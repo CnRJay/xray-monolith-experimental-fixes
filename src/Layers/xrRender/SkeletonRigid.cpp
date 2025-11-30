@@ -251,7 +251,14 @@ void CKinematics::Bone_Calculate(CBoneData *bd, Fmatrix *parent) {
 void CKinematics::Bone_Calculate_Parallel(CBoneData *bd, Fmatrix *parent) {
   u16 SelfID = bd->GetSelfID();
   CBoneInstance &BONE_INST = LL_GetBoneInstance(SelfID);
-  CLBone(bd, BONE_INST, parent, u8(-1));
+
+  if (BONE_INST.callback()) {
+    xrCriticalSectionGuard g(UCalc_Mutex2);
+    CLBone(bd, BONE_INST, parent, u8(-1));
+  } else {
+    CLBone(bd, BONE_INST, parent, u8(-1));
+  }
+
   // Calculate children
   std::for_each(std::execution::par, bd->children.begin(), bd->children.end(),
                 [this, &BONE_INST](CBoneData *C) {
