@@ -56,9 +56,9 @@ void CSoundRender_Core::update(const Fvector &P, const Fvector &D,
                         get_occlusion(E->p_source.position, .2f, occluder);
                     E->m_current_occ_value = occ;
                     E->m_occ_value_ready = true;
-                    // debug only for testing to verify multithreaded parallel
-                    // occlussion execution Msg("Parallel Occ: Thread %d",
-                    // std::hash<std::thread::id>{}(std::this_thread::get_id()));
+                    // debug only for testing to verify parallel sound occlusion
+                     // Msg("Parallel Occ: Thread %d",
+                     // std::hash<std::thread::id>{}(std::this_thread::get_id()));
                   });
   }
 

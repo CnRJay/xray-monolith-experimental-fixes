@@ -264,9 +264,9 @@ void CKinematics::Bone_Calculate_Parallel(CBoneData *bd, Fmatrix *parent) {
   // Calculate children
   std::for_each(std::execution::par, bd->children.begin(), bd->children.end(),
                 [this, &BONE_INST](CBoneData *C) {
-                  // debug only for testing to verify multithreaded bone
-                  // calculation Msg("Parallel Bone Calc: Thread %d",
-                  // std::hash<std::thread::id>{}(std::this_thread::get_id()));
+                  // debug only for testing to verify parallel bone calculation
+                   // Msg("Parallel Bone Calc: Thread %d",
+                   // std::hash<std::thread::id>{}(std::this_thread::get_id()));
                   Bone_Calculate_Parallel(C, &BONE_INST.mTransform);
                 });
 }
