@@ -250,25 +250,64 @@ void CKinematics::Bone_Calculate(CBoneData *bd, Fmatrix *parent) {
     Bone_Calculate(*C, &BONE_INST.mTransform);
 }
 
+bool CKinematics::HasCallbacks(const CBoneData *bd) {
+  if (LL_GetBoneInstance(bd->GetSelfID()).callback())
+    return true;
+  for (const auto *child : bd->children) {
+    if (HasCallbacks(child))
+      return true;
+  }
+  return false;
+}
+
+void CKinematics::Bone_Calculate_Simple(CBoneData *bd, Fmatrix *parent) {
+  u16 SelfID = bd->GetSelfID();
+  CBoneInstance &BONE_INST = LL_GetBoneInstance(SelfID);
+
+  CLBone(bd, BONE_INST, parent, u8(-1));
+
+  if (!bd->children.empty()) {
+    std::for_each(std::execution::par, bd->children.begin(), bd->children.end(),
+                  [this, &BONE_INST](CBoneData *C) {
+                    Bone_Calculate_Simple(C, &BONE_INST.mTransform);
+                  });
+  }
+}
+
 void CKinematics::Bone_Calculate_Parallel(CBoneData *bd, Fmatrix *parent) {
   u16 SelfID = bd->GetSelfID();
   CBoneInstance &BONE_INST = LL_GetBoneInstance(SelfID);
 
-  if (BONE_INST.callback()) {
-    xrCriticalSectionGuard g(UCalc_Mutex2);
-    CLBone(bd, BONE_INST, parent, u8(-1));
-  } else {
-    CLBone(bd, BONE_INST, parent, u8(-1));
+  CLBone(bd, BONE_INST, parent, u8(-1));
+
+  if (bd->children.empty())
+    return;
+
+  xr_vector<CBoneData *> complex_children;
+  xr_vector<CBoneData *> simple_children;
+  complex_children.reserve(bd->children.size());
+  simple_children.reserve(bd->children.size());
+
+  for (auto *child : bd->children) {
+    if (HasCallbacks(child))
+      complex_children.push_back(child);
+    else
+      simple_children.push_back(child);
   }
 
-  // Calculate children
-  std::for_each(std::execution::par, bd->children.begin(), bd->children.end(),
-                [this, &BONE_INST](CBoneData *C) {
-                  // debug only for testing to verify parallel bone calculation
-                   // Msg("Parallel Bone Calc: Thread %d",
-                   // std::hash<std::thread::id>{}(std::this_thread::get_id()));
-                  Bone_Calculate_Parallel(C, &BONE_INST.mTransform);
-                });
+  for (auto *child : complex_children) {
+    Bone_Calculate_Parallel(child, &BONE_INST.mTransform);
+  }
+
+  if (!simple_children.empty()) {
+    std::for_each(std::execution::par, simple_children.begin(),
+                  simple_children.end(), [this, &BONE_INST](CBoneData *C) {
+                    // debug only for testing to verify parallel bone
+                    // calculation Msg("Parallel Bone Calc: Thread %d",
+                    // std::hash<std::thread::id>{}(std::this_thread::get_id()));
+                    Bone_Calculate_Simple(C, &BONE_INST.mTransform);
+                  });
+  }
 }
 
 void CKinematics::BoneChain_Calculate(const CBoneData *bd, CBoneInstance &bi,

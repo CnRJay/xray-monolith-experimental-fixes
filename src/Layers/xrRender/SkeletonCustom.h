@@ -104,6 +104,8 @@ public:
 #endif
   void Bone_Calculate(CBoneData *bd, Fmatrix *parent);
   void Bone_Calculate_Parallel(CBoneData *bd, Fmatrix *parent);
+  void Bone_Calculate_Simple(CBoneData *bd, Fmatrix *parent);
+  bool HasCallbacks(const CBoneData *bd);
   void CLBone(const CBoneData *bd, CBoneInstance &bi, const Fmatrix *parent,
               u8 mask_channel = (1 << 0));
 
