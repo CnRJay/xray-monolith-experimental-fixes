@@ -187,11 +187,16 @@ SVS* CResourceManager::_CreateVS(LPCSTR _name)
 			FS.update_path(cname, "$game_shaders$", cname);
 			file = FS.r_open(cname);
 		}
+		// memory leak fix (CnR)
 		u32 const size = file->length();
-		char* const data = (LPSTR)_alloca(size + 1);
-		CopyMemory(data, file->pointer(), size);
-		data[size] = 0;
+
+		std::vector<char> buffer(size + 1);
+		CopyMemory(buffer.data(), file->pointer(), size);
+		buffer[size] = 0;
+
 		FS.r_close(file);
+
+		char* data = buffer.data();
 
 		// Select target
 		LPCSTR c_target = "vs_2_0";
@@ -301,13 +306,18 @@ SPS* CResourceManager::_CreatePS(LPCSTR _name)
 			FS.update_path(cname, "$game_shaders$", cname);
 			file = FS.r_open(cname);
 		}
-
+		// memory leak fix (CnR)
 		R_ASSERT2(file, cname);
 		u32 const size = file->length();
-		char* const data = (LPSTR)_alloca(size + 1);
-		CopyMemory(data, file->pointer(), size);
-		data[size] = 0;
+
+		// std::vector guarantees contiguous memory and auto deletes
+		std::vector<char> buffer(size + 1);
+		CopyMemory(buffer.data(), file->pointer(), size);
+		buffer[size] = 0;
+
 		FS.r_close(file);
+
+		char* data = buffer.data();
 
 		// Select target
 		LPCSTR c_target = "ps_2_0";
