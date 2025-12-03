@@ -940,9 +940,10 @@ CRender::CRender()
 	init_cacades();
 }
 
+// slide window items memory leak fix (CnR)
 CRender::~CRender()
 {
-	for (FSlideWindowItem it : SWIs)
+	for (auto& it : SWIs)
 	{
 		xr_free(it.sw);
 		it.sw = nullptr;

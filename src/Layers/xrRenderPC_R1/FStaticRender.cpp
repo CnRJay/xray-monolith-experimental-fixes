@@ -435,8 +435,15 @@ CRender::CRender()
 {
 }
 
+// slide window items memory leak fix (CnR)
 CRender::~CRender()
 {
+	for (auto& it : SWIs) {
+		xr_free(it.sw);
+		it.sw = nullptr;
+		it.count = 0;
+	}
+	SWIs.clear();
 }
 
 extern float r_ssaDISCARD;
