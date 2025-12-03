@@ -69,12 +69,15 @@ This engine includes all standard "Modded Exes" features required by modern mods
 ## Troubleshooting & FAQ
 
 **Q: My RAM usage is very high (6GB - 10GB+). Is this a memory leak?**
+
 **A:** **No.** This is intentional. The new allocator aggressively caches memory to prevent stuttering, and the GC64 Lua implementation uses more memory per object to ensure stability. Unused RAM is wasted RAM.
 
 **Q: The screen is black but I can see the HUD.**
+
 **A:** You did not delete your `shaders_cache`. Delete the folder in `appdata` and restart.
 
 **Q: I am crashing with LNK1120 or "Entry Point Not Found".**
+
 **A:** You likely have mismatched DLLs. Ensure you copied `lua51.dll` from the release zip into your `bin` folder and overwrote the old one.
 
 -----
