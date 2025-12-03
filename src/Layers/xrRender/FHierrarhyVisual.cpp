@@ -17,104 +17,93 @@
 // Construction/Destruction
 //////////////////////////////////////////////////////////////////////
 
-FHierrarhyVisual::FHierrarhyVisual() : dxRender_Visual()
-{
-	bDontDelete = FALSE;
+FHierrarhyVisual::FHierrarhyVisual() : dxRender_Visual() {
+  bDontDelete = FALSE;
 }
 
-FHierrarhyVisual::~FHierrarhyVisual()
-{
-	if (!bDontDelete)
-	{
-		for (u32 i = 0; i < children.size(); i++)
-			::Render->model_Delete((IRenderVisual *&)children[i]);
-	}
-	children.clear();
+FHierrarhyVisual::~FHierrarhyVisual() {
+  if (!bDontDelete) {
+    for (u32 i = 0; i < children.size(); i++)
+      ::Render->model_Delete((IRenderVisual *&)children[i]);
+    for (u32 i = 0; i < children_invisible.size(); i++)
+      ::Render->model_Delete((IRenderVisual *&)children_invisible[i]);
+  }
+  children.clear();
+  children_invisible.clear();
 }
 
-void FHierrarhyVisual::Release()
-{
-	if (!bDontDelete)
-	{
-		for (u32 i = 0; i < children.size(); i++)
-			((dxRender_Visual*)children[i])->Release();
-	}
+void FHierrarhyVisual::Release() {
+  if (!bDontDelete) {
+    for (u32 i = 0; i < children.size(); i++)
+      ((dxRender_Visual *)children[i])->Release();
+    for (u32 i = 0; i < children_invisible.size(); i++)
+      ((dxRender_Visual *)children_invisible[i])->Release();
+  }
 }
 
-void FHierrarhyVisual::Load(const char* N, IReader* data, u32 dwFlags)
-{
-	dxRender_Visual::Load(N, data, dwFlags);
-	if (data->find_chunk(OGF_CHILDREN_L))
-	{
-		// From Link
-		u32 cnt = data->r_u32();
-		children.resize(cnt);
-		for (u32 i = 0; i < cnt; i++)
-		{
+void FHierrarhyVisual::Load(const char *N, IReader *data, u32 dwFlags) {
+  dxRender_Visual::Load(N, data, dwFlags);
+  if (data->find_chunk(OGF_CHILDREN_L)) {
+    // From Link
+    u32 cnt = data->r_u32();
+    children.resize(cnt);
+    for (u32 i = 0; i < cnt; i++) {
 #ifdef _EDITOR
-			THROW;
+      THROW;
 #else
-			u32 ID = data->r_u32();
-			children[i] = ::Render->getVisual(ID);
-			((dxRender_Visual*)children[i])->setID(i + 1);
+      u32 ID = data->r_u32();
+      children[i] = ::Render->getVisual(ID);
+      ((dxRender_Visual *)children[i])->setID(i + 1);
 #endif
-		}
-		bDontDelete = TRUE;
-	}
-	else
-	{
-		if (data->find_chunk(OGF_CHILDREN))
-		{
-			// From stream
-			IReader* OBJ = data->open_chunk(OGF_CHILDREN);
-			if (OBJ)
-			{
-				IReader* O = OBJ->open_chunk(0);
-				for (int count = 1; O; count++)
-				{
-					string_path name_load, short_name, num;
-					xr_strcpy(short_name, N);
-					if (strext(short_name)) *strext(short_name) = 0;
-					strconcat(sizeof(name_load), name_load, short_name, ":", itoa(count, num, 10));
-					children.push_back(::Render->model_CreateChild(name_load, O));
-					((dxRender_Visual*)children.back())->setID(count);
-					O->close();
-					O = OBJ->open_chunk(count);
-				}
-				OBJ->close();
-			}
-			bDontDelete = FALSE;
-		}
-		else
-		{
-			FATAL("Invalid visual");
-		}
-	}
+    }
+    bDontDelete = TRUE;
+  } else {
+    if (data->find_chunk(OGF_CHILDREN)) {
+      // From stream
+      IReader *OBJ = data->open_chunk(OGF_CHILDREN);
+      if (OBJ) {
+        IReader *O = OBJ->open_chunk(0);
+        for (int count = 1; O; count++) {
+          string_path name_load, short_name, num;
+          xr_strcpy(short_name, N);
+          if (strext(short_name))
+            *strext(short_name) = 0;
+          strconcat(sizeof(name_load), name_load, short_name, ":",
+                    itoa(count, num, 10));
+          children.push_back(::Render->model_CreateChild(name_load, O));
+          ((dxRender_Visual *)children.back())->setID(count);
+          O->close();
+          O = OBJ->open_chunk(count);
+        }
+        OBJ->close();
+      }
+      bDontDelete = FALSE;
+    } else {
+      FATAL("Invalid visual");
+    }
+  }
 }
 
 //--DSR-- HeatVision_start
-void FHierrarhyVisual::MarkAsHot(bool is_hot) 
-{
-	dxRender_Visual::MarkAsHot(is_hot);
-	for (u32 i = 0; i < children.size(); i++)
-		children[i]->MarkAsHot(is_hot);
-	for (u32 i = 0; i < children_invisible.size(); i++)
-		children_invisible[i]->MarkAsHot(is_hot);
+void FHierrarhyVisual::MarkAsHot(bool is_hot) {
+  dxRender_Visual::MarkAsHot(is_hot);
+  for (u32 i = 0; i < children.size(); i++)
+    children[i]->MarkAsHot(is_hot);
+  for (u32 i = 0; i < children_invisible.size(); i++)
+    children_invisible[i]->MarkAsHot(is_hot);
 }
 //--DSR-- HeatVision_end
 
-void FHierrarhyVisual::Copy(dxRender_Visual* pSrc)
-{
-	dxRender_Visual::Copy(pSrc);
+void FHierrarhyVisual::Copy(dxRender_Visual *pSrc) {
+  dxRender_Visual::Copy(pSrc);
 
-	FHierrarhyVisual* pFrom = (FHierrarhyVisual *)pSrc;
+  FHierrarhyVisual *pFrom = (FHierrarhyVisual *)pSrc;
 
-	children.clear();
-	children.reserve(pFrom->children.size());
-	for (u32 i = 0; i < pFrom->children.size(); i++)
-	{
-		IRenderVisual* p = ::Render->model_Duplicate(pFrom->children[i]);
-		children.push_back(p);
-	}
-	bDontDelete = FALSE;
+  children.clear();
+  children.reserve(pFrom->children.size());
+  for (u32 i = 0; i < pFrom->children.size(); i++) {
+    IRenderVisual *p = ::Render->model_Duplicate(pFrom->children[i]);
+    children.push_back(p);
+  }
+  bDontDelete = FALSE;
 }
