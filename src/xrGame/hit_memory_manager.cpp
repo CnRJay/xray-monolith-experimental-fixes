@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////
 //	Module 		: hit_memory_manager.cpp
 //	Created 	: 02.10.2001
-//  Modified 	: 19.11.2003
+//  Modified 	: 19.11.2003
 //	Author		: Dmitriy Iassenev
 //	Description : Hit memory manager
 ////////////////////////////////////////////////////////////////////////////
@@ -54,7 +54,7 @@ CHitMemoryManager::~CHitMemoryManager()
 	clear_delayed_objects();
 
 #ifdef USE_SELECTED_HIT
-	xr_delete				(m_selected_hit);
+	xr_delete(m_selected_hit);
 #endif
 }
 
@@ -87,7 +87,7 @@ void CHitMemoryManager::reinit()
 void CHitMemoryManager::reload(LPCSTR section)
 {
 #ifdef USE_SELECTED_HIT
-	xr_delete				(m_selected_hit);
+	xr_delete(m_selected_hit);
 #endif
 	m_max_hit_count = READ_IF_EXISTS(pSettings, r_s32, section, "DynamicHitCount", 1);
 }
@@ -118,7 +118,7 @@ void CHitMemoryManager::add(float amount, const Fvector& vLocalDir, const CObjec
 		vLocalDir,
 		smart_cast<const CGameObject*>(who)->lua_game_object(),
 		element
-	);
+		);
 
 	Fvector direction;
 	m_object->XFORM().transform_dir(direction, vLocalDir);
@@ -133,13 +133,13 @@ void CHitMemoryManager::add(float amount, const Fvector& vLocalDir, const CObjec
 		CHitObject hit_object;
 
 		hit_object.fill(entity_alive, m_object,
-		                !m_stalker ? squad_mask_type(-1) : m_stalker->agent_manager().member().mask(m_stalker));
+			!m_stalker ? squad_mask_type(-1) : m_stalker->agent_manager().member().mask(m_stalker));
 
 #ifdef USE_FIRST_GAME_TIME
-		hit_object.m_first_game_time	= Level().GetGameTime();
+		hit_object.m_first_game_time = Level().GetGameTime();
 #endif
 #ifdef USE_FIRST_LEVEL_TIME
-		hit_object.m_first_level_time	= Device.dwTimeGlobal;
+		hit_object.m_first_level_time = Device.dwTimeGlobal;
 #endif
 		hit_object.m_amount = amount;
 
@@ -155,9 +155,9 @@ void CHitMemoryManager::add(float amount, const Fvector& vLocalDir, const CObjec
 	else
 	{
 		(*J).fill(entity_alive, m_object,
-		          (!m_stalker
-			           ? (*J).m_squad_mask.get()
-			           : ((*J).m_squad_mask.get() | m_stalker->agent_manager().member().mask(m_stalker))));
+			(!m_stalker
+				? (*J).m_squad_mask.get()
+				: ((*J).m_squad_mask.get() | m_stalker->agent_manager().member().mask(m_stalker))));
 		(*J).m_amount = _max(amount, (*J).m_amount);
 	}
 }
@@ -175,7 +175,7 @@ void CHitMemoryManager::add(const CHitObject& _hit_object)
 
 	CHitObject hit_object = _hit_object;
 	hit_object.m_squad_mask.set(!m_stalker ? squad_mask_type(-1) : m_stalker->agent_manager().member().mask(m_stalker),
-	                            TRUE);
+		TRUE);
 
 	const CEntityAlive* entity_alive = hit_object.m_object;
 	HITS::iterator J = std::find(m_hits->begin(), m_hits->end(), object_id(entity_alive));
@@ -211,26 +211,26 @@ void CHitMemoryManager::update()
 	START_PROFILE("Memory Manager/hits::update")
 		clear_delayed_objects();
 
-		VERIFY(m_hits);
-		m_hits->erase(
-			std::remove_if(
-				m_hits->begin(),
-				m_hits->end(),
-				CRemoveOfflinePredicate()
-			),
-			m_hits->end()
-		);
+	VERIFY(m_hits);
+	m_hits->erase(
+		std::remove_if(
+			m_hits->begin(),
+			m_hits->end(),
+			CRemoveOfflinePredicate()
+		),
+		m_hits->end()
+	);
 
 #ifdef USE_SELECTED_HIT
-	xr_delete					(m_selected_hit);
+	xr_delete(m_selected_hit);
 	u32							level_time = 0;
 	HITS::const_iterator		I = m_hits->begin();
 	HITS::const_iterator		E = m_hits->end();
-	for ( ; I != E; ++I) {
+	for (; I != E; ++I) {
 		if ((*I).m_level_time > level_time) {
-			xr_delete			(m_selected_hit);
-			m_selected_hit		= xr_new<CHitObject>(*I);
-			level_time			= (*I).m_level_time;
+			xr_delete(m_selected_hit);
+			m_selected_hit = xr_new<CHitObject>(*I);
+			level_time = (*I).m_level_time;
 		}
 	}
 #endif
@@ -269,7 +269,7 @@ void CHitMemoryManager::remove_links(CObject* object)
 	if (m_selected_hit->m_object->ID() != object->ID())
 		return;
 
-	xr_delete					(m_selected_hit);
+	xr_delete(m_selected_hit);
 #endif
 }
 
@@ -290,17 +290,17 @@ void CHitMemoryManager::save(NET_Packet& packet) const
 		packet.w_u32((*I).m_object_params.m_level_vertex_id);
 		packet.w_vec3((*I).m_object_params.m_position);
 #ifdef USE_ORIENTATION
-		packet.w_float			((*I).m_object_params.m_orientation.yaw);
-		packet.w_float			((*I).m_object_params.m_orientation.pitch);
-		packet.w_float			((*I).m_object_params.m_orientation.roll);
+		packet.w_float((*I).m_object_params.m_orientation.yaw);
+		packet.w_float((*I).m_object_params.m_orientation.pitch);
+		packet.w_float((*I).m_object_params.m_orientation.roll);
 #endif // USE_ORIENTATION
 		// self params
 		packet.w_u32((*I).m_self_params.m_level_vertex_id);
 		packet.w_vec3((*I).m_self_params.m_position);
 #ifdef USE_ORIENTATION
-		packet.w_float			((*I).m_self_params.m_orientation.yaw);
-		packet.w_float			((*I).m_self_params.m_orientation.pitch);
-		packet.w_float			((*I).m_self_params.m_orientation.roll);
+		packet.w_float((*I).m_self_params.m_orientation.yaw);
+		packet.w_float((*I).m_self_params.m_orientation.pitch);
+		packet.w_float((*I).m_self_params.m_orientation.roll);
 #endif // USE_ORIENTATION
 #ifdef USE_LEVEL_TIME
 		packet.w_u32((Device.dwTimeGlobal > (*I).m_level_time) ? (Device.dwTimeGlobal - (*I).m_level_time) : 0);
@@ -309,7 +309,7 @@ void CHitMemoryManager::save(NET_Packet& packet) const
 		packet.w_u32((Device.dwTimeGlobal > (*I).m_level_time) ? (Device.dwTimeGlobal - (*I).m_last_level_time) : 0);
 #endif // USE_LAST_LEVEL_TIME
 #ifdef USE_FIRST_LEVEL_TIME
-		packet.w_u32			((Device.dwTimeGlobal >= (*I).m_level_time) ? (Device.dwTimeGlobal - (*I).m_first_level_time) : 0);
+		packet.w_u32((Device.dwTimeGlobal >= (*I).m_first_level_time) ? (Device.dwTimeGlobal - (*I).m_first_level_time) : 0);
 #endif // USE_FIRST_LEVEL_TIME
 		packet.w_vec3((*I).m_direction);
 		packet.w_u16((*I).m_bone_index);
@@ -338,35 +338,38 @@ void CHitMemoryManager::load(IReader& packet)
 		object.m_object_params.m_level_vertex_id = packet.r_u32();
 		packet.r_fvector3(object.m_object_params.m_position);
 #ifdef USE_ORIENTATION
-		packet.r_float				(object.m_object_params.m_orientation.yaw);
-		packet.r_float				(object.m_object_params.m_orientation.pitch);
-		packet.r_float				(object.m_object_params.m_orientation.roll);
+		packet.r_float(object.m_object_params.m_orientation.yaw);
+		packet.r_float(object.m_object_params.m_orientation.pitch);
+		packet.r_float(object.m_object_params.m_orientation.roll);
 #endif
 		// self params
 		object.m_self_params.m_level_vertex_id = packet.r_u32();
 		packet.r_fvector3(object.m_self_params.m_position);
 #ifdef USE_ORIENTATION
-		packet.r_float				(object.m_self_params.m_orientation.yaw);
-		packet.r_float				(object.m_self_params.m_orientation.pitch);
-		packet.r_float				(object.m_self_params.m_orientation.roll);
+		packet.r_float(object.m_self_params.m_orientation.yaw);
+		packet.r_float(object.m_self_params.m_orientation.pitch);
+		packet.r_float(object.m_self_params.m_orientation.roll);
 #endif
+
+		// FIX: Time loading logic fixed to subtract delta from current time and removed invalid VERIFY checks
 #ifdef USE_LEVEL_TIME
-		VERIFY(Device.dwTimeGlobal >= object.m_level_time);
 		object.m_level_time = Device.dwTimeGlobal - packet.r_u32();
 		if (object.m_level_time > Device.dwTimeGlobal)
 			object.m_level_time = Device.dwTimeGlobal;
 #endif // USE_LEVEL_TIME
+
 #ifdef USE_LAST_LEVEL_TIME
-		VERIFY(Device.dwTimeGlobal >= object.m_last_level_time);
 		object.m_last_level_time = Device.dwTimeGlobal - packet.r_u32();
 		if (object.m_last_level_time > Device.dwTimeGlobal)
 			object.m_last_level_time = Device.dwTimeGlobal;
 #endif // USE_LAST_LEVEL_TIME
+
 #ifdef USE_FIRST_LEVEL_TIME
-		VERIFY						(Device.dwTimeGlobal >= (*I).m_first_level_time);
-		object.m_first_level_time	= packet.r_u32();
-		object.m_first_level_time	+= Device.dwTimeGlobal;
+		object.m_first_level_time = Device.dwTimeGlobal - packet.r_u32();
+		if (object.m_first_level_time > Device.dwTimeGlobal)
+			object.m_first_level_time = Device.dwTimeGlobal;
 #endif // USE_FIRST_LEVEL_TIME
+
 		packet.r_fvector3(object.m_direction);
 		object.m_bone_index = packet.r_u16();
 		object.m_amount = packet.r_float();
@@ -386,11 +389,11 @@ void CHitMemoryManager::load(IReader& packet)
 			if (!g_dedicated_server)
 				Level().client_spawn_manager().add(delayed_object.m_object_id, m_object->ID(), callback);
 #ifdef DEBUG
-		else {
-			if (spawn_callback && spawn_callback->m_object_callback) {
-				VERIFY				(spawn_callback->m_object_callback == callback);
+			else {
+				if (spawn_callback && spawn_callback->m_object_callback) {
+					VERIFY(spawn_callback->m_object_callback == callback);
+				}
 			}
-		}
 #endif // DEBUG
 	}
 }
