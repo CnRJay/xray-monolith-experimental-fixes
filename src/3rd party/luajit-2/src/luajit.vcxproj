@@ -27,7 +27,7 @@
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Label="Configuration">
-    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <ConfigurationType>Makefile</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>v143</PlatformToolset>
     <PreferredToolArchitecture>x64</PreferredToolArchitecture>
@@ -93,7 +93,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ProfiledDX11|x64'">
     <ClCompile>
-      <PreprocessorDefinitions>XRCORE_PROFILER;WIN32;NDEBUG;_CRT_SECURE_NO_DEPRECATE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>LUAJIT_ENABLE_GC64</PreprocessorDefinitions>
       <Optimization>MaxSpeed</Optimization>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <OmitFramePointers>true</OmitFramePointers>
@@ -104,7 +104,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_CRT_SECURE_NO_DEPRECATE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>LUAJIT_ENABLE_GC64</PreprocessorDefinitions>
       <Optimization>MaxSpeed</Optimization>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <OmitFramePointers>true</OmitFramePointers>
@@ -125,7 +125,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release-AVX|x64'">
     <ClCompile>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_CRT_SECURE_NO_DEPRECATE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>LUAJIT_ENABLE_GC64</PreprocessorDefinitions>
       <Optimization>MaxSpeed</Optimization>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <OmitFramePointers>true</OmitFramePointers>
@@ -147,7 +147,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Verified|x64'">
     <ClCompile>
-      <PreprocessorDefinitions>USE_VERIFY_IN_RELEASE;WIN32;NDEBUG;_CRT_SECURE_NO_DEPRECATE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>LUAJIT_ENABLE_GC64</PreprocessorDefinitions>
       <Optimization>Disabled</Optimization>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <OmitFramePointers>true</OmitFramePointers>
@@ -253,6 +253,62 @@
       $(CleanDependsOn);
       LuaJITClean;
     </CleanDependsOn>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ProfiledDX11|x64'">
+    <NMakeBuildCommandLine>cd src
+call msvcbuild.bat gc64
+copy /Y lua51.dll "$(SolutionDir)..\_build\_game\bin_dbg\x64\Release-AVX\lua51.dll"
+copy /Y lua51.lib "$(SolutionDir)..\sdk\libraries\x64\lua51.lib"</NMakeBuildCommandLine>
+    <NMakeReBuildCommandLine>cd src
+call msvcbuild.bat gc64
+copy /Y lua51.dll "$(SolutionDir)..\_build\_game\bin_dbg\x64\Release-AVX\lua51.dll"
+copy /Y lua51.lib "$(SolutionDir)..\sdk\libraries\x64\lua51.lib"</NMakeReBuildCommandLine>
+    <NMakeCleanCommandLine>cd src
+del *.obj *.manifest *.lib *.dll *.exp *.exe
+del "$(SolutionDir)..\sdk\libraries\x64\lua51.lib"</NMakeCleanCommandLine>
+    <NMakeOutput>src\lua51.dll</NMakeOutput>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <NMakeBuildCommandLine>cd src
+call msvcbuild.bat gc64
+copy /Y lua51.dll "$(SolutionDir)..\_build\_game\bin_dbg\x64\Release-AVX\lua51.dll"
+copy /Y lua51.lib "$(SolutionDir)..\sdk\libraries\x64\lua51.lib"</NMakeBuildCommandLine>
+    <NMakeReBuildCommandLine>cd src
+call msvcbuild.bat gc64
+copy /Y lua51.dll "$(SolutionDir)..\_build\_game\bin_dbg\x64\Release-AVX\lua51.dll"
+copy /Y lua51.lib "$(SolutionDir)..\sdk\libraries\x64\lua51.lib"</NMakeReBuildCommandLine>
+    <NMakeCleanCommandLine>cd src
+del *.obj *.manifest *.lib *.dll *.exp *.exe
+del "$(SolutionDir)..\sdk\libraries\x64\lua51.lib"</NMakeCleanCommandLine>
+    <NMakeOutput>src\lua51.dll</NMakeOutput>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release-AVX|x64'">
+    <NMakeBuildCommandLine>cd src
+call msvcbuild.bat gc64
+copy /Y lua51.dll "$(SolutionDir)..\_build\_game\bin_dbg\x64\Release-AVX\lua51.dll"
+copy /Y lua51.lib "$(SolutionDir)..\sdk\libraries\x64\lua51.lib"</NMakeBuildCommandLine>
+    <NMakeReBuildCommandLine>cd src
+call msvcbuild.bat gc64
+copy /Y lua51.dll "$(SolutionDir)..\_build\_game\bin_dbg\x64\Release-AVX\lua51.dll"
+copy /Y lua51.lib "$(SolutionDir)..\sdk\libraries\x64\lua51.lib"</NMakeReBuildCommandLine>
+    <NMakeCleanCommandLine>cd src
+del *.obj *.manifest *.lib *.dll *.exp *.exe
+del "$(SolutionDir)..\sdk\libraries\x64\lua51.lib"</NMakeCleanCommandLine>
+    <NMakeOutput>src\lua51.dll</NMakeOutput>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Verified|x64'">
+    <NMakeBuildCommandLine>cd src
+call msvcbuild.bat gc64
+copy /Y lua51.dll "$(SolutionDir)..\_build\_game\bin_dbg\x64\Release-AVX\lua51.dll"
+copy /Y lua51.lib "$(SolutionDir)..\sdk\libraries\x64\lua51.lib"</NMakeBuildCommandLine>
+    <NMakeReBuildCommandLine>cd src
+call msvcbuild.bat gc64
+copy /Y lua51.dll "$(SolutionDir)..\_build\_game\bin_dbg\x64\Release-AVX\lua51.dll"
+copy /Y lua51.lib "$(SolutionDir)..\sdk\libraries\x64\lua51.lib"</NMakeReBuildCommandLine>
+    <NMakeCleanCommandLine>cd src
+del *.obj *.manifest *.lib *.dll *.exp *.exe
+del "$(SolutionDir)..\sdk\libraries\x64\lua51.lib"</NMakeCleanCommandLine>
+    <NMakeOutput>src\lua51.dll</NMakeOutput>
   </PropertyGroup>
   <Target Name="LuaJITClean">
     <Message Text="LuaJIT: Cleaning generated files" Importance="high" />

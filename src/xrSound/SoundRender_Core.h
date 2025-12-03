@@ -138,7 +138,12 @@ public:
 
   virtual float get_occlusion_to(const Fvector &hear_pt, const Fvector &snd_pt,
                                  float dispersion = 0.2f);
+  float get_occlusion_to_impl(const Fvector &hear_pt, const Fvector &snd_pt,
+                              float dispersion, CRandom &RNG);
+
   float get_occlusion(Fvector &P, float R, Fvector *occ) override;
+  float get_occlusion_impl(Fvector &P, float R, Fvector *occ, CRandom &RNG);
+
   CSoundRender_Environment *get_environment(const Fvector &P);
 
   void env_load();

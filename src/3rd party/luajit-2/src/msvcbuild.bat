@@ -1,29 +1,30 @@
 @rem Script to build LuaJIT with MSVC.
-@rem Copyright (C) 2005-2015 Mike Pall. See Copyright Notice in luajit.h
+@rem Copyright (C) 2005-2021 Mike Pall. See Copyright Notice in luajit.h
 @rem
-@rem Either open a "Visual Studio .NET Command Prompt"
-@rem (Note that the Express Edition does not contain an x64 compiler)
-@rem -or-
-@rem Open a "Windows SDK Command Shell" and set the compiler environment:
-@rem     setenv /release /x86
-@rem   -or-
-@rem     setenv /release /x64
+@rem Open a "Visual Studio Command Prompt" (either x86 or x64).
+@rem Then cd to this directory and run this script. Use the following
+@rem options (in order), if needed. The default is a dynamic release build.
 @rem
-@rem Then cd to this directory and run this script.
+@rem   nogc64   disable LJ_GC64 mode for x64
+@rem   debug    emit debug symbols
+@rem   amalg    amalgamated build
+@rem   static   static linkage
 
 @if not defined INCLUDE goto :FAIL
 
-@if "%1"=="clean" goto :CLEAN
-
 @setlocal
-@set LJCOMPILE=cl /nologo /c /O2 /Ob3 /Oi /Ot /Oy /GT /GL /W3 /fp:precise /MD /GF /GS- /Zi /D_CRT_SECURE_NO_DEPRECATE
-@set LJLINK=link /nologo /debug /OPT:REF /OPT:ICF /LTCG
+@rem Add more debug flags here, e.g. DEBUGCFLAGS=/DLUA_USE_APICHECK
+@set DEBUGCFLAGS=
+@set LJCOMPILE=cl /nologo /c /O2 /W3 /D_CRT_SECURE_NO_DEPRECATE /D_CRT_STDIO_INLINE=__declspec(dllexport)__inline
+@set LJLINK=link /nologo
 @set LJMT=mt /nologo
-@set LJLIB=lib /nologo
+@set LJLIB=lib /nologo /nodefaultlib
 @set DASMDIR=..\dynasm
 @set DASM=%DASMDIR%\dynasm.lua
+@set DASC=vm_x64.dasc
 @set LJDLLNAME=lua51.dll
 @set LJLIBNAME=lua51.lib
+@set BUILDTYPE=release
 @set ALL_LIB=lib_base.c lib_math.c lib_bit.c lib_string.c lib_table.c lib_io.c lib_os.c lib_package.c lib_debug.c lib_jit.c lib_ffi.c
 
 %LJCOMPILE% host\minilua.c
@@ -37,10 +38,17 @@ if exist minilua.exe.manifest^
 @set LJARCH=x64
 @minilua
 @if errorlevel 8 goto :X64
+@set DASC=vm_x86.dasc
 @set DASMFLAGS=-D WIN -D JIT -D FFI
 @set LJARCH=x86
+@set LJCOMPILE=%LJCOMPILE% /arch:SSE2
 :X64
-minilua %DASM% -LN %DASMFLAGS% -o host\buildvm_arch.h vm_x86.dasc
+@if "%1" neq "nogc64" goto :GC64
+@shift
+@set DASC=vm_x86.dasc
+@set LJCOMPILE=%LJCOMPILE% /DLUAJIT_DISABLE_GC64
+:GC64
+minilua %DASM% -LN %DASMFLAGS% -o host\buildvm_arch.h %DASC%
 @if errorlevel 1 goto :BAD
 
 %LJCOMPILE% /I "." /I %DASMDIR% host\buildvm*.c
@@ -67,20 +75,22 @@ buildvm -m folddef -o lj_folddef.h lj_opt_fold.c
 
 @if "%1" neq "debug" goto :NODEBUG
 @shift
-@set LJCOMPILE=%LJCOMPILE% /Zi
-@set LJLINK=%LJLINK% /debug
+@set BUILDTYPE=debug
+@set LJCOMPILE=%LJCOMPILE% /Zi %DEBUGCFLAGS%
+@set LJLINK=%LJLINK% /opt:ref /opt:icf /incremental:no
 :NODEBUG
+@set LJLINK=%LJLINK% /%BUILDTYPE%
 @if "%1"=="amalg" goto :AMALGDLL
 @if "%1"=="static" goto :STATIC
-%LJCOMPILE% /MD /DLUA_BUILD_AS_DLL lj_*.c lib_*.c xr_*.c
+%LJCOMPILE% /MD /DLUA_BUILD_AS_DLL lj_*.c lib_*.c
 @if errorlevel 1 goto :BAD
-%LJLINK% /DLL /out:%LJDLLNAME% lj_*.obj lib_*.obj xr_*.obj
+%LJLINK% /DLL /out:%LJDLLNAME% lj_*.obj lib_*.obj
 @if errorlevel 1 goto :BAD
 @goto :MTDLL
 :STATIC
-%LJCOMPILE% lj_*.c lib_*.c xr_*.c
+%LJCOMPILE% lj_*.c lib_*.c
 @if errorlevel 1 goto :BAD
-%LJLIB% /OUT:%LJLIBNAME% lj_*.obj lib_*.obj xr_*.obj
+%LJLIB% /OUT:%LJLIBNAME% lj_*.obj lib_*.obj
 @if errorlevel 1 goto :BAD
 @goto :MTDLL
 :AMALGDLL
@@ -99,11 +109,9 @@ if exist %LJDLLNAME%.manifest^
 if exist luajit.exe.manifest^
   %LJMT% -manifest luajit.exe.manifest -outputresource:luajit.exe
 
-REM copy /b lua51.dll ..\..\..\..\_build\_game\bin_dbg
-REM copy /b lua51.pdb ..\..\..\..\_build\_game\bin_dbg
-copy /b lua51.lib ..\..\..\..\_build\_game\bin_dbg\x64
-
 @del *.obj *.manifest minilua.exe buildvm.exe
+@del host\buildvm_arch.h
+@del lj_bcdef.h lj_ffdef.h lj_libdef.h lj_recdef.h lj_folddef.h
 @echo.
 @echo === Successfully built LuaJIT for Windows/%LJARCH% ===
 
@@ -114,20 +122,6 @@ copy /b lua51.lib ..\..\..\..\_build\_game\bin_dbg\x64
 @echo *** Build FAILED -- Please check the error messages ***
 @echo *******************************************************
 @goto :END
-:CLEAN
-@del buildvm.ilk 2>NUL
-@del buildvm.pdb 2>NUL
-@del lua51.dll 2>NUL
-@del lua51.lib 2>NUL
-@del luajit.exe 2>NUL
-@del luajit.ilk 2>NUL
-@del luajit.pdb 2>NUL
-@del luajit.vcxproj.user 2>NUL
-@del minilua.ilk 2>NUL
-@del minilua.pdb 2>NUL
-@del vc140.pdb 2>NUL
-@rmdir /S /Q x64 2>NUL
-@goto :END
 :FAIL
-@echo You must open a "Visual Studio .NET Command Prompt" to run this script
+@echo You must open a "Visual Studio Command Prompt" to run this script
 :END

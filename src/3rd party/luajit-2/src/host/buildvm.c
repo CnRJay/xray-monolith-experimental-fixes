@@ -1,6 +1,6 @@
 /*
 ** LuaJIT VM builder.
-** Copyright (C) 2005-2015 Mike Pall. See Copyright Notice in luajit.h
+** Copyright (C) 2005-2021 Mike Pall. See Copyright Notice in luajit.h
 **
 ** This is a tool to build the hand-tuned assembler code required for
 ** LuaJIT's bytecode interpreter. It supports a variety of output formats
@@ -59,12 +59,14 @@ static int collect_reloc(BuildCtx *ctx, uint8_t *addr, int idx, int type);
 #include "../dynasm/dasm_x86.h"
 #elif LJ_TARGET_ARM
 #include "../dynasm/dasm_arm.h"
+#elif LJ_TARGET_ARM64
+#include "../dynasm/dasm_arm64.h"
 #elif LJ_TARGET_PPC
-#include "../dynasm/dasm_ppc.h"
-#elif LJ_TARGET_PPCSPE
 #include "../dynasm/dasm_ppc.h"
 #elif LJ_TARGET_MIPS
 #include "../dynasm/dasm_mips.h"
+#elif LJ_TARGET_E2K
+#include "../dynasm/dasm_e2k.h"
 #else
 #error "No support for this architecture (yet)"
 #endif
@@ -110,11 +112,11 @@ static const char *sym_decorate(BuildCtx *ctx,
   if (p) {
 #if LJ_TARGET_X86ORX64
     if (!LJ_64 && (ctx->mode == BUILD_coffasm || ctx->mode == BUILD_peobj))
-      name[0] = '@';
+      name[0] = name[1] == 'R' ? '_' : '@';  /* Just for _RtlUnwind@16. */
     else
       *p = '\0';
-#elif (LJ_TARGET_PPC  || LJ_TARGET_PPCSPE) && !LJ_TARGET_CONSOLE
-    /* Keep @plt. */
+#elif LJ_TARGET_PPC && !LJ_TARGET_CONSOLE
+    /* Keep @plt etc. */
 #else
     *p = '\0';
 #endif
@@ -179,6 +181,7 @@ static int build_code(BuildCtx *ctx)
   ctx->nreloc = 0;
 
   ctx->globnames = globnames;
+  ctx->extnames = extnames;
   ctx->relocsym = (const char **)malloc(NRELOCSYM*sizeof(const char *));
   ctx->nrelocsym = 0;
   for (i = 0; i < (int)NRELOCSYM; i++) relocmap[i] = -1;
@@ -240,6 +243,48 @@ static int build_code(BuildCtx *ctx)
   return 0;
 }
 
+static int clean_ctx(BuildCtx *ctx)
+{
+    if(ctx->glob)
+        free(ctx->glob);
+
+    if(ctx->bc_ofs)
+        free(ctx->bc_ofs);
+
+    if(ctx->code)
+        free(ctx->code);
+
+    ptrdiff_t i = ctx->nsym;
+
+    if(ctx->sym[0].name)
+        free(ctx->sym[0].name);
+
+    while (i > 0) {
+        if(ctx->sym[i].name)
+            free(ctx->sym[i].name);
+        i--;
+    }
+
+    int j;
+
+    for (j = 0; j < (int)NRELOCSYM; j++)
+    {
+        if(relocmap[j] >= 0)
+        {
+            if(ctx->relocsym[relocmap[j]])
+                free(ctx->relocsym[relocmap[j]]);
+        }
+    }
+
+    if(ctx->relocsym)
+        free(ctx->relocsym);
+
+    if(ctx->sym)
+        free(ctx->sym);
+
+    if(ctx->beginsym)
+        free(ctx->beginsym);
+}
 /* -- Generate VM enums --------------------------------------------------- */
 
 const char *const bc_names[] = {
@@ -320,20 +365,20 @@ static void emit_vmdef(BuildCtx *ctx)
   char buf[80];
   int i;
   fprintf(ctx->fp, "-- This is a generated file. DO NOT EDIT!\n\n");
-  fprintf(ctx->fp, "module(...)\n\n");
+  fprintf(ctx->fp, "return {\n\n");
 
   fprintf(ctx->fp, "bcnames = \"");
   for (i = 0; bc_names[i]; i++) fprintf(ctx->fp, "%-6s", bc_names[i]);
-  fprintf(ctx->fp, "\"\n\n");
+  fprintf(ctx->fp, "\",\n\n");
 
   fprintf(ctx->fp, "irnames = \"");
   for (i = 0; ir_names[i]; i++) fprintf(ctx->fp, "%-6s", ir_names[i]);
-  fprintf(ctx->fp, "\"\n\n");
+  fprintf(ctx->fp, "\",\n\n");
 
   fprintf(ctx->fp, "irfpm = { [0]=");
   for (i = 0; irfpm_names[i]; i++)
     fprintf(ctx->fp, "\"%s\", ", lower(buf, irfpm_names[i]));
-  fprintf(ctx->fp, "}\n\n");
+  fprintf(ctx->fp, "},\n\n");
 
   fprintf(ctx->fp, "irfield = { [0]=");
   for (i = 0; irfield_names[i]; i++) {
@@ -343,17 +388,17 @@ static void emit_vmdef(BuildCtx *ctx)
     if (p) *p = '.';
     fprintf(ctx->fp, "\"%s\", ", buf);
   }
-  fprintf(ctx->fp, "}\n\n");
+  fprintf(ctx->fp, "},\n\n");
 
   fprintf(ctx->fp, "ircall = {\n[0]=");
   for (i = 0; ircall_names[i]; i++)
     fprintf(ctx->fp, "\"%s\",\n", ircall_names[i]);
-  fprintf(ctx->fp, "}\n\n");
+  fprintf(ctx->fp, "},\n\n");
 
   fprintf(ctx->fp, "traceerr = {\n[0]=");
   for (i = 0; trace_errors[i]; i++)
     fprintf(ctx->fp, "\"%s\",\n", trace_errors[i]);
-  fprintf(ctx->fp, "}\n\n");
+  fprintf(ctx->fp, "},\n\n");
 }
 
 /* -- Argument parsing ---------------------------------------------------- */
@@ -437,6 +482,7 @@ int main(int argc, char **argv)
   if (sizeof(void *) != 4*LJ_32+8*LJ_64) {
     fprintf(stderr,"Error: pointer size mismatch in cross-build.\n");
     fprintf(stderr,"Try: make HOST_CC=\"gcc -m32\" CROSS=...\n\n");
+    clean_ctx(ctx);
     return 1;
   }
 
@@ -445,6 +491,7 @@ int main(int argc, char **argv)
 
   if ((status = build_code(ctx))) {
     fprintf(stderr,"Error: DASM error %08x\n", status);
+    clean_ctx(ctx);
     return 1;
   }
 
@@ -467,6 +514,7 @@ int main(int argc, char **argv)
   } else if (!(ctx->fp = fopen(ctx->outname, binmode ? "wb" : "w"))) {
     fprintf(stderr, "Error: cannot open output file '%s': %s\n",
 	    ctx->outname, strerror(errno));
+    clean_ctx(ctx);
     exit(1);
   }
 
@@ -490,6 +538,7 @@ int main(int argc, char **argv)
   case BUILD_vmdef:
     emit_vmdef(ctx);
     emit_lib(ctx);
+    fprintf(ctx->fp, "}\n\n");
     break;
   case BUILD_ffdef:
   case BUILD_libdef:
@@ -507,9 +556,11 @@ int main(int argc, char **argv)
   if (ferror(ctx->fp)) {
     fprintf(stderr, "Error: cannot write to output file: %s\n",
 	    strerror(errno));
+    clean_ctx(ctx);
     exit(1);
   }
   fclose(ctx->fp);
+  clean_ctx(ctx);
 
   return 0;
 }

@@ -7,8 +7,10 @@
 #include "SoundRender_Source.h"
 #include "SoundRender_TargetA.h"
 #include "cl_intersect.h"
-#include <execution>
 #include <mutex>
+#include <tbb/blocked_range.h>
+#include <tbb/parallel_for.h>
+
 
 CSoundRender_Emitter *CSoundRender_Core::i_play(ref_sound *S, BOOL _loop,
                                                 float delay) {
@@ -49,17 +51,20 @@ void CSoundRender_Core::update(const Fvector &P, const Fvector &D,
       }
     }
 
-    std::for_each(std::execution::par, emitters_to_calc.begin(),
-                  emitters_to_calc.end(), [&](CSoundRender_Emitter *E) {
-                    Fvector occluder[3];
-                    float occ =
-                        get_occlusion(E->p_source.position, .2f, occluder);
-                    E->m_current_occ_value = occ;
-                    E->m_occ_value_ready = true;
-                    // debug only for testing to verify parallel sound occlusion
-                     // Msg("Parallel Occ: Thread %d",
-                     // std::hash<std::thread::id>{}(std::this_thread::get_id()));
-                  });
+    tbb::parallel_for(
+        tbb::blocked_range<size_t>(0, emitters_to_calc.size()),
+        [&](const tbb::blocked_range<size_t> &range) {
+          thread_local CRandom th_rng(
+              std::hash<std::thread::id>{}(std::this_thread::get_id()));
+          for (size_t i = range.begin(); i != range.end(); ++i) {
+            CSoundRender_Emitter *E = emitters_to_calc[i];
+            Fvector occluder[3];
+            float occ =
+                get_occlusion_impl(E->p_source.position, .2f, occluder, th_rng);
+            E->m_current_occ_value = occ;
+            E->m_occ_value_ready = true;
+          }
+        });
   }
 
   for (it = 0; it < s_targets.size(); it++) {
@@ -218,13 +223,19 @@ void CSoundRender_Core::statistic(CSound_stats *dest, CSound_stats_ext *ext) {
 float CSoundRender_Core::get_occlusion_to(const Fvector &hear_pt,
                                           const Fvector &snd_pt,
                                           float dispersion) {
+  return get_occlusion_to_impl(hear_pt, snd_pt, dispersion, ::Random);
+}
+
+float CSoundRender_Core::get_occlusion_to_impl(const Fvector &hear_pt,
+                                               const Fvector &snd_pt,
+                                               float dispersion, CRandom &RNG) {
   float occ_value = 1.f;
 
   if (0 != geom_SOM) {
     std::shared_lock<std::shared_mutex> lock(m_sound_model_mutex);
     // Calculate RAY params
     Fvector pos, dir;
-    pos.random_dir();
+    pos.random_dir(RNG);
     pos.mul(dispersion);
     pos.add(snd_pt);
     dir.sub(pos, hear_pt);
@@ -254,13 +265,18 @@ float CSoundRender_Core::get_occlusion_to(const Fvector &hear_pt,
 }
 
 float CSoundRender_Core::get_occlusion(Fvector &P, float R, Fvector *occ) {
+  return get_occlusion_impl(P, R, occ, ::Random);
+}
+
+float CSoundRender_Core::get_occlusion_impl(Fvector &P, float R, Fvector *occ,
+                                            CRandom &RNG) {
   float occ_value = 1.f;
 
   // Calculate RAY params
   Fvector base = listener_position();
   Fvector pos, dir;
   float range;
-  pos.random_dir();
+  pos.random_dir(RNG);
   pos.mul(R);
   pos.add(P);
   dir.sub(pos, base);
