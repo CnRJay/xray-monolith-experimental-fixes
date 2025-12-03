@@ -189,7 +189,7 @@ void R_dsgraph_structure::r_dsgraph_insert_dynamic(dxRender_Visual* pVisual, Fve
 	if (RI.val_bInvisible) return;
 
 	// strict-sorting selection
-	if (sh->flags.bStrictB2F)
+	if (sh->flags.bStrictB2F && !pVisual->dcast_ParticleCustom()) //credit v2v3v4 and LVutner
 	{
 		mapSorted_Node* N = mapSorted.insertInAnyWay(distSQ);
 		N->val.ssa = SSA;
