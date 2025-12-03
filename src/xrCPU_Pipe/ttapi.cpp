@@ -7,7 +7,7 @@ typedef struct TTAPI_WORKER_PARAMS
 	LPPTTAPI_WORKER_FUNC lpWorkerFunc;
 	LPVOID lpvWorkerFuncParams;
 	DWORD dwPadding[13];
-}* PTTAPI_WORKER_PARAMS;
+}*PTTAPI_WORKER_PARAMS;
 
 typedef PTTAPI_WORKER_PARAMS LPTTAPI_WORKER_PARAMS;
 
@@ -185,11 +185,12 @@ process2:
 	DWORD dwAffinitiMask = ID->affinity_mask;
 	DWORD dwCurrentMask = 0x01;
 
+	// Disable Main Thread Affinity Lock
 	// Setting affinity
-	while (! (dwAffinitiMask & dwCurrentMask))
-		dwCurrentMask <<= 1;
+	// while (! (dwAffinitiMask & dwCurrentMask))
+	// 	dwCurrentMask <<= 1;
 
-	SetThreadAffinityMask(GetCurrentThread(), dwCurrentMask);
+	// SetThreadAffinityMask(GetCurrentThread(), dwCurrentMask);
 	//Msg("Master Thread Affinity Mask : 0x%8.8X" , dwCurrentMask );
 
 	// Creating threads
@@ -199,15 +200,16 @@ process2:
 		ttapi_worker_params[i].vlFlag = 1;
 
 		if ((ttapi_threads_handles[i] = CreateThread(NULL, 0, &ttapiThreadProc, &ttapi_worker_params[i], 0, &dwThreadId)
-		) == NULL)
+			) == NULL)
 			return 0;
 
+		// Disable Worker Thread Affinity Lock
 		// Setting affinity
-		do
-			dwCurrentMask <<= 1;
-		while (! (dwAffinitiMask & dwCurrentMask));
+		// do
+		// 	dwCurrentMask <<= 1;
+		// while (! (dwAffinitiMask & dwCurrentMask));
 
-		SetThreadAffinityMask(ttapi_threads_handles[i], dwCurrentMask);
+		// SetThreadAffinityMask(ttapi_threads_handles[i], dwCurrentMask);
 		//Msg("Helper Thread #%u Affinity Mask : 0x%8.8X" , i + 1 , dwCurrentMask );
 
 		// Setting thread name
@@ -272,7 +274,7 @@ VOID ttapi_RunAllWorkers()
 
 VOID ttapi_Done()
 {
-	if (! ttapi_initialized)
+	if (!ttapi_initialized)
 		return;
 
 	// Asking helper threads to terminate
