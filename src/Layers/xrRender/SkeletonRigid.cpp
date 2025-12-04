@@ -3,10 +3,6 @@
 #pragma hdrstop
 
 #include "SkeletonCustom.h"
-#include <algorithm>
-#include <tbb/blocked_range.h>
-#include <tbb/parallel_for.h>
-
 
 #include "../../xrCore/profiler.h"
 
@@ -102,8 +98,7 @@ void CKinematics::CalculateBones(BOOL bForceExact) {
   RDEVICE.Statistic->Animation.Begin();
 #endif
 
-  // Bone_Calculate(bones->at(iRoot), &Fidentity);
-  Bone_Calculate_Parallel(bones->at(iRoot), &Fidentity);
+  Bone_Calculate(bones->at(iRoot), &Fidentity);
 #ifdef DEBUG
   check_kinematics(this, dbg_name.c_str());
   RDEVICE.Statistic->Animation.End();
@@ -248,69 +243,6 @@ void CKinematics::Bone_Calculate(CBoneData *bd, Fmatrix *parent) {
   for (xr_vector<CBoneData *>::iterator C = bd->children.begin();
        C != bd->children.end(); C++)
     Bone_Calculate(*C, &BONE_INST.mTransform);
-}
-
-bool CKinematics::HasCallbacks(const CBoneData *bd) {
-  if (LL_GetBoneInstance(bd->GetSelfID()).callback())
-    return true;
-  for (const auto *child : bd->children) {
-    if (HasCallbacks(child))
-      return true;
-  }
-  return false;
-}
-
-void CKinematics::Bone_Calculate_Simple(CBoneData *bd, Fmatrix *parent) {
-  u16 SelfID = bd->GetSelfID();
-  CBoneInstance &BONE_INST = LL_GetBoneInstance(SelfID);
-
-  CLBone(bd, BONE_INST, parent, u8(-1));
-
-  if (!bd->children.empty()) {
-    tbb::parallel_for(tbb::blocked_range<size_t>(0, bd->children.size()),
-                      [&](const tbb::blocked_range<size_t> &r) {
-                        for (size_t i = r.begin(); i != r.end(); ++i) {
-                          Bone_Calculate_Simple(bd->children[i],
-                                                &BONE_INST.mTransform);
-                        }
-                      });
-  }
-}
-
-void CKinematics::Bone_Calculate_Parallel(CBoneData *bd, Fmatrix *parent) {
-  u16 SelfID = bd->GetSelfID();
-  CBoneInstance &BONE_INST = LL_GetBoneInstance(SelfID);
-
-  CLBone(bd, BONE_INST, parent, u8(-1));
-
-  if (bd->children.empty())
-    return;
-
-  xr_vector<CBoneData *> complex_children;
-  xr_vector<CBoneData *> simple_children;
-  complex_children.reserve(bd->children.size());
-  simple_children.reserve(bd->children.size());
-
-  for (auto *child : bd->children) {
-    if (HasCallbacks(child))
-      complex_children.push_back(child);
-    else
-      simple_children.push_back(child);
-  }
-
-  for (auto *child : complex_children) {
-    Bone_Calculate_Parallel(child, &BONE_INST.mTransform);
-  }
-
-  if (!simple_children.empty()) {
-    tbb::parallel_for(tbb::blocked_range<size_t>(0, simple_children.size()),
-                      [&](const tbb::blocked_range<size_t> &r) {
-                        for (size_t i = r.begin(); i != r.end(); ++i) {
-                          Bone_Calculate_Simple(simple_children[i],
-                                                &BONE_INST.mTransform);
-                        }
-                      });
-  }
 }
 
 void CKinematics::BoneChain_Calculate(const CBoneData *bd, CBoneInstance &bi,
