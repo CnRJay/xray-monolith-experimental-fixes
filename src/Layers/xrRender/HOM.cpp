@@ -7,7 +7,6 @@
 #include "../../xrEngine/GameFont.h"
 #include "occRasterizer.h"
 
-
 #include "dxRenderDeviceRender.h"
 
 #include <tbb/blocked_range.h>
@@ -209,48 +208,53 @@ void CHOM::Render_DB(CFrustum &base) {
 #endif
 
   // Perfrom selection, sorting, culling
-  for (; it != end; it++) {
-    // Control skipping
-    occTri &T = m_pTris[it->id];
-    u32 next = _frame + ::Random.randI(3, 10);
+  tbb::parallel_for(tbb::blocked_range<CDB::RESULT *>(it, end),
+                    [&](const tbb::blocked_range<CDB::RESULT *> &range) {
+                      sPoly src, dst;
+                      for (CDB::RESULT *I = range.begin(); I != range.end();
+                           ++I) {
+                        // Control skipping
+                        occTri &T = m_pTris[I->id];
+                        u32 next = _frame + ((I->id + _frame) % 8 + 3);
 
-    // Test for good occluder - should be improved :)
-    if (!(T.flags || (T.plane.classify(COP) > 0))) {
-      T.skip = next;
-      continue;
-    }
+                        // Test for good occluder - should be improved :)
+                        if (!(T.flags || (T.plane.classify(COP) > 0))) {
+                          T.skip = next;
+                          continue;
+                        }
 
-    // Access to triangle vertices
-    CDB::TRI &t = m_pModel->get_tris()[it->id];
-    Fvector *v = m_pModel->get_verts();
-    src.clear();
-    dst.clear();
-    src.push_back(v[t.verts[0]]);
-    src.push_back(v[t.verts[1]]);
-    src.push_back(v[t.verts[2]]);
-    sPoly *P = clip.ClipPoly(src, dst);
-    if (0 == P) {
-      T.skip = next;
-      continue;
-    }
+                        // Access to triangle vertices
+                        CDB::TRI &t = m_pModel->get_tris()[I->id];
+                        Fvector *v = m_pModel->get_verts();
+                        src.clear();
+                        dst.clear();
+                        src.push_back(v[t.verts[0]]);
+                        src.push_back(v[t.verts[1]]);
+                        src.push_back(v[t.verts[2]]);
+                        sPoly *P = clip.ClipPoly(src, dst);
+                        if (0 == P) {
+                          T.skip = next;
+                          continue;
+                        }
 
-    // XForm and Rasterize
+      // XForm and Rasterize
 #ifdef DEBUG
-    tris_in_frame_visible++;
+                        InterlockedIncrement((long *)&tris_in_frame_visible);
 #endif
-    u32 pixels = 0;
-    int limit = int(P->size()) - 1;
-    for (int v = 1; v < limit; v++) {
-      m_xform.transform(T.raster[0], (*P)[0]);
-      m_xform.transform(T.raster[1], (*P)[v + 0]);
-      m_xform.transform(T.raster[2], (*P)[v + 1]);
-      pixels += Raster.rasterize(&T);
-    }
-    if (0 == pixels) {
-      T.skip = next;
-      continue;
-    }
-  }
+                        u32 pixels = 0;
+                        int limit = int(P->size()) - 1;
+                        for (int v = 1; v < limit; v++) {
+                          m_xform.transform(T.raster[0], (*P)[0]);
+                          m_xform.transform(T.raster[1], (*P)[v + 0]);
+                          m_xform.transform(T.raster[2], (*P)[v + 1]);
+                          pixels += Raster.rasterize(&T);
+                        }
+                        if (0 == pixels) {
+                          T.skip = next;
+                          continue;
+                        }
+                      }
+                    });
 }
 
 void CHOM::Render(CFrustum &base) {
