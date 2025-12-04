@@ -12,28 +12,33 @@ class CSE_Abstract;
 class CScriptBinderObject;
 class NET_Packet;
 
-class CScriptBinder
-{
+#include <luabind/functor.hpp>
+
+class CScriptBinder {
 protected:
-	CScriptBinderObject* m_object;
+  CScriptBinderObject *m_object;
 
 public:
-	CScriptBinder();
-	virtual ~CScriptBinder();
-	void init();
-	void clear();
-	virtual void reinit();
-	virtual void Load(LPCSTR section);
-	virtual void reload(LPCSTR section);
-	virtual BOOL net_Spawn(CSE_Abstract* DC);
-	virtual void net_Destroy();
-	virtual void shedule_Update(u32 time_delta);
-	virtual void save(NET_Packet& output_packet);
-	virtual void load(IReader& input_packet);
-	virtual BOOL net_SaveRelevant();
-	virtual void net_Relcase(CObject* object);
-	void set_object(CScriptBinderObject* object);
-	IC CScriptBinderObject* object();
+  CScriptBinder();
+  virtual ~CScriptBinder();
+  void init();
+  void clear();
+  virtual void reinit();
+  virtual void Load(LPCSTR section);
+  virtual void reload(LPCSTR section);
+  virtual BOOL net_Spawn(CSE_Abstract *DC);
+  virtual void net_Destroy();
+  virtual void shedule_Update(u32 time_delta);
+  virtual void save(NET_Packet &output_packet);
+  virtual void load(IReader &input_packet);
+  virtual BOOL net_SaveRelevant();
+  virtual void net_Relcase(CObject *object);
+  void set_object(CScriptBinderObject *object);
+  IC CScriptBinderObject *object();
+
+protected:
+  luabind::functor<void> m_functor_update;
+  bool m_functor_update_initialized;
 };
 
 #include "script_binder_inline.h"

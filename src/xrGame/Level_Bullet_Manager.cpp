@@ -16,6 +16,7 @@
 #include "mt_config.h"
 #include "reward_event_generator.h"
 
+
 #include "../Include/xrRender/Kinematics.h"
 #include "../Include/xrRender/UIRender.h"
 
@@ -302,7 +303,8 @@ void CBulletManager::UpdateWorkload() {
   //	VERIFY						( m_thread_id ==
   // GetCurrentThreadId() );
 
-  rq_storage.r_clear();
+  // rq_storage.r_clear();
+  collide::rq_results rq_storage;
 
   u32 const time_delta = Device.dwTimeDelta;
   if (!time_delta)
@@ -845,31 +847,35 @@ static bool try_update_bullet(SBullet &bullet, Fvector const &gravity,
   bullet.life_time = time;
 
   // demonized: bullet on update callback
-  lua_lock.Enter();
-  ::luabind::functor<void> funct;
-  if (ai().script_engine().functor("_G.CBulletOnUpdate", funct)) {
-    ::luabind::object table = ::luabind::newtable(ai().script_engine().lua());
-    populateBulletTable(table, bullet.bullet_pos, bullet.dir, bullet.speed,
-                        bullet.fly_dist, bullet.catridgeSection,
-                        bullet.bulletId, bullet.weapon_id, bullet.parent_id,
-                        65535, NULL, bullet.life_time, -1);
-    funct(table);
+  // AVO: Lua cannot be accessed from worker threads. This callback is
+  // incompatible with mtBullets.
+  if (!g_mt_config.test(mtBullets)) {
+    lua_lock.Enter();
+    ::luabind::functor<void> funct;
+    if (ai().script_engine().functor("_G.CBulletOnUpdate", funct)) {
+      ::luabind::object table = ::luabind::newtable(ai().script_engine().lua());
+      populateBulletTable(table, bullet.bullet_pos, bullet.dir, bullet.speed,
+                          bullet.fly_dist, bullet.catridgeSection,
+                          bullet.bulletId, bullet.weapon_id, bullet.parent_id,
+                          65535, NULL, bullet.life_time, -1);
+      funct(table);
 
-    /*
-    ::luabind::object output = funct(table);
+      /*
+      ::luabind::object output = funct(table);
 
-    if (output && output.type() == LUA_TTABLE) {
-            bullet.bullet_pos =
-    ::luabind::object_cast<Fvector>(table["position"]); bullet.dir =
-    ::luabind::object_cast<Fvector>(table["direction"]); bullet.speed =
-    ::luabind::object_cast<float>(table["speed"]); bullet.fly_dist =
-    ::luabind::object_cast<float>(table["distance"]); bullet.weapon_id =
-    ::luabind::object_cast<u16>(table["weapon_id"]); bullet.parent_id =
-    ::luabind::object_cast<u16>(table["parent_id"]);
+      if (output && output.type() == LUA_TTABLE) {
+              bullet.bullet_pos =
+      ::luabind::object_cast<Fvector>(table["position"]); bullet.dir =
+      ::luabind::object_cast<Fvector>(table["direction"]); bullet.speed =
+      ::luabind::object_cast<float>(table["speed"]); bullet.fly_dist =
+      ::luabind::object_cast<float>(table["distance"]); bullet.weapon_id =
+      ::luabind::object_cast<u16>(table["weapon_id"]); bullet.parent_id =
+      ::luabind::object_cast<u16>(table["parent_id"]);
+      }
+      */
     }
-    */
+    lua_lock.Leave();
   }
-  lua_lock.Leave();
 
   return (true);
 }

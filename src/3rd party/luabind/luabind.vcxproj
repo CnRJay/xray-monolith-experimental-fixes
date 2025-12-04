@@ -88,7 +88,7 @@
       <OmitFramePointers>true</OmitFramePointers>
       <Optimization>MaxSpeed</Optimization>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
-      <PreprocessorDefinitions>WIN32;NDEBUG;LUABIND_BUILDING;_SECURE_SCL=0;_HAS_ITERATOR_DEBUGGING=0;LUABIND_NO_EXCEPTIONS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;LUABIND_BUILDING;_SECURE_SCL=0;_HAS_ITERATOR_DEBUGGING=0;LUABIND_NO_EXCEPTIONS;%(PreprocessorDefinitions);LUAJIT_ENABLE_GC64</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <UndefinePreprocessorDefinitions>USE_LUAJIT_ONE;MBCS</UndefinePreprocessorDefinitions>
       <WholeProgramOptimization>true</WholeProgramOptimization>
@@ -124,7 +124,7 @@
       <OmitFramePointers>true</OmitFramePointers>
       <Optimization>MaxSpeed</Optimization>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
-      <PreprocessorDefinitions>WIN32;NDEBUG;LUABIND_BUILDING;_SECURE_SCL=0;_HAS_ITERATOR_DEBUGGING=0;LUABIND_NO_EXCEPTIONS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;LUABIND_BUILDING;_SECURE_SCL=0;_HAS_ITERATOR_DEBUGGING=0;LUABIND_NO_EXCEPTIONS;%(PreprocessorDefinitions);LUAJIT_ENABLE_GC64</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <UndefinePreprocessorDefinitions>USE_LUAJIT_ONE;MBCS</UndefinePreprocessorDefinitions>
       <WholeProgramOptimization>true</WholeProgramOptimization>
@@ -159,7 +159,7 @@
       <OmitFramePointers>true</OmitFramePointers>
       <Optimization>MaxSpeed</Optimization>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
-      <PreprocessorDefinitions>XRCORE_PROFILER;WIN32;NDEBUG;LUABIND_BUILDING;_SECURE_SCL=0;_HAS_ITERATOR_DEBUGGING=0;LUABIND_NO_EXCEPTIONS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>XRCORE_PROFILER;WIN32;NDEBUG;LUABIND_BUILDING;_SECURE_SCL=0;_HAS_ITERATOR_DEBUGGING=0;LUABIND_NO_EXCEPTIONS;%(PreprocessorDefinitions);LUAJIT_ENABLE_GC64</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <UndefinePreprocessorDefinitions>USE_LUAJIT_ONE;MBCS</UndefinePreprocessorDefinitions>
       <WholeProgramOptimization>false</WholeProgramOptimization>
@@ -195,7 +195,7 @@
       <OmitFramePointers>false</OmitFramePointers>
       <Optimization>Disabled</Optimization>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
-      <PreprocessorDefinitions>USE_VERIFY_IN_RELEASE;WIN32;NDEBUG;LUABIND_BUILDING;_SECURE_SCL=0;_HAS_ITERATOR_DEBUGGING=0;LUABIND_NO_EXCEPTIONS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>USE_VERIFY_IN_RELEASE;WIN32;NDEBUG;LUABIND_BUILDING;_SECURE_SCL=0;_HAS_ITERATOR_DEBUGGING=0;LUABIND_NO_EXCEPTIONS;%(PreprocessorDefinitions);LUAJIT_ENABLE_GC64</PreprocessorDefinitions>
       <StringPooling>false</StringPooling>
       <UndefinePreprocessorDefinitions>USE_LUAJIT_ONE;MBCS</UndefinePreprocessorDefinitions>
       <WholeProgramOptimization>false</WholeProgramOptimization>
