@@ -101,7 +101,7 @@ void SetThreadName(DWORD dwThreadID, LPCSTR szThreadName)
 	{
 		RaiseException(0x406D1388, 0, sizeof(info) / sizeof(DWORD), (ULONG_PTR*)&info);
 	}
-	__except (EXCEPTION_CONTINUE_EXECUTION)
+	__except (EXCEPTION_EXECUTE_HANDLER)
 	{
 	}
 }
@@ -231,6 +231,9 @@ DWORD ttapi_GetWorkersCount()
 // Assume that caller is smart enough to use ttapi_GetWorkersCount() to get number of available slots
 VOID ttapi_AddWorker(LPPTTAPI_WORKER_FUNC lpWorkerFunc, LPVOID lpvWorkerFuncParams)
 {
+	if (ttapi_assigned_workers >= ttapi_workers_count)
+		return;
+
 	// Assigning parameters
 	ttapi_worker_params[ttapi_assigned_workers].lpWorkerFunc = lpWorkerFunc;
 	ttapi_worker_params[ttapi_assigned_workers].lpvWorkerFuncParams = lpvWorkerFuncParams;
@@ -240,6 +243,9 @@ VOID ttapi_AddWorker(LPPTTAPI_WORKER_FUNC lpWorkerFunc, LPVOID lpvWorkerFuncPara
 
 VOID ttapi_RunAllWorkers()
 {
+	if (!ttapi_assigned_workers)
+		return;
+
 	DWORD ttapi_thread_workers = (ttapi_assigned_workers - 1);
 	//unsigned __int64 Start,Stop;
 

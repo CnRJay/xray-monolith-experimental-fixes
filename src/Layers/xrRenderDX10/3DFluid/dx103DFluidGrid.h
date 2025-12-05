@@ -7,6 +7,7 @@ struct VS_INPUT_FLUIDSIM_STRUCT;
 class dx103DFluidGrid
 {
 public:
+	dx103DFluidGrid();
 	~dx103DFluidGrid();
 
 	void Initialize(int gridWidth, int gridHeight, int gridDepth);

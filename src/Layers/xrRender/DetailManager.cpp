@@ -270,10 +270,6 @@ void CDetailManager::UpdateVisibleM() {
   View.CreateFromMatrix(RDEVICE.mFullTransform_saved,
                         FRUSTUM_P_LRTB + FRUSTUM_P_FAR);
 
-  CFrustum View_old;
-  Fmatrix Viewm_old = RDEVICE.mFullTransform;
-  View_old.CreateFromMatrix(Viewm_old, FRUSTUM_P_LRTB + FRUSTUM_P_FAR);
-
   float fade_limit = dm_fade;
   fade_limit = fade_limit * fade_limit;
   float fade_start = 1.f;
@@ -284,6 +280,13 @@ void CDetailManager::UpdateVisibleM() {
   // Initialize 'vis' and 'cache'
   // Collect objects for rendering
   RDEVICE.Statistic->RenderDUMP_DT_VIS.Begin();
+
+  // Clean up the visibility list from the previous frame
+  for (int i = 0; i < 3; ++i) {
+      for (auto& vec : m_visibles[i]) {
+          vec.clear();
+      }
+  }
 
   // Thread-local storage for visibility lists
   struct ThreadVisibles {
@@ -320,10 +323,6 @@ void CDetailManager::UpdateVisibleM() {
               Slot *PS = *MS.slots[_i];
               Slot &S = *PS;
 
-              //				if ( ( _i + 1 ) < dwCC );
-              //					_mm_prefetch( (char *)
-              //*MS.slots[ _i + 1 ]  , _MM_HINT_T1 );
-
               // if slot empty - continue
               if (S.empty) {
                 continue;
@@ -351,15 +350,13 @@ void CDetailManager::UpdateVisibleM() {
                   S.hidden = true;
                   continue;
                 }
-                if (dist_sq > fade_limit)
-                  continue;
+                
                 float alpha = (dist_sq < fade_start)
                                   ? 0.f
                                   : (dist_sq - fade_start) / fade_range;
                 float alpha_i = 1.f - alpha;
                 float dist_sq_rcp = 1.f / dist_sq;
 
-                // S.frame = RDEVICE.dwFrame + Random.randI(15, 30);
                 u32 seed = (u32)(S.sx) ^ (u32)(S.sz) ^ RDEVICE.dwFrame;
                 S.frame = RDEVICE.dwFrame + 15 + (seed % 15);
 
@@ -371,6 +368,9 @@ void CDetailManager::UpdateVisibleM() {
                   sp.r_items[0].clear_not_free();
                   sp.r_items[1].clear_not_free();
                   sp.r_items[2].clear_not_free();
+
+                  if (sp.items.empty())
+                    continue;
 
                   float R = objects[sp.id]->bv_sphere.R;
                   float Rq_drcp =
@@ -405,8 +405,6 @@ void CDetailManager::UpdateVisibleM() {
                     Item.alpha_target = 1;
                     Item.distance = dist_sq;
                     Item.position = S.vis.sphere.P;
-                    // 2
-                    // visible[vis_id][sp.id].push_back(&Item);
                   }
                 }
               }
@@ -433,7 +431,7 @@ void CDetailManager::UpdateVisibleM() {
   for (const auto &tv : tls) {
     for (int i = 0; i < 3; ++i) {
       for (u32 obj = 0; obj < objects.size(); ++obj) {
-        auto &src = tv.lists[i][obj];
+        const auto &src = tv.lists[i][obj];
         auto &dst = m_visibles[i][obj];
         dst.insert(dst.end(), src.begin(), src.end());
       }
