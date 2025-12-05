@@ -964,14 +964,8 @@ int APIENTRY WinMain_impl(HINSTANCE hInstance, HINSTANCE hPrevInstance,
   compute_build_id();
   Core._initialize("xray", NULL, TRUE, fsgame[0] ? fsgame : NULL);
 
-  // Process Affinity Masking to avoid Core 0 on CPU's with more that 4 cores
-  unsigned int threads = std::thread::hardware_concurrency();
-  if (threads > 4) {
-    DWORD_PTR mask = (1ULL << threads) - 2;
-    SetProcessAffinityMask(GetCurrentProcess(), mask);
-    Msg("COMMAND LINE: CPU Affinity Mask set to %p (Threads: %d)", mask,
-        threads);
-  }
+ // set high priority instead of masking 0. will need to test how windows and linux schedulers handle this
+  SetPriorityClass(GetCurrentProcess(), HIGH_PRIORITY_CLASS);
 
   InitSettings();
   Msg(XRAY_MONOLITH_VERSION);

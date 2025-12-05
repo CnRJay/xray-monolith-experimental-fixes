@@ -405,7 +405,9 @@ void CParticleGroup::SItem::OnFrame(u32 u_dt, const CPGDef::SEffect &def,
       }
 
       void operator()(const tbb::blocked_range<int> &range) {
-        CollisionContext ctx;
+        static thread_local CollisionContext ctx;
+        ctx.r_spatial.clear();
+        ctx.r_temp.r_clear();
         for (int i = range.begin(); i != range.end(); ++i) {
           CParticleEffect *E = static_cast<CParticleEffect *>(children[i]);
           if (E) {
@@ -459,7 +461,9 @@ void CParticleGroup::SItem::OnFrame(u32 u_dt, const CPGDef::SEffect &def,
       }
 
       void operator()(const tbb::blocked_range<int> &range) {
-        CollisionContext ctx;
+        static thread_local CollisionContext ctx;
+        ctx.r_spatial.clear();
+        ctx.r_temp.r_clear();
         for (int i = range.begin(); i != range.end(); ++i) {
           CParticleEffect *E = static_cast<CParticleEffect *>(children[i]);
           if (E) {
