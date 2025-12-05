@@ -145,7 +145,7 @@ void dxRainRender::Render(CEffect_Rain& owner)
 		float dt = Device.fTimeDelta;
 		one.P.mad(one.D, one.fSpeed * dt);
 
-		Device.Statistic->TEST1.Begin();
+		// Device.Statistic->TEST1.Begin();
 		Fvector wdir;
 		wdir.set(one.P.x - vEye.x, 0, one.P.z - vEye.z);
 		float wlen = wdir.square_magnitude();
@@ -205,7 +205,7 @@ void dxRainRender::Render(CEffect_Rain& owner)
 			}
 			//.			Device.Statistic->TEST3.End();
 		}
-		Device.Statistic->TEST1.End();
+		// Device.Statistic->TEST1.End(); // Optimization: Remove profiling in release
 
 		// Build line
 		Fvector& pos_head = one.P;
