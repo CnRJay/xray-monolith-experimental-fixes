@@ -144,8 +144,8 @@ void i_scan(RasterCtx &Ctx, int curY, float leftX, float lhx, float rightX,
   occTri **pFrame = Raster.get_frame();
   float *pDepth = Raster.get_depth();
 
-  // LOCK SCANLINE
-  tbb::spin_mutex::scoped_lock lock(Raster.m_locks[curY]);
+  // lock scanline
+  tbb::spin_mutex::scoped_lock lock(Raster.m_locks[curY].mutex);
 
   // left connector
   int i_base = curY * occ_dim;
