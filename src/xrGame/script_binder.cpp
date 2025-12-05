@@ -52,8 +52,6 @@ void CScriptBinder::reinit() {
       clear();
     }
   }
-  m_functor_update.reset();
-  m_functor_update_initialized = false;
 #ifdef DEBUG_MEMORY_MANAGER
   if (g_bMEMO) {
     //		lua_gc
@@ -175,11 +173,8 @@ void CScriptBinder::set_object(CScriptBinderObject *object) {
       luabind::object self(ai().script_engine().lua(), m_object);
       luabind::object update_func = self["update"];
       if (update_func.type() == LUA_TFUNCTION) {
-        update_func.pushvalue();
-        luabind::detail::lua_reference ref;
-        ref.set(ai().script_engine().lua());
         m_functor_update =
-            luabind::functor<void>(ai().script_engine().lua(), ref);
+            luabind::object_cast<luabind::functor<void>>(update_func);
         m_functor_update_initialized = true;
       }
     }
