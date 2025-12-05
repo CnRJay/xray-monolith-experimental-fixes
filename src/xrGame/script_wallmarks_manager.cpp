@@ -64,6 +64,11 @@ void ScriptWallmarksManager::PlaceWallmark(Fvector dir, Fvector start_pos,
 	float trace_dist, float wallmark_size, LPCSTR section,
 	CScriptGameObject* ignore_obj, float ttl, float rotation)
 {
+	if (!_valid(start_pos) || !_valid(dir)) {
+		Msg("! [Error] ScriptWallmarksManager::PlaceWallmark received invalid coordinates!");
+		return;
+	}
+
 	collide::rq_result result;
 	BOOL reach_wall =
 		Level().ObjectSpace.RayPick(
@@ -97,6 +102,11 @@ void ScriptWallmarksManager::PlaceWallmark(Fvector dir, Fvector start_pos,
 void ScriptWallmarksManager::PlaceSkeletonWallmark(CScriptGameObject* obj, LPCSTR section, 
 	Fvector start, Fvector dir, float size, float ttl)
 {
+	if (!_valid(start) || !_valid(dir)) {
+		Msg("! [Error] ScriptWallmarksManager::PlaceSkeletonWallmark received invalid coordinates!");
+		return;
+	}
+
 	if (!obj)
 	{
 		Msg("[ScriptWallmarksManager] object is null!");
