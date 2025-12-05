@@ -1,4 +1,4 @@
-﻿// CRender.cpp: implementation of the CRender class.
+// CRender.cpp: implementation of the CRender class.
 //
 //////////////////////////////////////////////////////////////////////
 
@@ -10,6 +10,8 @@
 #include "../../xrEngine/xr_object.h"
 #include "../../xrEngine/fmesh.h"
 #include "../xrRender/SkeletonCustom.h"
+#include <tbb/parallel_for.h>
+#include <tbb/blocked_range.h>
 #include "../xrRender/lighttrack.h"
 #include "../xrRender/dxRenderDeviceRender.h"
 #include "../xrRender/dxWallMarkArray.h"
@@ -580,6 +582,64 @@ void CRender::Calculate()
 					if (R) R->update(O);
 				}
 			}
+
+			// skeleton pre calc before frustum
+			{
+				xr_vector<CKinematics*> skeletons_to_update;
+				skeletons_to_update.reserve(lstRenderables.size());
+
+				for (u32 o_it = 0; o_it < lstRenderables.size(); o_it++)
+				{
+					ISpatial* spatial = lstRenderables[o_it];
+					spatial->spatial_updatesector();
+					CSector* sector = (CSector*)spatial->spatial.sector;
+					if (!sector) continue;
+
+					if (PortalTraverser.i_marker != sector->r_marker) continue;
+
+					if (!(spatial->spatial.type & STYPE_RENDERABLE)) continue;
+
+					// Check if it is a skeleton
+					IRenderable* renderable = spatial->dcast_Renderable();
+					if (!renderable) continue;
+
+					dxRender_Visual* V = (dxRender_Visual*)renderable->renderable.visual;
+					if (V->Type != MT_SKELETON_ANIM && V->Type != MT_SKELETON_RIGID) continue;
+
+					// Check frustums
+					bool visible_in_frustum = false;
+					for (u32 v_it = 0; v_it < sector->r_frustums.size(); v_it++)
+					{
+						CFrustum& view = sector->r_frustums[v_it];
+						if (view.testSphere_dirty(spatial->spatial.sphere.P, spatial->spatial.sphere.R)) {
+							visible_in_frustum = true;
+							break;
+						}
+					}
+					if (!visible_in_frustum) continue;
+
+					// Check HOM
+					vis_data& v_orig = V->vis;
+					if (Device.dwFrame < v_orig.hom_frame) {
+						skeletons_to_update.push_back((CKinematics*)V);
+					}
+					else {
+						vis_data v_copy = v_orig;
+						v_copy.box.xform(renderable->renderable.xform);
+						if (HOM.visible(v_copy.box)) {
+							skeletons_to_update.push_back((CKinematics*)V);
+						}
+					}
+				}
+
+				tbb::parallel_for(tbb::blocked_range<size_t>(0, skeletons_to_update.size()),
+					[&](const tbb::blocked_range<size_t>& range) {
+						for (size_t i = range.begin(); i != range.end(); ++i) {
+							skeletons_to_update[i]->CalculateBones(TRUE);
+						}
+					});
+			}
+
 			for (u32 o_it = 0; o_it < lstRenderables.size(); o_it++)
 			{
 				ISpatial* spatial = lstRenderables[o_it];
