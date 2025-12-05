@@ -222,6 +222,7 @@ public:
 	virtual void OnEvent(NET_Packet& P, u16 type);
 	virtual void feel_touch_new(CObject* O);
 	virtual void feel_touch_delete(CObject* O);
+	void feel_sound_new();
 	void on_ownership_reject(CObject* O, bool just_before_destroy);
 	virtual void renderable_Render();
 	virtual void Exec_Look(float dt);

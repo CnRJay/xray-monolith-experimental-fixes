@@ -353,6 +353,8 @@ public:
 /// definition (Sound Callback)
 typedef void __stdcall sound_event(ref_sound_data_ptr S, float range);
 
+typedef std::pair<ref_sound_data_ptr, float> SoundEvent;
+
 /// definition (Sound Manager Interface)
 class XRSOUND_API CSound_manager_interface
 {
@@ -400,6 +402,7 @@ public:
 
 	virtual void object_relcase(CObject* obj) = 0;
 	virtual const Fvector& listener_position() = 0;
+	virtual const xr_vector<SoundEvent>& GetEvents() const = 0;
 #ifdef __BORLANDC__
 	virtual SoundEnvironment_LIB*	get_env_library			()																						= 0;
 	virtual void					refresh_env_library		()																						= 0;

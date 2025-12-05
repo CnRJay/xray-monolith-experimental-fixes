@@ -15,6 +15,10 @@
 #include "../../stalker_movement_manager_smart_cover.h"
 #include "../../stalker_animation_manager.h"
 #include "CustomZone.h"
+#include "../../sound_memory_manager.h"
+
+#include <tbb/parallel_for.h>
+#include <tbb/enumerable_thread_specific.h>
 
 #ifdef DEBUG
 #	include "../../ai_debug.h"
@@ -112,4 +116,86 @@ void CAI_Stalker::feel_touch_delete(CObject* O)
 		return;
 
 	m_ignored_touched_objects.erase(i);
+}
+
+void CAI_Stalker::feel_sound_new()
+{
+	if (!g_Alive()) return;
+
+	// Get all playing sounds
+	const xr_vector<SoundEvent>& events = ::Sound->GetEvents();
+	if (events.empty()) return;
+
+	tbb::enumerable_thread_specific<xr_vector<SoundEvent>> audible_sounds_tls;
+
+	Fvector my_pos = Position();
+	float hearing_threshold = memory().sound().threshold();
+
+	tbb::parallel_for(tbb::blocked_range<size_t>(0, events.size()),
+		[&](const tbb::blocked_range<size_t>& r)
+		{
+			xrXRC xrc_local;
+			collide::rq_results r_temp_local;
+			xr_vector<ISpatial*> r_spatial_local;
+			collide::rq_results results;
+
+			xr_vector<SoundEvent>& local_audible = audible_sounds_tls.local();
+
+			for (size_t i = r.begin(); i != r.end(); ++i)
+			{
+				const SoundEvent& event = events[i];
+				ref_sound_data_ptr sd = event.first;
+				
+				if (!sd || !sd->feedback) continue;
+				
+				const CSound_params* p = sd->feedback->get_params();
+				if (!p) continue;
+
+				Fvector snd_pos = p->position;
+				float power = event.second;
+				
+				float dist_sqr = my_pos.distance_to_sqr(snd_pos);
+				float max_dist = power * hearing_threshold;
+				
+				if (dist_sqr > max_dist * max_dist) continue;
+
+				float dist = _sqrt(dist_sqr);
+
+				if (dist < EPS_L) {
+					local_audible.push_back(event);
+					continue;
+				}
+
+				// Check if sound is occluded by static geometry
+				collide::ray_defs rq(my_pos, Fvector().sub(snd_pos, my_pos).normalize(), dist, CDB::OPT_ONLYNEAREST | CDB::OPT_CULL, collide::rqtStatic);
+				
+				BOOL hit = Level().ObjectSpace.RayQueryParallel(results, rq, NULL, NULL, NULL, this, xrc_local, r_temp_local, r_spatial_local);
+				
+				if (hit) {
+					continue;
+				}
+
+				// the sound is audible here
+				local_audible.push_back(event);
+			}
+		}
+	);
+
+	for (const auto& local_audible : audible_sounds_tls)
+	{
+		for (const auto& event : local_audible)
+		{
+			ref_sound_data_ptr sd = event.first;
+			const CSound_params* p = sd->feedback->get_params();
+			if (!p) continue;
+
+			memory().sound().feel_sound_new(
+				sd->g_object, 
+				sd->g_type, 
+				sd->g_userdata, 
+				p->position, 
+				event.second
+			);
+		}
+	}
 }

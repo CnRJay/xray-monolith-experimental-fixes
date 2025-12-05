@@ -105,6 +105,7 @@ public:
 public:
 	IC void set_threshold(float threshold);
 	IC void restore_threshold();
+	IC float threshold() const;
 
 public:
 	void save(NET_Packet& packet) const;

@@ -27,7 +27,7 @@ protected:
   CSoundRender_Environment *e_target_ptr;
 
 public:
-  typedef std::pair<ref_sound_data_ptr, float> event;
+  typedef SoundEvent event;
   xr_vector<event> s_events;
 
 public:
@@ -134,6 +134,7 @@ public:
   virtual BOOL i_locked() { return bLocked; }
 
   virtual void object_relcase(CObject *obj);
+  virtual const xr_vector<SoundEvent>& GetEvents() const override { return s_events; }
   void i_create_all_sources();
 
   virtual float get_occlusion_to(const Fvector &hear_pt, const Fvector &snd_pt,

@@ -53,6 +53,11 @@ IC void CSoundMemoryManager::set_threshold(float threshold)
 	VERIFY(_valid(m_sound_threshold));
 }
 
+IC float CSoundMemoryManager::threshold() const
+{
+	return m_sound_threshold;
+}
+
 IC void CSoundMemoryManager::restore_threshold()
 {
 	m_sound_threshold = m_min_sound_threshold;
