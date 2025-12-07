@@ -10,6 +10,7 @@
 #include <tbb/blocked_range2d.h>
 #include <tbb/enumerable_thread_specific.h>
 #include <tbb/parallel_for.h>
+#include <tbb/task_group.h>
 
 
 #ifdef _EDITOR
@@ -300,132 +301,133 @@ void CDetailManager::UpdateVisibleM() {
     return tv;
   });
 
-  tbb::parallel_for(
-      tbb::blocked_range2d<u32>(0, dm_cache1_line, 0, dm_cache1_line),
-      [&](const tbb::blocked_range2d<u32> &r) {
+  tbb::task_group tg;
+  for (u32 _mz = 0; _mz < dm_cache1_line; ++_mz) {
+    for (u32 _mx = 0; _mx < dm_cache1_line; ++_mx) {
+      CacheSlot1 &MS = cache_level1[_mz][_mx];
+      if (MS.empty) {
+        continue;
+      }
+
+      tg.run([&, _mz, _mx]() {
         ThreadVisibles &tv = tls.local();
-        for (u32 _mz = r.rows().begin(); _mz != r.rows().end(); ++_mz) {
-          for (u32 _mx = r.cols().begin(); _mx != r.cols().end(); ++_mx) {
-            CacheSlot1 &MS = cache_level1[_mz][_mx];
-            if (MS.empty) {
-              continue;
-            }
-            u32 mask = 0xff;
-            u32 res = View.testSphere(MS.vis.sphere.P, MS.vis.sphere.R, mask);
-            if (fcvNone == res) {
+        CacheSlot1 &MS = cache_level1[_mz][_mx];
+
+        u32 mask = 0xff;
+        u32 res = View.testSphere(MS.vis.sphere.P, MS.vis.sphere.R, mask);
+        if (fcvNone == res) {
+          return; // invisible-view frustum
+        }
+        // test slots
+
+        u32 dwCC = dm_cache1_count * dm_cache1_count;
+
+        for (u32 _i = 0; _i < dwCC; _i++) {
+          Slot *PS = *MS.slots[_i];
+          Slot &S = *PS;
+
+          // if slot empty - continue
+          if (S.empty) {
+            continue;
+          }
+
+          // if upper test = fcvPartial - test inner slots
+          if (fcvPartial == res) {
+            u32 _mask = mask;
+            u32 _res = View.testSphere(S.vis.sphere.P, S.vis.sphere.R, _mask);
+            if (fcvNone == _res) {
               continue; // invisible-view frustum
             }
-            // test slots
-
-            u32 dwCC = dm_cache1_count * dm_cache1_count;
-
-            for (u32 _i = 0; _i < dwCC; _i++) {
-              Slot *PS = *MS.slots[_i];
-              Slot &S = *PS;
-
-              // if slot empty - continue
-              if (S.empty) {
-                continue;
-              }
-
-              // if upper test = fcvPartial - test inner slots
-              if (fcvPartial == res) {
-                u32 _mask = mask;
-                u32 _res =
-                    View.testSphere(S.vis.sphere.P, S.vis.sphere.R, _mask);
-                if (fcvNone == _res) {
-                  continue; // invisible-view frustum
-                }
-              }
+          }
 #ifndef _EDITOR
-              if (!RImplementation.HOM.visible(S.vis)) {
-                continue; // invisible-occlusion
-              }
+          if (!RImplementation.HOM.visible(S.vis)) {
+            continue; // invisible-occlusion
+          }
 #endif
-              // Add to visibility structures
-              if (RDEVICE.dwFrame > S.frame) {
-                // Calc fade factor	(per slot)
-                float dist_sq = EYE.distance_to_sqr(S.vis.sphere.P);
-                if (dist_sq > fade_limit) {
-                  S.hidden = true;
+          // Add to visibility structures
+          if (RDEVICE.dwFrame > S.frame) {
+            // Calc fade factor	(per slot)
+            float dist_sq = EYE.distance_to_sqr(S.vis.sphere.P);
+            if (dist_sq > fade_limit) {
+              S.hidden = true;
+              continue;
+            }
+
+            float alpha = (dist_sq < fade_start)
+                              ? 0.f
+                              : (dist_sq - fade_start) / fade_range;
+            float alpha_i = 1.f - alpha;
+            float dist_sq_rcp = 1.f / dist_sq;
+
+            u32 seed = (u32)(S.sx) ^ (u32)(S.sz) ^ RDEVICE.dwFrame;
+            S.frame = RDEVICE.dwFrame + 15 + (seed % 15);
+
+            for (int sp_id = 0; sp_id < dm_obj_in_slot; sp_id++) {
+              SlotPart &sp = S.G[sp_id];
+              if (sp.id == DetailSlot::ID_Empty)
+                continue;
+
+              sp.r_items[0].clear_not_free();
+              sp.r_items[1].clear_not_free();
+              sp.r_items[2].clear_not_free();
+
+              if (sp.items.empty())
+                continue;
+
+              float R = objects[sp.id]->bv_sphere.R;
+              float Rq_drcp =
+                  R * R * dist_sq_rcp; // reordered expression for 'ssa' calc
+
+              SlotItem **siIT = &(*sp.items.begin()),
+                       **siEND = &(*sp.items.end());
+              for (; siIT != siEND; siIT++) {
+                SlotItem &Item = *(*siIT);
+                float scale =
+                    psDeviceFlags2.test(rsNoScale)
+                        ? (Item.scale_calculated = Item.scale)
+                        : (Item.scale_calculated = Item.scale * alpha_i);
+                float ssa = psDeviceFlags2.test(rsNoScale)
+                                ? scale
+                                : scale * scale * Rq_drcp;
+                if (ssa < r_ssaDISCARD) {
+                  Item.alpha_target = 0;
                   continue;
                 }
-                
-                float alpha = (dist_sq < fade_start)
-                                  ? 0.f
-                                  : (dist_sq - fade_start) / fade_range;
-                float alpha_i = 1.f - alpha;
-                float dist_sq_rcp = 1.f / dist_sq;
+                u32 vis_id = 0;
+                if (ssa > r_ssaCHEAP)
+                  vis_id = Item.vis_ID;
 
-                u32 seed = (u32)(S.sx) ^ (u32)(S.sz) ^ RDEVICE.dwFrame;
-                S.frame = RDEVICE.dwFrame + 15 + (seed % 15);
+                sp.r_items[vis_id].push_back(*siIT);
 
-                for (int sp_id = 0; sp_id < dm_obj_in_slot; sp_id++) {
-                  SlotPart &sp = S.G[sp_id];
-                  if (sp.id == DetailSlot::ID_Empty)
-                    continue;
-
-                  sp.r_items[0].clear_not_free();
-                  sp.r_items[1].clear_not_free();
-                  sp.r_items[2].clear_not_free();
-
-                  if (sp.items.empty())
-                    continue;
-
-                  float R = objects[sp.id]->bv_sphere.R;
-                  float Rq_drcp =
-                      R * R *
-                      dist_sq_rcp; // reordered expression for 'ssa' calc
-
-                  SlotItem **siIT = &(*sp.items.begin()),
-                           **siEND = &(*sp.items.end());
-                  for (; siIT != siEND; siIT++) {
-                    SlotItem &Item = *(*siIT);
-                    float scale =
-                        psDeviceFlags2.test(rsNoScale)
-                            ? (Item.scale_calculated = Item.scale)
-                            : (Item.scale_calculated = Item.scale * alpha_i);
-                    float ssa = psDeviceFlags2.test(rsNoScale)
-                                    ? scale
-                                    : scale * scale * Rq_drcp;
-                    if (ssa < r_ssaDISCARD) {
-                      Item.alpha_target = 0;
-                      continue;
-                    }
-                    u32 vis_id = 0;
-                    if (ssa > r_ssaCHEAP)
-                      vis_id = Item.vis_ID;
-
-                    sp.r_items[vis_id].push_back(*siIT);
-
-                    if (S.hidden) {
-                      Item.alpha = 0;
-                      S.hidden = false;
-                    }
-                    Item.alpha_target = 1;
-                    Item.distance = dist_sq;
-                    Item.position = S.vis.sphere.P;
-                  }
+                if (S.hidden) {
+                  Item.alpha = 0;
+                  S.hidden = false;
                 }
+                Item.alpha_target = 1;
+                Item.distance = dist_sq;
+                Item.position = S.vis.sphere.P;
               }
-              for (int sp_id = 0; sp_id < dm_obj_in_slot; sp_id++) {
-                SlotPart &sp = S.G[sp_id];
-                if (sp.id == DetailSlot::ID_Empty)
-                  continue;
-                if (!sp.r_items[0].empty()) {
-                  tv.lists[0][sp.id].push_back(&sp.r_items[0]);
-                }
-                if (!sp.r_items[1].empty()) {
-                  tv.lists[1][sp.id].push_back(&sp.r_items[1]);
-                }
-                if (!sp.r_items[2].empty()) {
-                  tv.lists[2][sp.id].push_back(&sp.r_items[2]);
-                }
-              }
+            }
+          }
+          for (int sp_id = 0; sp_id < dm_obj_in_slot; sp_id++) {
+            SlotPart &sp = S.G[sp_id];
+            if (sp.id == DetailSlot::ID_Empty)
+              continue;
+            if (!sp.r_items[0].empty()) {
+              tv.lists[0][sp.id].push_back(&sp.r_items[0]);
+            }
+            if (!sp.r_items[1].empty()) {
+              tv.lists[1][sp.id].push_back(&sp.r_items[1]);
+            }
+            if (!sp.r_items[2].empty()) {
+              tv.lists[2][sp.id].push_back(&sp.r_items[2]);
             }
           }
         }
       });
+    }
+  }
+  tg.wait();
 
   // Merge thread-local results
   for (const auto &tv : tls) {
