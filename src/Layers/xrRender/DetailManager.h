@@ -206,6 +206,7 @@ public:
 	int cache_cz;
 
 	PSS poolSI; // pool из которого выделяются SlotItem
+	xrCriticalSection pool_mutex;
 
 	void UpdateVisibleM();
 	void UpdateVisibleS();
@@ -253,7 +254,7 @@ public:
 	void cache_Update(int sx, int sz, Fvector& view, int limit);
 	void cache_Task(int gx, int gz, Slot* D);
 	Slot* cache_Query(int sx, int sz);
-	void cache_Decompress(Slot* D);
+	void cache_Decompress(Slot* D, CDB::COLLIDER* collider = nullptr);
 	BOOL cache_Validate();
 	// cache grid to world
 	int cg2w_X(int x) { return cache_cx - dm_size + x; }

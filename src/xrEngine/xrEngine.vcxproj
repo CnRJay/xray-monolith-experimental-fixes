@@ -797,6 +797,7 @@
     <ClInclude Include="xrLevel.h" />
     <ClInclude Include="xrSASH.h" />
     <ClInclude Include="xrSheduler.h" />
+    <ClInclude Include="xrSkinning.h" />
     <ClInclude Include="xrTheora_Stream.h" />
     <ClInclude Include="xrTheora_Surface.h" />
     <ClInclude Include="xrTheora_Surface_mmx.h" />
@@ -910,6 +911,7 @@
     <ClCompile Include="xrImage_Resampler.cpp" />
     <ClCompile Include="xrSASH.cpp" />
     <ClCompile Include="xrSheduler.cpp" />
+    <ClCompile Include="xrSkinning.cpp" />
     <ClCompile Include="xrTheora_Stream.cpp" />
     <ClCompile Include="xrTheora_Surface.cpp" />
     <ClCompile Include="xrTheora_Surface_mmx.cpp" />
@@ -990,9 +992,7 @@
     <ProjectReference Include="$(SolutionDir)xrCore\xrCore.vcxproj">
       <Project>{a0f7d1fb-59a7-4717-a7e4-96f37e91998e}</Project>
     </ProjectReference>
-    <ProjectReference Include="$(SolutionDir)xrCPU_Pipe\xrCPU_Pipe.vcxproj">
-      <Project>{ca0649dd-d089-423a-981c-46b57a884eb9}</Project>
-    </ProjectReference>
+
     <ProjectReference Include="$(SolutionDir)xrGame\xrGame.vcxproj">
       <Project>{200652a6-043e-4634-8837-87983b3bd5e0}</Project>
     </ProjectReference>

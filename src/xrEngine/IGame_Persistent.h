@@ -86,6 +86,13 @@ public:
 	void GrassBendersSet(u8 idx, u16 id, Fvector position, Fvector3 dir, float fade, float speed, float str, float radius, GrassBenders_Anim anim, bool resetTime);
 	float GrassBenderToValue(float& current, float go_to, float intensity, bool use_easing);
 
+	class CEnvironmentRegistrator : public pureFrame {
+		IGame_Persistent* m_owner;
+	public:
+		CEnvironmentRegistrator(IGame_Persistent* owner) : m_owner(owner) {}
+		virtual void _BCL OnFrame();
+	} m_env_registrator;
+
 	CPerlinNoise1D* PerlinNoise1D;
 
 	struct grass_data

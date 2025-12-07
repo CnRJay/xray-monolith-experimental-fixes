@@ -186,6 +186,7 @@ public:
   void CalculateWallmarks();
   void RenderWallmark(intrusive_ptr<CSkeletonWallmark> wm, FVF::LIT *&verts);
   void ClearWallmarks();
+  const SkeletonWMVec& GetWallmarks() const { return wallmarks; }
 
 public:
   bool PickBone(const Fmatrix &parent_xform, IKinematics::pick_result &r,

@@ -6,6 +6,7 @@
 #include "../xrRender/SkeletonCustom.h"
 #include <tbb/parallel_for.h>
 #include <tbb/blocked_range.h>
+#include <tbb/parallel_sort.h>
 
 IC bool pred_sp_sort(ISpatial* _1, ISpatial* _2)
 {
@@ -36,7 +37,7 @@ void CRender::render_main(Fmatrix& m_ViewProjection, bool _fportals)
 			);
 
 			// (almost) Exact sorting order (front-to-back)
-			std::sort(lstRenderables.begin(), lstRenderables.end(), pred_sp_sort);
+			tbb::parallel_sort(lstRenderables.begin(), lstRenderables.end(), pred_sp_sort);
 
 			// Determine visibility for dynamic part of scene
 			set_Object(0);

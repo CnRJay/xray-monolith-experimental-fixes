@@ -5,7 +5,9 @@
 #include "../../xrEngine/xr_object.h"
 #include "../xrRender/SkeletonCustom.h"
 #include <tbb/parallel_for.h>
+#include <tbb/parallel_reduce.h>
 #include <tbb/blocked_range.h>
+#include <tbb/parallel_sort.h>
 
 #include "../xrRender/QueryHelper.h"
 
@@ -39,7 +41,7 @@ void CRender::render_main(Fmatrix& m_ViewProjection, bool _fportals)
 			);
 
 			// (almost) Exact sorting order (front-to-back)
-			std::sort(lstRenderables.begin(), lstRenderables.end(), pred_sp_sort);
+			tbb::parallel_sort(lstRenderables.begin(), lstRenderables.end(), pred_sp_sort);
 
 			// Determine visibility for dynamic part of scene
 			set_Object(0);
@@ -99,49 +101,61 @@ void CRender::render_main(Fmatrix& m_ViewProjection, bool _fportals)
 			xr_vector<CKinematics*> skeletons_to_update;
 			skeletons_to_update.reserve(lstRenderables.size());
 
-			for (u32 o_it = 0; o_it < lstRenderables.size(); o_it++)
-			{
-				ISpatial* spatial = lstRenderables[o_it];
-				spatial->spatial_updatesector();
-				CSector* sector = (CSector*)spatial->spatial.sector;
-				if (!sector) continue;
+			skeletons_to_update = tbb::parallel_reduce(
+				tbb::blocked_range<size_t>(0, lstRenderables.size()),
+				xr_vector<CKinematics*>(),
+				[&](const tbb::blocked_range<size_t>& range, xr_vector<CKinematics*> local_list) -> xr_vector<CKinematics*> {
+					local_list.reserve(local_list.size() + range.size());
+					for (size_t o_it = range.begin(); o_it != range.end(); ++o_it)
+					{
+						ISpatial* spatial = lstRenderables[o_it];
+						spatial->spatial_updatesector();
+						CSector* sector = (CSector*)spatial->spatial.sector;
+						if (!sector) continue;
 
-				if (PortalTraverser.i_marker != sector->r_marker) continue;
+						if (PortalTraverser.i_marker != sector->r_marker) continue;
 
-				if (!(spatial->spatial.type & STYPE_RENDERABLE)) continue;
+						if (!(spatial->spatial.type & STYPE_RENDERABLE)) continue;
 
-				// Check if it is a skeleton
-				IRenderable* renderable = spatial->dcast_Renderable();
-				if (!renderable) continue;
+						// Check if it is a skeleton
+						IRenderable* renderable = spatial->dcast_Renderable();
+						if (!renderable) continue;
 
-				dxRender_Visual* V = (dxRender_Visual*)renderable->renderable.visual;
-				if (V->Type != MT_SKELETON_ANIM && V->Type != MT_SKELETON_RIGID) continue;
+						dxRender_Visual* V = (dxRender_Visual*)renderable->renderable.visual;
+						if (V->Type != MT_SKELETON_ANIM && V->Type != MT_SKELETON_RIGID) continue;
 
-				// Check frustums
-				bool visible_in_frustum = false;
-				for (u32 v_it = 0; v_it < sector->r_frustums.size(); v_it++)
-				{
-					CFrustum& view = sector->r_frustums[v_it];
-					if (view.testSphere_dirty(spatial->spatial.sphere.P, spatial->spatial.sphere.R)) {
-						visible_in_frustum = true;
-						break;
+						// Check frustums
+						bool visible_in_frustum = false;
+						for (u32 v_it = 0; v_it < sector->r_frustums.size(); v_it++)
+						{
+							CFrustum& view = sector->r_frustums[v_it];
+							if (view.testSphere_dirty(spatial->spatial.sphere.P, spatial->spatial.sphere.R)) {
+								visible_in_frustum = true;
+								break;
+							}
+						}
+						if (!visible_in_frustum) continue;
+
+						// Check HOM
+						vis_data& v_orig = V->vis;
+						if (Device.dwFrame < v_orig.hom_frame) {
+							local_list.push_back((CKinematics*)V);
+						}
+						else {
+							vis_data v_copy = v_orig;
+							v_copy.box.xform(renderable->renderable.xform);
+							if (HOM.visible(v_copy.box)) {
+								local_list.push_back((CKinematics*)V);
+							}
+						}
 					}
+					return local_list;
+				},
+				[](xr_vector<CKinematics*> a, const xr_vector<CKinematics*>& b) -> xr_vector<CKinematics*> {
+					a.insert(a.end(), b.begin(), b.end());
+					return a;
 				}
-				if (!visible_in_frustum) continue;
-
-				// Check HOM
-				vis_data& v_orig = V->vis;
-				if (Device.dwFrame < v_orig.hom_frame) {
-					skeletons_to_update.push_back((CKinematics*)V);
-				}
-				else {
-					vis_data v_copy = v_orig;
-					v_copy.box.xform(renderable->renderable.xform);
-					if (HOM.visible(v_copy.box)) {
-						skeletons_to_update.push_back((CKinematics*)V);
-					}
-				}
-			}
+			);
 
 			tbb::parallel_for(tbb::blocked_range<size_t>(0, skeletons_to_update.size()),
 				[&](const tbb::blocked_range<size_t>& range) {

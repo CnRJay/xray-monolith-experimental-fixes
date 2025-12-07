@@ -18,7 +18,7 @@
 #include "SkeletonX.h"
 #include "SkeletonCustom.h"
 #include "../../xrEngine/fmesh.h"
-#include "../../xrCPU_Pipe/xrCPU_Pipe.h"
+#include "../../xrEngine/xrSkinning.h"
 
 shared_str s_bones_array_const;
 shared_str s_bones_array_prev_const;
@@ -180,7 +180,7 @@ void CSkeletonX::_Render_soft(ref_geom& hGeom, u32 vCount, u32 iOffset, u32 pCou
 		RDEVICE.Statistic->RenderDUMP_SKIN.Begin();
 		if (*Vertices1W)
 		{
-			PSGP.skin1W(
+			xrSkin1W(
 				Dest, // dest
 				*Vertices1W, // source
 				vCount, // count
@@ -189,7 +189,7 @@ void CSkeletonX::_Render_soft(ref_geom& hGeom, u32 vCount, u32 iOffset, u32 pCou
 		}
 		else if (*Vertices2W)
 		{
-			PSGP.skin2W(
+			xrSkin2W(
 				Dest, // dest
 				*Vertices2W, // source
 				vCount, // count
@@ -198,7 +198,7 @@ void CSkeletonX::_Render_soft(ref_geom& hGeom, u32 vCount, u32 iOffset, u32 pCou
 		}
 		else if (*Vertices3W)
 		{
-			PSGP.skin3W(
+			xrSkin3W(
 				Dest, // dest
 				*Vertices3W, // source
 				vCount, // count
@@ -207,7 +207,7 @@ void CSkeletonX::_Render_soft(ref_geom& hGeom, u32 vCount, u32 iOffset, u32 pCou
 		}
 		else if (*Vertices4W)
 		{
-			PSGP.skin4W(
+			xrSkin4W(
 				Dest, // dest
 				*Vertices4W, // source
 				vCount, // count

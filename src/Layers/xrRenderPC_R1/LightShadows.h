@@ -36,13 +36,13 @@ private:
 		float E;
 	};
 
+public:
 	struct tess_tri
 	{
 		Fvector v[3];
 		Fvector N;
 	};
 
-public:
 	struct cache_item
 	{
 		IRenderable* O;

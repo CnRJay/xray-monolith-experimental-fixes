@@ -7,6 +7,7 @@ struct RasterCtx {
   occTri *currentTri;
   u32 dwPixels;
   float currentA[3], currentB[3], currentC[3];
+  occRasterizer* pRasterizer;
 };
 
 const int BOTTOM = 0, TOP = 1;
@@ -141,11 +142,12 @@ void i_scan(RasterCtx &Ctx, int curY, float leftX, float lhx, float rightX,
   Z += 0.5f * _abs(dZ);
 
   // gain access to buffers
-  occTri **pFrame = Raster.get_frame();
-  float *pDepth = Raster.get_depth();
+  occRasterizer& rasterizer = *Ctx.pRasterizer;
+  occTri **pFrame = rasterizer.get_frame();
+  float *pDepth = rasterizer.get_depth();
 
   // lock scanline
-  tbb::spin_mutex::scoped_lock lock(Raster.m_locks[curY].mutex);
+  tbb::spin_mutex::scoped_lock lock(rasterizer.m_locks[curY].mutex);
 
   // left connector
   int i_base = curY * occ_dim;
@@ -376,6 +378,7 @@ u32 occRasterizer::rasterize(occTri *T) {
   RasterCtx Ctx;
   Ctx.currentTri = T;
   Ctx.dwPixels = 0;
+  Ctx.pRasterizer = this;
 
   // Order the vertices by Y
   i_order(Ctx, &(T->raster[0].x), &(T->raster[1].x), &(T->raster[2].x));

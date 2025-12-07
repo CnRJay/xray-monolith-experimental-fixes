@@ -1,4 +1,5 @@
 #include "stdafx.h"
+#include <tbb/task_group.h>
 #include "../xrCDB/frustum.h"
 #include "../xrCore/profiler.h"
 #include "xr_input.h"
@@ -22,6 +23,7 @@
 #include "x_ray.h"
 #include <chrono>
 #include <tbb/tbb.h>
+#include <tbb/flow_graph.h>
 
 // must be defined before include of FS_impl.h
 #define INCLUDE_FROM_ENGINE
@@ -248,6 +250,106 @@ void mt_FreezeThread(void *ptr) {
   }
 }
 
+struct CRenderDevice::DeviceFlowGraph {
+    tbb::flow::graph graph;
+    tbb::flow::broadcast_node<tbb::flow::continue_msg> start_node;
+    tbb::flow::continue_node<tbb::flow::continue_msg> render_node;
+    tbb::flow::continue_node<tbb::flow::continue_msg> logic_node;
+
+    DeviceFlowGraph(CRenderDevice* device) : 
+        start_node(graph),
+        render_node(graph, [device](const tbb::flow::continue_msg&) { device->TaskRender(); }),
+        logic_node(graph, [device](const tbb::flow::continue_msg&) { device->TaskLogic(); })
+    {
+        tbb::flow::make_edge(start_node, render_node);
+        tbb::flow::make_edge(start_node, logic_node);
+    }
+};
+
+void CRenderDevice::TaskRender() {
+    Statistic->RenderTOTAL_Real.FrameStart();
+    Statistic->RenderTOTAL_Real.Begin();
+
+    if (b_is_Active && Begin()) {
+        START_PROFILE("Process seqRender");
+        seqRender.Process(rp_Render);
+        STOP_PROFILE;
+
+        if (psDeviceFlags.test(rsCameraPos) ||
+            psDeviceFlags.test(rsStatistic) || Statistic->errors.size()) {
+            PROF_EVENT("Draw statistics");
+            Statistic->Show();
+        }
+
+        End();
+    }
+    Statistic->RenderTOTAL_Real.End();
+    Statistic->RenderTOTAL_Real.FrameEnd();
+    Statistic->RenderTOTAL.accum = Statistic->RenderTOTAL_Real.accum;
+}
+
+void CRenderDevice::TaskLogic() {
+    tbb::task_group tg;
+    START_PROFILE("Process seqParallel");
+    xr_vector<fastdelegate::FastDelegate0<>> tasks;
+    tasks.swap(seqParallel);
+    
+    for (const auto& task : tasks) {
+        tg.run([task] { task(); });
+    }
+    tg.wait();
+    STOP_PROFILE;
+
+    START_PROFILE("Process seqFrameMT");
+    // Use chunking to avoid overhead for many small objects
+    const size_t chunk_size = 16;
+    size_t count = seqFrameMT.R.size();
+    
+    for (size_t i = 0; i < count; i += chunk_size) {
+        tg.run([this, i, count, chunk_size] {
+            size_t end = std::min(i + chunk_size, count);
+            for (size_t j = i; j < end; ++j) {
+                const auto& item = seqFrameMT.R[j];
+                if (item.Prio != REG_PRIORITY_INVALID)
+                    rp_Frame(item.Object);
+            }
+        });
+    }
+    tg.wait();
+    STOP_PROFILE;
+}
+
+CRenderDevice::CRenderDevice()
+      : m_pRender(0)
+#ifdef INGAME_EDITOR
+        ,
+        m_editor_module(0), m_editor_initialize(0), m_editor_finalize(0),
+        m_editor(0), m_engine(0)
+#endif // #ifdef INGAME_EDITOR
+#ifdef PROFILE_CRITICAL_SECTIONS
+        ,
+        mt_csEnter(MUTEX_PROFILE_ID(CRenderDevice::mt_csEnter)),
+        mt_csLeave(MUTEX_PROFILE_ID(CRenderDevice::mt_csLeave))
+#endif // #ifdef PROFILE_CRITICAL_SECTIONS
+{
+    m_hWnd = NULL;
+    b_is_Active = FALSE;
+    b_is_Ready = FALSE;
+    b_hide_cursor = FALSE;
+    Timer.Start();
+    m_bNearer = FALSE;
+
+    m_SecondViewport.SetSVPActive(false);
+    m_SecondViewport.SetSVPFrameDelay(2);
+    m_SecondViewport.isCamReady = false;
+    
+    m_flow_graph = new DeviceFlowGraph(this);
+}
+
+CRenderDevice::~CRenderDevice() {
+    delete m_flow_graph;
+}
+
 void CRenderDevice::on_idle() {
   FreezeTimer.Start();
 
@@ -367,44 +469,8 @@ void CRenderDevice::on_idle() {
 #endif // ECO_RENDER END
 
 #ifndef DEDICATED_SERVER
-  tbb::parallel_invoke(
-      [&] {
-        Statistic->RenderTOTAL_Real.FrameStart();
-        Statistic->RenderTOTAL_Real.Begin();
-
-        if (b_is_Active && Begin()) {
-          START_PROFILE("Process seqRender");
-          seqRender.Process(rp_Render);
-          STOP_PROFILE;
-
-          if (psDeviceFlags.test(rsCameraPos) ||
-              psDeviceFlags.test(rsStatistic) || Statistic->errors.size()) {
-            PROF_EVENT("Draw statistics");
-            Statistic->Show();
-          }
-
-          End();
-        }
-        Statistic->RenderTOTAL_Real.End();
-        Statistic->RenderTOTAL_Real.FrameEnd();
-        Statistic->RenderTOTAL.accum = Statistic->RenderTOTAL_Real.accum;
-      },
-      [&] {
-        START_PROFILE("Process seqParallel");
-        xr_vector<fastdelegate::FastDelegate0<>> tasks;
-        tasks.swap(seqParallel);
-        tbb::parallel_for_each(tasks.begin(), tasks.end(),
-                               [](const auto &task) { task(); });
-        STOP_PROFILE;
-
-        START_PROFILE("Process seqFrameMT");
-        tbb::parallel_for_each(seqFrameMT.R.begin(), seqFrameMT.R.end(),
-                               [](const auto &item) {
-                                 if (item.Prio != REG_PRIORITY_INVALID)
-                                   rp_Frame(item.Object);
-                               });
-        STOP_PROFILE;
-      });
+  m_flow_graph->start_node.try_put(tbb::flow::continue_msg());
+  m_flow_graph->graph.wait_for_all();
 #endif // #ifndef DEDICATED_SERVER
 
 #ifdef DEDICATED_SERVER
@@ -559,7 +625,16 @@ void CRenderDevice::FrameMove() {
   // TODO: HACK to test loading screen.
   // if(!g_bLoaded)
   START_PROFILE("Process seqFrame");
+  
+  tbb::task_group tg;
+  tg.run([&] {
+      Device.seqFrameIndependent.Process(rp_Frame);
+  });
+  
   Device.seqFrame.Process(rp_Frame);
+
+  tg.wait();
+  
   STOP_PROFILE;
   g_bLoaded = TRUE;
   // else

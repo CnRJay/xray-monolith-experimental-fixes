@@ -2,6 +2,8 @@
 
 #include "light.h"
 
+class light; // Forward declaration
+
 class light_Package
 {
 public:

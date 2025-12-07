@@ -67,6 +67,17 @@ void occRasterizer::clear() {
   Memory.mem_fill32(bufDepth, *LPDWORD(&f), size);
 }
 
+void occRasterizer::merge(occRasterizer& other) {
+	for (int y = 0; y < occ_dim; y++) {
+		for (int x = 0; x < occ_dim; x++) {
+			if (other.bufDepth[y][x] < bufDepth[y][x]) {
+				bufDepth[y][x] = other.bufDepth[y][x];
+				bufFrame[y][x] = other.bufFrame[y][x];
+			}
+		}
+	}
+}
+
 IC BOOL shared(occTri *T1, occTri *T2) {
   if (T1 == T2)
     return TRUE;

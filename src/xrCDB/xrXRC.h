@@ -66,6 +66,8 @@ public:
 #endif
 	}
 
+	IC CDB::COLLIDER* collider() { return &CL; }
+
 	IC CDB::RESULT* r_begin() { return CL.r_begin(); };
 	IC CDB::RESULT* r_end() { return CL.r_end(); };
 	IC void r_free() { CL.r_free(); }

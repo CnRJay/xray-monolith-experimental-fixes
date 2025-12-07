@@ -49,10 +49,11 @@ public:
   IC float ds32_2_f(s32 d) { return float(d) / occQ_s32; }
   IC float ds16_2_f(s16 d) { return float(d) / occQ_s16; }
 
-  void clear();
-  void propagade();
-  u32 rasterize(occTri *T);
-  BOOL test(float x0, float y0, float x1, float y1, float z);
+	void clear();
+	void merge(occRasterizer& other);
+	void propagade();
+	u32 rasterize(occTri* T);
+	BOOL test(float x0, float y0, float x1, float y1, float z);
 
   occTri **get_frame() { return &(bufFrame[0][0]); }
   float *get_depth() { return &(bufDepth[0][0]); }

@@ -32,10 +32,11 @@ bool IsMainMenuActive() {
          g_pGamePersistent->m_pMainMenu->IsActive();
 } // ECO_RENDER add
 
-IGame_Persistent::IGame_Persistent() {
+IGame_Persistent::IGame_Persistent() : m_env_registrator(this) {
   RDEVICE.seqAppStart.Add(this);
   RDEVICE.seqAppEnd.Add(this);
   RDEVICE.seqFrame.Add(this, REG_PRIORITY_HIGH + 1);
+  RDEVICE.seqFrameIndependent.Add(&m_env_registrator, REG_PRIORITY_HIGH + 1);
   RDEVICE.seqAppActivate.Add(this);
   RDEVICE.seqAppDeactivate.Add(this);
   m_pGShaderConstants = new ShadersExternalData(); //--#SM+#--
@@ -61,6 +62,7 @@ IGame_Persistent::IGame_Persistent() {
 IGame_Persistent::~IGame_Persistent() {
   xr_delete(PerlinNoise1D);
   RDEVICE.seqFrame.Remove(this);
+  RDEVICE.seqFrameIndependent.Remove(&m_env_registrator);
   RDEVICE.seqAppStart.Remove(this);
   RDEVICE.seqAppEnd.Remove(this);
   RDEVICE.seqAppActivate.Remove(this);
@@ -235,11 +237,15 @@ void IGame_Persistent::OnGameEnd() {
 #endif
 }
 
+void IGame_Persistent::CEnvironmentRegistrator::OnFrame() {
+#ifndef _EDITOR
+	if (!Device.Paused() || Device.dwPrecacheFrame)
+		m_owner->Environment().OnFrame();
+#endif
+}
+
 void IGame_Persistent::OnFrame() {
 #ifndef _EDITOR
-
-  if (!Device.Paused() || Device.dwPrecacheFrame)
-    Environment().OnFrame();
 
   Device.Statistic->Particles_starting = ps_needtoplay.size();
   Device.Statistic->Particles_active = ps_active.size();

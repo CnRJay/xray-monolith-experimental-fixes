@@ -69,7 +69,6 @@ CParticleEffect::CParticleEffect() {
 }
 
 CParticleEffect::~CParticleEffect() {
-  // Log					("--- destroy PE");
   OnDeviceDestroy();
   ParticleManager()->DestroyEffect(m_HandleEffect);
   ParticleManager()->DestroyActionList(m_HandleActionList);
@@ -269,15 +268,9 @@ IC void FillSprite_fpu(FVF::LIT *&pv, const Fvector &T, const Fvector &R,
   pv++;
 }
 
-#include "../../xrCore/Lock.hpp"
-
-Lock m_sprite_section;
-
 IC void FillSprite(FVF::LIT *&pv, const Fvector &T, const Fvector &R,
                    const Fvector &pos, const Fvector2 &lt, const Fvector2 &rb,
                    float r1, float r2, u32 clr, float sina, float cosa) {
-  m_sprite_section.Enter();
-
   __m128 Vr, Vt, _T, _R, _pos, _zz, _sa, _ca, a, b, c, d;
 
   _sa = _mm_set1_ps(sina);
@@ -332,8 +325,6 @@ IC void FillSprite(FVF::LIT *&pv, const Fvector &T, const Fvector &R,
   pv->color = clr;
   pv->t.set(rb.x, lt.y);
   pv++;
-
-  m_sprite_section.Leave();
 }
 
 IC void FillSprite(FVF::LIT *&pv, const Fvector &pos, const Fvector &dir,
@@ -416,119 +407,123 @@ __forceinline void magnitude_sse(Fvector &vec, float &res) {
 
 void ParticleRenderStream(FVF::LIT *pv, u32 count, PAPI::Particle *particles,
                           CParticleEffect *pPE) {
-  float sina = 0.0f, cosa = 0.0f;
-  // Xottab_DUTY: changed angle to be float instead of DWORD
-  // But it must be 0xFFFFFFFF or otherwise some particles won't play
-  float angle = 0xFFFFFFFF;
+  tbb::parallel_for(tbb::blocked_range<u32>(0, count), [&](const tbb::blocked_range<u32>& range) {
+    float sina = 0.0f, cosa = 0.0f;
+    // Xottab_DUTY: changed angle to be float instead of DWORD
+    // But it must be 0xFFFFFFFF or otherwise some particles won't play
+    float angle = 0xFFFFFFFF;
 
-  for (u32 i = 0; i != count; ++i) {
-    PAPI::Particle &m = particles[i];
-    Fvector2 lt, rb;
-    lt.set(0.f, 0.f);
-    rb.set(1.f, 1.f);
+    for (u32 i = range.begin(); i != range.end(); ++i) {
+      PAPI::Particle &m = particles[i];
+      FVF::LIT *local_pv = pv + i * 4;
 
-    _mm_prefetch((char *)&particles[i + 1], _MM_HINT_NTA);
+      Fvector2 lt, rb;
+      lt.set(0.f, 0.f);
+      rb.set(1.f, 1.f);
 
-    if (angle != m.rot.x) {
-      angle = m.rot.x;
-      sina = std::sinf(*(float *)&angle);
-      cosa = std::cosf(*(float *)&angle);
-    }
+      _mm_prefetch((char *)&particles[i + 1], _MM_HINT_NTA);
 
-    _mm_prefetch(64 + (char *)&particles[i + 1], _MM_HINT_NTA);
+      if (angle != m.rot.x) {
+        angle = m.rot.x;
+        sina = std::sinf(*(float *)&angle);
+        cosa = std::cosf(*(float *)&angle);
+      }
 
-    if (pPE->m_Def->m_Flags.is(CPEDef::dfFramed))
-      pPE->m_Def->m_Frame.CalculateTC(iFloor(float(m.frame) / 255.f), lt, rb);
+      _mm_prefetch(64 + (char *)&particles[i + 1], _MM_HINT_NTA);
 
-    float r_x = m.size.x * 0.5f;
-    float r_y = m.size.y * 0.5f;
-    float speed = 0.f;
-    bool speed_calculated = false;
+      if (pPE->m_Def->m_Flags.is(CPEDef::dfFramed))
+        pPE->m_Def->m_Frame.CalculateTC(iFloor(float(m.frame) / 255.f), lt, rb);
 
-    if (pPE->m_Def->m_Flags.is(CPEDef::dfVelocityScale)) {
-      magnitude_sse(m.vel, speed);
-      speed_calculated = true;
-      r_x += speed * pPE->m_Def->m_VelocityScale.x;
-      r_y += speed * pPE->m_Def->m_VelocityScale.y;
-    }
+      float r_x = m.size.x * 0.5f;
+      float r_y = m.size.y * 0.5f;
+      float speed = 0.f;
+      bool speed_calculated = false;
 
-    if (pPE->m_Def->m_Flags.is(CPEDef::dfAlignToPath)) {
-      if (!speed_calculated)
+      if (pPE->m_Def->m_Flags.is(CPEDef::dfVelocityScale)) {
         magnitude_sse(m.vel, speed);
-      if ((speed < EPS_S) && pPE->m_Def->m_Flags.is(CPEDef::dfWorldAlign)) {
-        Fmatrix M;
-        M.setXYZ(pPE->m_Def->m_APDefaultRotation);
-        if (pPE->m_RT_Flags.is(CParticleEffect::flRT_XFORM)) {
-          Fvector p;
-          pPE->m_XFORM.transform_tiny(p, m.pos);
-          M.mulA_43(pPE->m_XFORM);
-          FillSprite(pv, M.k, M.i, p, lt, rb, r_x, r_y,
-                     color_rgba_f(m.colorR, m.colorG, m.colorB, m.colorA), sina,
-                     cosa);
-        } else {
-          FillSprite(pv, M.k, M.i, m.pos, lt, rb, r_x, r_y,
-                     color_rgba_f(m.colorR, m.colorG, m.colorB, m.colorA), sina,
-                     cosa);
-        }
-      } else if ((speed >= EPS_S) &&
-                 pPE->m_Def->m_Flags.is(CPEDef::dfFaceAlign)) {
-        Fmatrix M;
-        M.identity();
-        M.k.div(m.vel, speed);
-        M.j.set(0, 1, 0);
-        if (_abs(M.j.dotproduct(M.k)) > .99f)
-          M.j.set(0, 0, 1);
-        M.i.crossproduct(M.j, M.k);
-        M.i.normalize();
-        M.j.crossproduct(M.k, M.i);
-        M.j.normalize();
-        if (pPE->m_RT_Flags.is(CParticleEffect::flRT_XFORM)) {
-          Fvector p;
-          pPE->m_XFORM.transform_tiny(p, m.pos);
-          M.mulA_43(pPE->m_XFORM);
-          FillSprite(pv, M.j, M.i, p, lt, rb, r_x, r_y,
-                     color_rgba_f(m.colorR, m.colorG, m.colorB, m.colorA), sina,
-                     cosa);
-        } else {
-          FillSprite(pv, M.j, M.i, m.pos, lt, rb, r_x, r_y,
-                     color_rgba_f(m.colorR, m.colorG, m.colorB, m.colorA), sina,
-                     cosa);
-        }
-      } else {
-        Fvector dir;
-        if (speed >= EPS_S)
-          dir.div(m.vel, speed);
-        else
-          dir.setHP(-pPE->m_Def->m_APDefaultRotation.y,
-                    -pPE->m_Def->m_APDefaultRotation.x);
-        if (pPE->m_RT_Flags.is(CParticleEffect::flRT_XFORM)) {
-          Fvector p, d;
-          pPE->m_XFORM.transform_tiny(p, m.pos);
-          pPE->m_XFORM.transform_dir(d, dir);
-          FillSprite(pv, p, d, lt, rb, r_x, r_y,
-                     color_rgba_f(m.colorR, m.colorG, m.colorB, m.colorA), sina,
-                     cosa);
-        } else {
-          FillSprite(pv, m.pos, dir, lt, rb, r_x, r_y,
-                     color_rgba_f(m.colorR, m.colorG, m.colorB, m.colorA), sina,
-                     cosa);
-        }
+        speed_calculated = true;
+        r_x += speed * pPE->m_Def->m_VelocityScale.x;
+        r_y += speed * pPE->m_Def->m_VelocityScale.y;
       }
-    } else {
-      if (pPE->m_RT_Flags.is(CParticleEffect::flRT_XFORM)) {
-        Fvector p;
-        pPE->m_XFORM.transform_tiny(p, m.pos);
-        FillSprite(pv, RDEVICE.vCameraTop, RDEVICE.vCameraRight, p, lt, rb, r_x,
-                   r_y, color_rgba_f(m.colorR, m.colorG, m.colorB, m.colorA),
-                   sina, cosa);
+
+      if (pPE->m_Def->m_Flags.is(CPEDef::dfAlignToPath)) {
+        if (!speed_calculated)
+          magnitude_sse(m.vel, speed);
+        if ((speed < EPS_S) && pPE->m_Def->m_Flags.is(CPEDef::dfWorldAlign)) {
+          Fmatrix M;
+          M.setXYZ(pPE->m_Def->m_APDefaultRotation);
+          if (pPE->m_RT_Flags.is(CParticleEffect::flRT_XFORM)) {
+            Fvector p;
+            pPE->m_XFORM.transform_tiny(p, m.pos);
+            M.mulA_43(pPE->m_XFORM);
+            FillSprite(local_pv, M.k, M.i, p, lt, rb, r_x, r_y,
+                       color_rgba_f(m.colorR, m.colorG, m.colorB, m.colorA), sina,
+                       cosa);
+          } else {
+            FillSprite(local_pv, M.k, M.i, m.pos, lt, rb, r_x, r_y,
+                       color_rgba_f(m.colorR, m.colorG, m.colorB, m.colorA), sina,
+                       cosa);
+          }
+        } else if ((speed >= EPS_S) &&
+                   pPE->m_Def->m_Flags.is(CPEDef::dfFaceAlign)) {
+          Fmatrix M;
+          M.identity();
+          M.k.div(m.vel, speed);
+          M.j.set(0, 1, 0);
+          if (_abs(M.j.dotproduct(M.k)) > .99f)
+            M.j.set(0, 0, 1);
+          M.i.crossproduct(M.j, M.k);
+          M.i.normalize();
+          M.j.crossproduct(M.k, M.i);
+          M.j.normalize();
+          if (pPE->m_RT_Flags.is(CParticleEffect::flRT_XFORM)) {
+            Fvector p;
+            pPE->m_XFORM.transform_tiny(p, m.pos);
+            M.mulA_43(pPE->m_XFORM);
+            FillSprite(local_pv, M.j, M.i, p, lt, rb, r_x, r_y,
+                       color_rgba_f(m.colorR, m.colorG, m.colorB, m.colorA), sina,
+                       cosa);
+          } else {
+            FillSprite(local_pv, M.j, M.i, m.pos, lt, rb, r_x, r_y,
+                       color_rgba_f(m.colorR, m.colorG, m.colorB, m.colorA), sina,
+                       cosa);
+          }
+        } else {
+          Fvector dir;
+          if (speed >= EPS_S)
+            dir.div(m.vel, speed);
+          else
+            dir.setHP(-pPE->m_Def->m_APDefaultRotation.y,
+                      -pPE->m_Def->m_APDefaultRotation.x);
+          if (pPE->m_RT_Flags.is(CParticleEffect::flRT_XFORM)) {
+            Fvector p, d;
+            pPE->m_XFORM.transform_tiny(p, m.pos);
+            pPE->m_XFORM.transform_dir(d, dir);
+            FillSprite(local_pv, p, d, lt, rb, r_x, r_y,
+                       color_rgba_f(m.colorR, m.colorG, m.colorB, m.colorA), sina,
+                       cosa);
+          } else {
+            FillSprite(local_pv, m.pos, dir, lt, rb, r_x, r_y,
+                       color_rgba_f(m.colorR, m.colorG, m.colorB, m.colorA), sina,
+                       cosa);
+          }
+        }
       } else {
-        FillSprite(pv, RDEVICE.vCameraTop, RDEVICE.vCameraRight, m.pos, lt, rb,
-                   r_x, r_y,
-                   color_rgba_f(m.colorR, m.colorG, m.colorB, m.colorA), sina,
-                   cosa);
+        if (pPE->m_RT_Flags.is(CParticleEffect::flRT_XFORM)) {
+          Fvector p;
+          pPE->m_XFORM.transform_tiny(p, m.pos);
+          FillSprite(local_pv, RDEVICE.vCameraTop, RDEVICE.vCameraRight, p, lt, rb, r_x,
+                     r_y, color_rgba_f(m.colorR, m.colorG, m.colorB, m.colorA),
+                     sina, cosa);
+        } else {
+          FillSprite(local_pv, RDEVICE.vCameraTop, RDEVICE.vCameraRight, m.pos, lt, rb,
+                     r_x, r_y,
+                     color_rgba_f(m.colorR, m.colorG, m.colorB, m.colorA), sina,
+                     cosa);
+        }
       }
     }
-  }
+  });
 }
 
 void CParticleEffect::Render(float) {

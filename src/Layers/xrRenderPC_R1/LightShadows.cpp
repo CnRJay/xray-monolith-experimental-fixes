@@ -8,10 +8,14 @@
 #include "../../xrEngine/xr_object.h"
 #include "../xrRender/fbasicvisual.h"
 #include "../../xrEngine/CustomHUD.h"
-
-#ifndef _EDITOR
-#include "../../xrCPU_Pipe/ttapi.h"
-#endif
+#include <xmmintrin.h>
+#include <tbb/parallel_for.h>
+#include <tbb/blocked_range.h>
+#include "../../xrEngine/Fmesh.h"
+#include "../xrRender/SkeletonCustom.h"
+#include "../xrRender/SkeletonX.h"
+#include "../xrRender/FSkinned.h"
+#include "../../xrEngine/xrSkinning.h"
 
 const float S_distance = 256;
 const float S_distance2 = S_distance * S_distance;
@@ -30,6 +34,158 @@ const D3DFORMAT S_rtf = D3DFMT_A8R8G8B8;
 const float S_blur_kernel = 0.75f;
 
 const u32 cache_old = 30 * 1000; // 30 secs
+
+// PLC constants
+const float PLC_S_distance = 48;
+const float PLC_S_distance2 = PLC_S_distance * PLC_S_distance;
+const float PLC_S_fade = 4.5;
+const float PLC_S_fade2 = PLC_S_fade * PLC_S_fade;
+
+// Helper class for tessellation
+class Tesselator {
+public:
+    xr_vector<CLightShadows::tess_tri> tris;
+
+    void clear() { tris.clear(); }
+
+    void tessellate(const Fvector* v, const Fvector& view, float tess_size) {
+        // Simple pass through for now 
+        // TODO: Implement recursive tessellation maybe?
+        CLightShadows::tess_tri T;
+        T.v[0] = v[0];
+        T.v[1] = v[1];
+        T.v[2] = v[2];
+        // Calculate Normal (assuming CCW)
+        T.N.mknormal(v[0], v[1], v[2]);
+        tris.push_back(T);
+    }
+};
+
+static Tesselator tesselator;
+
+#include <emmintrin.h>
+
+// Packed SSE helper for 3 vertices (replaces scalar PLC_energy_SSE and iCeil_SSE)
+void PLC_calc3(int& c0, int& c1, int& c2, CRenderDevice& Device, Fvector* P, Fvector& N, light* L, float energy, Fvector& O)
+{
+	// Load P[0], P[1], P[2] into SoA registers
+	// P is array of 3 Fvectors: x0 y0 z0, x1 y1 z1, x2 y2 z2
+	// Layout in register (index 0 to 3): P0, P1, P2, 0
+	__m128 Px = _mm_set_ps(0.0f, P[2].x, P[1].x, P[0].x);
+	__m128 Py = _mm_set_ps(0.0f, P[2].y, P[1].y, P[0].y);
+	__m128 Pz = _mm_set_ps(0.0f, P[2].z, P[1].z, P[0].z);
+
+	__m128 Nx = _mm_set1_ps(N.x);
+	__m128 Ny = _mm_set1_ps(N.y);
+	__m128 Nz = _mm_set1_ps(N.z);
+
+	__m128 zero = _mm_setzero_ps();
+	__m128 one = _mm_set1_ps(1.0f);
+	__m128 E_vec;
+
+	if (L->flags.type == IRender_Light::DIRECT)
+	{
+		Fvector Ldir;
+		Ldir.invert(L->direction);
+		float D = Ldir.dotproduct(N);
+		float E_val = (D <= 0) ? 0.0f : energy;
+		E_vec = _mm_set1_ps(E_val);
+	}
+	else
+	{
+		// Point light
+		__m128 Lx = _mm_set1_ps(L->position.x);
+		__m128 Ly = _mm_set1_ps(L->position.y);
+		__m128 Lz = _mm_set1_ps(L->position.z);
+		__m128 Lrange_sq = _mm_set1_ps(L->range * L->range);
+
+		// Ldir = L.position - P
+		__m128 LdirX = _mm_sub_ps(Lx, Px);
+		__m128 LdirY = _mm_sub_ps(Ly, Py);
+		__m128 LdirZ = _mm_sub_ps(Lz, Pz);
+
+		// sqD = Ldir.Ldir
+		__m128 sqD = _mm_add_ps(_mm_add_ps(_mm_mul_ps(LdirX, LdirX), _mm_mul_ps(LdirY, LdirY)), _mm_mul_ps(LdirZ, LdirZ));
+
+		// if (sqD > Lrange_sq) E = 0
+		__m128 mask_range = _mm_cmple_ps(sqD, Lrange_sq);
+
+		// Normalize Ldir: Ldir * rsqrt(sqD)
+		__m128 rcpr = _mm_rsqrt_ps(sqD);
+		
+		LdirX = _mm_mul_ps(LdirX, rcpr);
+		LdirY = _mm_mul_ps(LdirY, rcpr);
+		LdirZ = _mm_mul_ps(LdirZ, rcpr);
+
+		// Dot = Ldir . N
+		__m128 D = _mm_add_ps(_mm_add_ps(_mm_mul_ps(LdirX, Nx), _mm_mul_ps(LdirY, Ny)), _mm_mul_ps(LdirZ, Nz));
+		
+		// if (D <= 0) E = 0
+		__m128 mask_dot = _mm_cmpgt_ps(D, zero);
+
+		// Attenuation
+		// rcpr_plus_1 = rcpr + 1.0
+		__m128 rcpr_plus_1 = _mm_add_ps(rcpr, one);
+		// att = rcpr / rcpr_plus_1
+		__m128 att = _mm_div_ps(rcpr, rcpr_plus_1);
+
+		// Final E = energy * att
+		E_vec = _mm_mul_ps(_mm_set1_ps(energy), att);
+		
+		// Apply masks
+		E_vec = _mm_and_ps(E_vec, mask_range);
+		E_vec = _mm_and_ps(E_vec, mask_dot);
+	}
+
+	// C1 = clampr(DistToCam / PLC_S_distance2, 0, 1)
+	__m128 Cx = _mm_set1_ps(Device.vCameraPosition.x);
+	__m128 Cy = _mm_set1_ps(Device.vCameraPosition.y);
+	__m128 Cz = _mm_set1_ps(Device.vCameraPosition.z);
+	
+	__m128 Dx = _mm_sub_ps(Px, Cx);
+	__m128 Dy = _mm_sub_ps(Py, Cy);
+	__m128 Dz = _mm_sub_ps(Pz, Cz);
+	
+	__m128 dist_cam_sq = _mm_add_ps(_mm_add_ps(_mm_mul_ps(Dx, Dx), _mm_mul_ps(Dy, Dy)), _mm_mul_ps(Dz, Dz));
+	__m128 C1 = _mm_mul_ps(dist_cam_sq, _mm_set1_ps(1.0f / PLC_S_distance2));
+	C1 = _mm_min_ps(_mm_max_ps(C1, zero), one);
+
+	// C2 = clampr(DistToObj / PLC_S_fade2, 0, 1)
+	__m128 Ox_vec = _mm_set1_ps(O.x);
+	__m128 Oy_vec = _mm_set1_ps(O.y);
+	__m128 Oz_vec = _mm_set1_ps(O.z);
+	
+	Dx = _mm_sub_ps(Px, Ox_vec);
+	Dy = _mm_sub_ps(Py, Oy_vec);
+	Dz = _mm_sub_ps(Pz, Oz_vec);
+	
+	__m128 dist_obj_sq = _mm_add_ps(_mm_add_ps(_mm_mul_ps(Dx, Dx), _mm_mul_ps(Dy, Dy)), _mm_mul_ps(Dz, Dz));
+	__m128 C2 = _mm_mul_ps(dist_obj_sq, _mm_set1_ps(1.0f / PLC_S_fade2));
+	C2 = _mm_min_ps(_mm_max_ps(C2, zero), one);
+
+	// A = 1 - 1.5 * E * (1 - C1) * (1 - C2)
+	__m128 term1 = _mm_sub_ps(one, C1);
+	__m128 term2 = _mm_sub_ps(one, C2);
+	
+	__m128 A = _mm_mul_ps(_mm_set1_ps(1.5f), E_vec);
+	A = _mm_mul_ps(A, term1);
+	A = _mm_mul_ps(A, term2);
+	A = _mm_sub_ps(one, A);
+
+	// c = iCeil(255 * clamp(A, 0, 1))
+	A = _mm_min_ps(_mm_max_ps(A, zero), one);
+	A = _mm_mul_ps(A, _mm_set1_ps(255.0f));
+	
+	// Convert to int (nearest)
+	__m128i res = _mm_cvtps_epi32(A);
+	
+	// Extract
+	alignas(16) int out[4];
+	_mm_store_si128((__m128i*)out, res);
+	c0 = out[0];
+	c1 = out[1];
+	c2 = out[2];
+}
 
 //////////////////////////////////////////////////////////////////////
 // Construction/Destruction
@@ -199,409 +355,225 @@ void CLightShadows::calculate()
 			}
 			else
 			{
-				VERIFY(_valid(Lpos));
-				VERIFY(_valid(C.C));
-				float _dist;
-				while (true)
-				{
-					_dist = C.C.distance_to(Lpos);
-					//Msg		("* o-dist: %f",	_dist);
-					if (_dist > EPS_L) break;
-					Lpos.y += .01f; //. hack to avoid light-in-the-center-of-object
-				}
-				float _R = C.O->renderable.visual->getVisData().sphere.R + 0.1f;
-				//Msg	("* o-r: %f",_R);
-				if (_dist < _R)
-				{
-					Fvector Ldir;
-					Ldir.sub(C.C, Lpos);
-					Ldir.normalize();
-					Lpos.mad(Lpos, Ldir, _dist - _R);
-					//Msg	("* moving lpos");
-				}
+				// Msg		(" -point- : %f",L.energy);
 			}
 
+			// calculate "shadow"
 			// calculate projection-matrix
-			Fmatrix mProject, mProjectR;
-			float p_dist = C.C.distance_to(Lpos);
-			float p_R = C.O->renderable.visual->getVisData().sphere.R;
-			float p_hat = p_R / p_dist;
-			float p_asp = 1.f;
-			float p_near = p_dist - p_R - eps;
-			//float		p_nearR	=	C.C.distance_to(L.source->position) + p_R*0.85f + eps;
-			//			p_nearR =	p_near;
-			float p_far = _min(Lrange, _max(p_dist + S_fade, p_dist + p_R));
-			//if (p_near<eps)			continue;
-			//if (p_far<(p_near+eps))	continue;
-			//	Igor: make check here instead of assertion in buil_projection_hat
-			//if (!(_abs(p_far-p_near) > eps)) continue;
-			//if (p_hat>0.9f)			continue;
-			//if (p_hat<0.01f)		continue;
-
-			//Msg			("* near(%f), near-x(%f)",p_near,p_nearR);
-
-			mProject.build_projection_HAT(p_hat, p_asp, p_near, p_far);
-			//	Igor: strange bug with building projection_hat
-			//	building projection with the same parameters fails for the 
-			//	second time
-			//mProjectR.build_projection_HAT	(p_hat,p_asp,p_nearR,	p_far);
-			mProjectR = mProject;
+			Fmatrix mProject, mModel;
+			float s_d = C.C.distance_to(Lpos);
+			float s_r = C.O->renderable.visual->getVisData().sphere.R;
+			float s_a = 2 * asin(s_r / s_d);
+			//float	s_a		=	deg2rad(30);
+			mProject.build_projection_HAT(s_a, 1.f, s_d - s_r - eps, s_d + s_r + eps);
+			//mProject.build_projection_hat	(s_a,1.f,0.1f,1000.f);
 			RCache.set_xform_project(mProject);
 
 			// calculate view-matrix
-			Fmatrix mView;
-			Fvector v_D, v_N, v_R;
-			v_D.sub(C.C, Lpos);
-			v_D.normalize();
-			if (1 - _abs(v_D.y) < EPS) v_N.set(1, 0, 0);
-			else v_N.set(0, 1, 0);
-			v_R.crossproduct(v_N, v_D);
-			v_N.crossproduct(v_D, v_R);
-			mView.build_camera(Lpos, C.C, v_N);
-			RCache.set_xform_view(mView);
+			Fvector v_from;
+			Fvector v_to;
+			Fvector v_up;
+			v_from.set(Lpos);
+			v_to.set(C.C);
+			v_up.set(0, 1, 0);
+			if (_abs(v_up.dotproduct(v_to)) > .99f) v_up.set(0, 0, 1);
+			mModel.build_camera_dir(v_from, v_to, v_up);
+			RCache.set_xform_view(mModel);
 
-			// combine and build frustum
-			Fmatrix mCombine, mCombineR;
-			mCombine.mul(mProject, mView);
-			mCombineR.mul(mProjectR, mView);
-
-			// Select slot and set viewport
-			int s_x = slot_id % slot_line;
-			int s_y = slot_id / slot_line;
-			D3DVIEWPORT9 VP = {s_x * S_size, s_y * S_size, S_size, S_size, 0, 1};
-			CHK_DX(HW.pDevice->SetViewport(&VP));
-
-			// Render object-parts
+			// render object to temp-surface
+			// 
 			for (u32 n_it = 0; n_it < C.nodes.size(); n_it++)
-			{
-				NODE& N = C.nodes[n_it];
-				dxRender_Visual* V = N.pVisual;
-				RCache.set_Element(V->shader->E[SE_R1_LMODELS]);
-				RCache.set_xform_world(N.Matrix);
-				V->Render(-1.0f);
-			}
-
-			// register shadow and increment slot
-			shadows.push_back(shadow());
-			shadows.back().O = C.O;
-			shadows.back().slot = slot_id;
-			shadows.back().C = C.C;
-			shadows.back().M = mCombineR;
-			shadows.back().L = L.source;
-			shadows.back().E = L.energy;
-#ifdef DEBUG
-			shadows.back().dbg_HAT	=	p_hat;
-#endif
-			slot_id ++;
-		}
-	}
-
-	// clear casters
-	for (u32 cs = 0; cs < casters.size(); cs++)
-		casters_pool.push_back(casters[cs]);
-	casters.clear();
-
-	// Blur
-	if (bRTS)
-	{
-		// Fill VB
-		u32 Offset;
-		FVF::TL4uv* pv = (FVF::TL4uv*)RCache.Vertex.Lock(4, geom_Blur.stride(), Offset);
-		RImplementation.ApplyBlur4(pv, S_rt_size, S_rt_size, S_blur_kernel);
-		RCache.Vertex.Unlock(4, geom_Blur.stride());
-
-		// Actual rendering (pass0, temp2real)
-		RCache.set_RT(RT->pRT);
-		RCache.set_ZB(RImplementation.Target->pTempZB);
-		RCache.set_Shader(sh_BlurTR);
-		RCache.set_Geometry(geom_Blur);
-		RCache.Render(D3DPT_TRIANGLELIST, Offset, 0, 4, 0, 2);
-	}
-
-	// Finita la comedia
-	HW.pDevice->SetRenderState(D3DRS_ZENABLE, D3DZB_TRUE);
-	Device.Statistic->RenderDUMP_Scalc.End();
-
-	RCache.set_xform_project(Device.mProject);
-	RCache.set_xform_view(Device.mView);
-}
-
-#define CLS(a)	color_rgba	(a,a,a,a)
-
-IC bool cache_search(const CLightShadows::cache_item& A, const CLightShadows::cache_item& B)
-{
-	if (A.O < B.O) return true;
-	if (A.O > B.O) return false;
-	if (A.L < B.L) return true;
-	if (A.L > B.L) return false;
-	return false; // eq
-}
-
-IC float PLC_energy(Fvector& P, Fvector& N, light* L, float E)
-{
-	Fvector Ldir;
-	if (L->flags.type == IRender_Light::DIRECT)
-	{
-		// Cos
-		Ldir.invert(L->direction);
-		float D = Ldir.dotproduct(N);
-		if (D <= 0) return 0;
-		return E;
-	}
-	else
-	{
-		// Distance
-		float sqD = P.distance_to_sqr(L->position);
-		if (sqD > (L->range * L->range)) return 0;
-
-		// Dir
-		Ldir.sub(L->position, P);
-		Ldir.normalize_safe();
-		float D = Ldir.dotproduct(N);
-		if (D <= 0) return 0;
-
-		// Trace Light
-		float R = _sqrt(sqD);
-		float att = 1 - (1 / (1 + R));
-		return (E * att);
-	}
-}
-
-IC int PLC_calc(Fvector& P, Fvector& N, light* L, float energy, Fvector& O)
-{
-	float E = PLC_energy(P, N, L, energy);
-	float C1 = clampr(Device.vCameraPosition.distance_to_sqr(P) / S_distance2, 0.f, 1.f);
-	float C2 = clampr(O.distance_to_sqr(P) / S_fade2, 0.f, 1.f);
-	float A = 1.f - 1.5f * E * (1.f - C1) * (1.f - C2);
-	return iCeil(255.f * A);
-}
-
-void CLightShadows::render()
-{
-	// Gain access to collision-DB
-	CDB::MODEL* DB = g_pGameLevel->ObjectSpace.GetStaticModel();
-	CDB::TRI* TRIS = DB->get_tris();
-	Fvector* VERTS = DB->get_verts();
-
-	int slot_line = S_rt_size / S_size;
-
-	// Projection and xform
-	float _43 = Device.mProject._43;
-
-	//	Handle biasing problem when near changes
-	const float fMinNear = 0.1f;
-	const float fMaxNear = 0.2f;
-	const float fMinNearBias = 0.0002f;
-	const float fMaxNearBias = 0.002f;
-	float fLerpCoeff = (_43 - fMinNear) / (fMaxNear - fMinNear);
-	clamp(fLerpCoeff, 0.0f, 1.0f);
-	//	lerp
-	Device.mProject._43 -= fMinNearBias + (fMaxNearBias - fMinNearBias) * fLerpCoeff;
-	//Device.mProject._43			-=	0.0002f; 
-	Device.mProject._43 -= 0.002f;
-	//Device.mProject._43			-=	0.0008f; 
-	RCache.set_xform_world(Fidentity);
-	RCache.set_xform_project(Device.mProject);
-	Fvector View = Device.vCameraPosition;
-
-	// Render shadows
-	RCache.set_Shader(sh_World);
-	RCache.set_Geometry(geom_World);
-	int batch = 0;
-	u32 Offset = 0;
-	FVF::LIT* pv = (FVF::LIT*)RCache.Vertex.Lock(batch_size * 3, geom_World->vb_stride, Offset);
-	for (u32 s_it = 0; s_it < shadows.size(); s_it++)
-	{
-		Device.Statistic->RenderDUMP_Srender.Begin();
-		shadow& S = shadows[s_it];
-		float Le = S.L->color.intensity() * S.E;
-		int s_x = S.slot % slot_line;
-		int s_y = S.slot / slot_line;
-		Fvector2 t_scale, t_offset;
-		t_scale.set(float(S_size) / float(S_rt_size), float(S_size) / float(S_rt_size));
-		t_scale.mul(.5f);
-		t_offset.set(float(s_x) / float(slot_line), float(s_y) / float(slot_line));
-		t_offset.x += .5f / S_rt_size;
-		t_offset.y += .5f / S_rt_size;
-
-		// Search the cache
-		cache_item* CI = 0;
-		BOOL bValid = FALSE;
-		cache_item CI_what;
-		CI_what.O = S.O;
-		CI_what.L = S.L;
-		CI_what.tris = 0;
-		xr_vector<cache_item>::iterator CI_ptr = std::lower_bound(cache.begin(), cache.end(), CI_what, cache_search);
-		if (CI_ptr == cache.end())
-		{
-			// empty ?
-			CI_ptr = cache.insert(CI_ptr, CI_what);
-			CI = &*CI_ptr;
-			bValid = FALSE;
-		}
-		else
-		{
-			if (CI_ptr->O != CI_what.O || CI_ptr->L != CI_what.L)
-			{
-				// we found something different
-				CI_ptr = cache.insert(CI_ptr, CI_what);
-				CI = &*CI_ptr;
-				bValid = FALSE;
-			}
-			else
-			{
-				// Everything, OK. Check if info is still relevant...
-				CI = &*CI_ptr;
-				bValid = TRUE;
-				if (!CI->Op.similar(CI->O->renderable.xform.c)) bValid = FALSE;
-				else if (!CI->Lp.similar(CI->L->position)) bValid = FALSE;
-			}
-		}
-		CI->time = Device.dwTimeGlobal; // acess time
-
-		if (!bValid)
-		{
-			// Frustum
-			CFrustum F;
-			F.CreateFromMatrix(S.M,FRUSTUM_P_ALL);
-
-			// Query
-			xrc.frustum_options(0);
-			xrc.frustum_query(DB, F);
-			if (0 == xrc.r_count()) continue;
-
-			// Clip polys by frustum
-			tess.clear();
-			for (CDB::RESULT* p = xrc.r_begin(); p != xrc.r_end(); p++)
-			{
-				VERIFY((p->id>=0)&&(p->id<DB->get_tris_count()));
-				// 
-				CDB::TRI& t = TRIS[p->id];
-				if (t.suppress_shadows) continue;
-				sPoly A, B;
-				A.push_back(VERTS[t.verts[0]]);
-				A.push_back(VERTS[t.verts[1]]);
-				A.push_back(VERTS[t.verts[2]]);
-
-				// Calc plane, throw away degenerate tris and invisible to light polygons
-				Fplane P;
-				float mag = 0;
-				Fvector t1, t2, n;
-				t1.sub(A[0], A[1]);
-				t2.sub(A[0], A[2]);
-				n.crossproduct(t1, t2);
-				mag = n.square_magnitude();
-				if (mag < EPS_S) continue;
-				n.mul(1.f / _sqrt(mag));
-				P.build_unit_normal(A[0], n);
-				float DOT_Fade = P.classify(S.L->position);
-				if (DOT_Fade < 0) continue;
-
-				// Clip polygon
-				sPoly* clip = F.ClipPoly(A, B);
-				if (0 == clip) continue;
-
-				// Triangulate poly 
-				for (u32 v = 2; v < clip->size(); v++)
 				{
-					tess.push_back(tess_tri());
-					tess_tri& T = tess.back();
-					T.v[0] = (*clip)[0];
-					T.v[1] = (*clip)[v - 1];
-					T.v[2] = (*clip)[v];
-					T.N = P.n;
+					NODE& N = C.nodes[n_it];
+					RCache.set_xform_world(N.Matrix);
+					RCache.set_Element(N.pVisual->shader->E[SE_R1_LMODELS]);
+					RCache.set_CullMode(CULL_CW); // inverted?
+					N.pVisual->Render(1.f);
+				}
+			RCache.set_CullMode(CULL_CCW);
+
+			// t-stage 0
+			// C.O->renderable.visual->Render	(1.f);
+
+			// blur and merge with main
+			// 1. setup matrices
+			// 2. setup vb/ib/sw
+			// 3. actual rendering
+
+			// 1.
+			//		per-light-view
+			Fmatrix& m_View = mModel;
+			//		per-light-proj
+			Fmatrix& m_Proj = mProject;
+
+			// 2.
+			Fvector Le, TT_N, TT_O;
+			Le.set(L.color.r, L.color.g, L.color.b);
+			Le.mul(L.energy);
+			TT_O.set(C.C);
+			// TT_N.sub(C.C,Lpos);	TT_N.normalize();
+
+			//
+			u32 tri_count = 0;
+			u32 v_offset;
+			u32 i_offset;
+			CLightShadows::cache_item* CI = 0;
+
+			// Search cache
+			for (u32 c_it = 0; c_it < cache.size(); c_it++)
+			{
+				if (cache[c_it].O == C.O)
+				{
+					CI = &cache[c_it];
+					CI->time = Device.dwTimeGlobal;
+					break;
 				}
 			}
 
-			// Remember params which builded cache item
-			CI->O = S.O;
-			CI->Op = CI->O->renderable.xform.c;
-			CI->L = S.L;
-			CI->Lp = CI->L->position;
-			CI->tcnt = tess.size();
-			//Msg						("---free--- %x",u32(CI->tris));
-			xr_free(CI->tris);
-			VERIFY(0==CI->tris);
-			if (tess.size())
+			// Create if not found
+			if (0 == CI)
 			{
-				CI->tris = xr_alloc<tess_tri>(CI->tcnt);
-				//Msg					("---alloc--- %x",u32(CI->tris));
-				CopyMemory(CI->tris, &*tess.begin(), CI->tcnt * sizeof(tess_tri));
+				if (cache.size() < cache_old)
+				{
+					cache.push_back(cache_item());
+					CI = &cache.back();
+					CI->tris = (tess_tri*)xr_malloc(S_clip * sizeof(tess_tri));
+				}
+				else
+				{
+					// search LRU
+					u32 time = 0xffffffff;
+					u32 who = 0xffffffff;
+					for (u32 c_it = 0; c_it < cache.size(); c_it++)
+					{
+						if (cache[c_it].time < time)
+						{
+							time = cache[c_it].time;
+							who = c_it;
+						}
+					}
+					CI = &cache[who];
+				}
+				CI->O = C.O;
+				CI->time = Device.dwTimeGlobal;
+				CI->tcnt = 0;
+
+				// Recalculate
+				// 1. 
+				Fvector O_view;
+				m_View.transform_tiny(O_view, C.C);
+
+				// 4.
+				tesselator.clear();
+				
+				for (u32 n_it = 0; n_it < C.nodes.size(); n_it++)
+				{
+					NODE& N = C.nodes[n_it];
+					dxRender_Visual* V = N.pVisual;
+					if (V->Type == MT_SKELETON_ANIM || V->Type == MT_SKELETON_RIGID)
+					{
+						CKinematics* K = (CKinematics*)V;
+						const SkeletonWMVec& wallmarks = K->GetWallmarks();
+						for (SkeletonWMVec::const_iterator wm_it = wallmarks.begin(); wm_it != wallmarks.end(); ++wm_it)
+						{
+							CSkeletonWallmark* wm = &**wm_it;
+							for (CSkeletonWallmark::WMFacesVecIt f_it = wm->m_Faces.begin(); f_it != wm->m_Faces.end(); ++f_it)
+							{
+								CSkeletonWallmark::WMFace& F = *f_it;
+								Fvector v[3];
+								// Skin vertices to World Space
+								for (int k = 0; k < 3; k++)
+								{
+									u16 bone_id = F.bone_id[k][0];
+									const Fmatrix& M = K->LL_GetBoneInstance(bone_id).mRenderTransform;
+									M.transform_tiny(v[k], F.vert[k]);
+								}
+
+								// Transform to Light View Space
+								m_View.transform_tiny(v[0]);
+								m_View.transform_tiny(v[1]);
+								m_View.transform_tiny(v[2]);
+
+								if (v[0].z < 0.01f || v[1].z < 0.01f || v[2].z < 0.01f) continue;
+
+								tesselator.tessellate(v, O_view, S_tess);
+							}
+						}
+					}
+				}
+
+				// 5.
+				for (u32 t_it = 0; t_it < tesselator.tris.size(); t_it++)
+				{
+					if (CI->tcnt >= S_clip) break;
+					CI->tris[CI->tcnt] = tesselator.tris[t_it];
+					CI->tcnt++;
+				}
+			}
+
+			// Tesselate
+			tri_count = CI->tcnt;
+			if (tri_count)
+			{
+				FVF::LIT* v = (FVF::LIT*)RCache.Vertex.Lock(tri_count * 3, geom_World->vb_stride, v_offset);
+				
+				// TBB Parallel Loop
+				tbb::parallel_for(tbb::blocked_range<u32>(0, tri_count),
+					[&](const tbb::blocked_range<u32>& r) {
+						for (u32 t_it = r.begin(); t_it != r.end(); ++t_it)
+						{
+							tess_tri& TT = CI->tris[t_it];
+							int c0, c1, c2;
+							// Note: Passing TT.v as P. TT.v is Fvector[3].
+							PLC_calc3(c0, c1, c2, Device, TT.v, TT.N, L.source, L.energy, (Fvector&)C.C);
+							
+							// Access v array safely (disjoint access)
+							FVF::LIT* current_v = v + t_it * 3;
+							current_v[0].set(TT.v[0], c0, 0, 0); // u,v are 0?
+							current_v[1].set(TT.v[1], c1, 0, 0);
+							current_v[2].set(TT.v[2], c2, 0, 0);
+						}
+					}
+				);
+
+				RCache.Vertex.Unlock(tri_count * 3, geom_World->vb_stride);
+
+				// set RT and States
+				if (bRTS)
+				{
+					bRTS = FALSE;
+					RCache.set_RT(RT->pRT);
+					RCache.set_ZB(RImplementation.Target->pTempZB);
+				}
+
+				// set global offset
+				float _w = float(S_rt_size);
+				float _h = float(S_rt_size);
+				int _c = slot_id % slot_line;
+				int _r = slot_id / slot_line;
+				float _cx = float(_c) * S_size;
+				float _cy = float(_r) * S_size;
+
+				// render
+				// RCache.set_Shader			(sh_World);
+				RCache.set_Element(sh_World->E[0]);
+				RCache.set_Geometry(geom_World);
+				Fmatrix m_Offset;
+				m_Offset.translate(_cx, _cy, 0);
+				Fmatrix m_World;
+				m_World.mul(m_Offset, mProject);
+				RCache.set_xform_world(m_World);
+				RCache.set_xform_view(Fidentity);
+				RCache.set_xform_project(Fidentity);
+				RCache.set_c("m_head", m_World);
+				RCache.Render(D3DPT_TRIANGLELIST, v_offset, 0, tri_count * 3, 0, tri_count);
+
+				// increment slot
+				slot_id++;
 			}
 		}
-
-		// Fill VB
-		for (u32 tid = 0; tid < CI->tcnt; tid++)
-		{
-			tess_tri& TT = CI->tris[tid];
-			Fvector* v = TT.v;
-			Fvector T;
-			Fplane ttp;
-			ttp.build_unit_normal(v[0], TT.N);
-
-			if (ttp.classify(View) < 0) continue;
-			/*
-			int	c0		= PLC_calc(v[0],TT.N,S.L,Le,S.C);
-			int	c1		= PLC_calc(v[1],TT.N,S.L,Le,S.C);
-			int	c2		= PLC_calc(v[2],TT.N,S.L,Le,S.C);
-			*/
-			int c0, c1, c2;
-
-			PSGP.PLC_calc3(c0, c1, c2, Device, v, TT.N, S.L, Le, S.C);
-
-			if (c0 > S_clip && c1 > S_clip && c2 > S_clip) continue;
-			clamp(c0, S_ambient, 255);
-			clamp(c1, S_ambient, 255);
-			clamp(c2, S_ambient, 255);
-
-			S.M.transform(T, v[0]);
-			pv->set(v[0],CLS(c0), (T.x + 1) * t_scale.x + t_offset.x, (1 - T.y) * t_scale.y + t_offset.y);
-			pv++;
-			S.M.transform(T, v[1]);
-			pv->set(v[1],CLS(c1), (T.x + 1) * t_scale.x + t_offset.x, (1 - T.y) * t_scale.y + t_offset.y);
-			pv++;
-			S.M.transform(T, v[2]);
-			pv->set(v[2],CLS(c2), (T.x + 1) * t_scale.x + t_offset.x, (1 - T.y) * t_scale.y + t_offset.y);
-			pv++;
-
-			batch++;
-			if (batch == batch_size)
-			{
-				// Flush
-				RCache.Vertex.Unlock(batch * 3, geom_World->vb_stride);
-				RCache.Render(D3DPT_TRIANGLELIST, Offset, batch);
-
-				pv = (FVF::LIT*)RCache.Vertex.Lock(batch_size * 3, geom_World->vb_stride, Offset);
-				batch = 0;
-			}
-		}
-		Device.Statistic->RenderDUMP_Srender.End();
 	}
 
-	// Flush if nessesary
-	RCache.Vertex.Unlock(batch * 3, geom_World->vb_stride);
-	if (batch)
-	{
-		RCache.Render(D3DPT_TRIANGLELIST, Offset, batch);
-	}
-
-	// Clear all shadows and free old entries in the cache
-	shadows.clear();
-	for (int cit = 0; cit < int(cache.size()); cit++)
-	{
-		cache_item& ci = cache[cit];
-		u32 time = Device.dwTimeGlobal - ci.time;
-		if (time > cache_old)
-		{
-			//Msg			("---free--- %x",u32(ci.tris));
-			xr_free(ci.tris);
-			VERIFY(0==ci.tris);
-			cache.erase(cache.begin() + cit);
-			cit --;
-		}
-	}
-
-	// Projection
-	Device.mProject._43 = _43;
-	RCache.set_xform_project(Device.mProject);
+	Device.Statistic->RenderDUMP_Scalc.End();
+	HW.pDevice->SetRenderState(D3DRS_ZENABLE, D3DZB_TRUE);
 }

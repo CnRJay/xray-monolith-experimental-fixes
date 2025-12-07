@@ -18,6 +18,7 @@
 #include "../../sound_memory_manager.h"
 
 #include <tbb/parallel_for.h>
+#include <tbb/task_group.h>
 #include <tbb/enumerable_thread_specific.h>
 
 #ifdef DEBUG
@@ -131,9 +132,12 @@ void CAI_Stalker::feel_sound_new()
 	Fvector my_pos = Position();
 	float hearing_threshold = memory().sound().threshold();
 
-	tbb::parallel_for(tbb::blocked_range<size_t>(0, events.size()),
-		[&](const tbb::blocked_range<size_t>& r)
-		{
+	tbb::task_group tg;
+	size_t count = events.size();
+	const size_t chunk_size = 32;
+
+	for (size_t i = 0; i < count; i += chunk_size) {
+		tg.run([&, i, count, chunk_size] {
 			xrXRC xrc_local;
 			collide::rq_results r_temp_local;
 			xr_vector<ISpatial*> r_spatial_local;
@@ -141,9 +145,10 @@ void CAI_Stalker::feel_sound_new()
 
 			xr_vector<SoundEvent>& local_audible = audible_sounds_tls.local();
 
-			for (size_t i = r.begin(); i != r.end(); ++i)
+			size_t end = std::min(i + chunk_size, count);
+			for (size_t j = i; j < end; ++j)
 			{
-				const SoundEvent& event = events[i];
+				const SoundEvent& event = events[j];
 				ref_sound_data_ptr sd = event.first;
 				
 				if (!sd || !sd->feedback) continue;
@@ -178,8 +183,9 @@ void CAI_Stalker::feel_sound_new()
 				// the sound is audible here
 				local_audible.push_back(event);
 			}
-		}
-	);
+		});
+	}
+	tg.wait();
 
 	for (const auto& local_audible : audible_sounds_tls)
 	{

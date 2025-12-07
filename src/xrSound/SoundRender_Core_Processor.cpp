@@ -9,7 +9,7 @@
 #include "cl_intersect.h"
 #include <mutex>
 #include <tbb/blocked_range.h>
-#include <tbb/parallel_for.h>
+#include <tbb/task_group.h>
 
 
 CSoundRender_Emitter *CSoundRender_Core::i_play(ref_sound *S, BOOL _loop,
@@ -51,20 +51,32 @@ void CSoundRender_Core::update(const Fvector &P, const Fvector &D,
       }
     }
 
-    tbb::parallel_for(
-        tbb::blocked_range<size_t>(0, emitters_to_calc.size()),
-        [&](const tbb::blocked_range<size_t> &range) {
-          thread_local CRandom th_rng(
-              std::hash<std::thread::id>{}(std::this_thread::get_id()));
-          for (size_t i = range.begin(); i != range.end(); ++i) {
-            CSoundRender_Emitter *E = emitters_to_calc[i];
-            Fvector occluder[3];
-            float occ =
-                get_occlusion_impl(E->p_source.position, .2f, occluder, th_rng);
-            E->m_current_occ_value = occ;
-            E->m_occ_value_ready = true;
-          }
+    tbb::task_group tg;
+    size_t count = emitters_to_calc.size();
+    const size_t chunk_size = 32;
+
+    for (size_t i = 0; i < count; i += chunk_size) {
+        tg.run([&, i, count, chunk_size] {
+            thread_local CRandom th_rng(
+                std::hash<std::thread::id>{}(std::this_thread::get_id()));
+#ifdef __linux__
+            CDB::COLLIDER th_collider;
+#else
+            thread_local CDB::COLLIDER th_collider;
+#endif
+            
+            size_t end = std::min(i + chunk_size, count);
+            for (size_t j = i; j < end; ++j) {
+                CSoundRender_Emitter *E = emitters_to_calc[j];
+                Fvector occluder[3];
+                float occ =
+                    get_occlusion_impl(E->p_source.position, .2f, occluder, th_rng, &th_collider);
+                E->m_current_occ_value = occ;
+                E->m_occ_value_ready = true;
+            }
         });
+    }
+    tg.wait();
   }
 
   for (it = 0; it < s_targets.size(); it++) {
@@ -269,7 +281,7 @@ float CSoundRender_Core::get_occlusion(Fvector &P, float R, Fvector *occ) {
 }
 
 float CSoundRender_Core::get_occlusion_impl(Fvector &P, float R, Fvector *occ,
-                                            CRandom &RNG) {
+                                            CRandom &RNG, CDB::COLLIDER* parent_collider) {
   float occ_value = 1.f;
 
   // Calculate RAY params
@@ -285,6 +297,14 @@ float CSoundRender_Core::get_occlusion_impl(Fvector &P, float R, Fvector *occ,
 
   std::shared_lock<std::shared_mutex> lock(m_sound_model_mutex);
 
+#ifndef _EDITOR
+  CDB::COLLIDER* collider = parent_collider;
+  if (!collider) {
+      thread_local CDB::COLLIDER th_collider;
+      collider = &th_collider;
+  }
+#endif
+
   if (0 != geom_MODEL) {
     bool bNeedFullTest = true;
     // 1. Check cached polygon
@@ -296,7 +316,6 @@ float CSoundRender_Core::get_occlusion_impl(Fvector &P, float R, Fvector *occ,
       }
     // 2. Polygon doesn't picked up - real database query
     if (bNeedFullTest) {
-      thread_local CDB::COLLIDER th_collider;
 #ifdef _EDITOR
       ETOOLS::ray_options(CDB::OPT_ONLYNEAREST);
       ETOOLS::ray_query(geom_MODEL, base, dir, range);
@@ -304,11 +323,11 @@ float CSoundRender_Core::get_occlusion_impl(Fvector &P, float R, Fvector *occ,
         // cache polygon
         const CDB::RESULT *R = ETOOLS::r_begin();
 #else
-      th_collider.ray_options(CDB::OPT_ONLYNEAREST);
-      th_collider.ray_query(geom_MODEL, base, dir, range);
-      if (0 != th_collider.r_count()) {
+      collider->ray_options(CDB::OPT_ONLYNEAREST);
+      collider->ray_query(geom_MODEL, base, dir, range);
+      if (0 != collider->r_count()) {
         // cache polygon
-        const CDB::RESULT *R = th_collider.r_begin();
+        const CDB::RESULT *R = collider->r_begin();
 #endif
         const CDB::TRI &T = geom_MODEL->get_tris()[R->id];
         const Fvector *V = geom_MODEL->get_verts();
@@ -320,17 +339,16 @@ float CSoundRender_Core::get_occlusion_impl(Fvector &P, float R, Fvector *occ,
     }
   }
   if (0 != geom_SOM) {
-    thread_local CDB::COLLIDER th_collider;
 #ifdef _EDITOR
     ETOOLS::ray_options(CDB::OPT_CULL);
     ETOOLS::ray_query(geom_SOM, base, dir, range);
     u32 r_cnt = ETOOLS::r_count();
     CDB::RESULT *_B = ETOOLS::r_begin();
 #else
-    th_collider.ray_options(CDB::OPT_CULL);
-    th_collider.ray_query(geom_SOM, base, dir, range);
-    u32 r_cnt = th_collider.r_count();
-    CDB::RESULT *_B = th_collider.r_begin();
+    collider->ray_options(CDB::OPT_CULL);
+    collider->ray_query(geom_SOM, base, dir, range);
+    u32 r_cnt = collider->r_count();
+    CDB::RESULT *_B = collider->r_begin();
 #endif
     if (0 != r_cnt) {
       for (u32 k = 0; k < r_cnt; k++) {

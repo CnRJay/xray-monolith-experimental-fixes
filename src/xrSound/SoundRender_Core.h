@@ -143,7 +143,7 @@ public:
                               float dispersion, CRandom &RNG);
 
   float get_occlusion(Fvector &P, float R, Fvector *occ) override;
-  float get_occlusion_impl(Fvector &P, float R, Fvector *occ, CRandom &RNG);
+  float get_occlusion_impl(Fvector &P, float R, Fvector *occ, CRandom &RNG, CDB::COLLIDER* collider = nullptr);
 
   CSoundRender_Environment *get_environment(const Fvector &P);
 

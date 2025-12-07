@@ -79,7 +79,7 @@ static inline u32 hash2(u32 x, u32 y)
 }
 
 //#define		DBG_SWITCHOFF_RANDOMIZE
-void CDetailManager::cache_Decompress(Slot* S)
+void CDetailManager::cache_Decompress(Slot* S, CDB::COLLIDER* collider)
 {
 	VERIFY(S);
 	Slot& D = *S;
@@ -99,9 +99,10 @@ void CDetailManager::cache_Decompress(Slot* S)
     Scene->BoxPickObjects(D.vis.box,pinf,GetSnapList());
 	u32	triCount		= pinf.size();
 #else
-	xrc.box_options(CDB::OPT_FULL_TEST);
-	xrc.box_query(g_pGameLevel->ObjectSpace.GetStaticModel(), bC, bD);
-	u32 triCount = xrc.r_count();
+	CDB::COLLIDER* pCollider = collider ? collider : xrc.collider();
+	pCollider->box_options(CDB::OPT_FULL_TEST);
+	pCollider->box_query(g_pGameLevel->ObjectSpace.GetStaticModel(), bC, bD);
+	u32 triCount = pCollider->r_count();
 	CDB::TRI* tris = g_pGameLevel->ObjectSpace.GetStaticTris();
 	Fvector* verts = g_pGameLevel->ObjectSpace.GetStaticVerts();
 #endif
@@ -181,7 +182,11 @@ void CDetailManager::cache_Decompress(Slot* S)
 #endif
 
 			CDetail* Dobj = objects[DS.r_id(index)];
-			SlotItem* ItemP = poolSI.create();
+			SlotItem* ItemP = nullptr;
+			{
+				xrCriticalSectionGuard lock(pool_mutex);
+				ItemP = poolSI.create();
+			}
 			SlotItem& Item = *ItemP;
 
 			// Position (XZ)
@@ -221,7 +226,7 @@ RDEVICE.Statistic->TEST0.End		();
 					}
 				}
 #else
-				CDB::TRI& T = tris[xrc.r_begin()[tid].id];
+				CDB::TRI& T = tris[pCollider->r_begin()[tid].id];
 				SGameMtl* mtl = GMLib.GetMaterialByIdx(T.material);
 				if (mtl->Flags.test(SGameMtl::flPassable))
 					continue;

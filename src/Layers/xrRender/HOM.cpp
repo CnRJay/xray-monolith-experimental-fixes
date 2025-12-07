@@ -10,12 +10,18 @@
 #include "dxRenderDeviceRender.h"
 
 #include <tbb/blocked_range.h>
-#include <tbb/parallel_for.h>
+#include <tbb/task_group.h>
+#include <tbb/enumerable_thread_specific.h>
 
 float psOSSR = .001f;
 
 void __stdcall CHOM::MT_RENDER() {
   MT.Enter();
+  if (m_bRendering) {
+      MT.Leave();
+      return;
+  }
+  m_bRendering = TRUE;
   bool b_main_menu_is_active = (g_pGamePersistent->m_pMainMenu &&
                                 g_pGamePersistent->m_pMainMenu->IsActive());
   if (MT_frame_rendered != Device.dwFrame && !b_main_menu_is_active) {
@@ -25,6 +31,7 @@ void __stdcall CHOM::MT_RENDER() {
     Enable();
     Render(ViewBase);
   }
+  m_bRendering = FALSE;
   MT.Leave();
 }
 
@@ -34,6 +41,7 @@ void __stdcall CHOM::MT_RENDER() {
 
 CHOM::CHOM() {
   bEnabled = FALSE;
+  m_bRendering = FALSE;
   m_pModel = 0;
   m_pTris = 0;
 #ifdef DEBUG
@@ -198,63 +206,104 @@ void CHOM::Render_DB(CFrustum &base) {
   std::sort(it, end, pred_fb(m_pTris, COP));
 
   // Build frustum with near plane only
-  CFrustum clip;
-  clip.CreateFromMatrix(Device.mFullTransform, FRUSTUM_P_NEAR);
-  sPoly src, dst;
   u32 _frame = Device.dwFrame;
 #ifdef DEBUG
   tris_in_frame = xrc.r_count();
   tris_in_frame_visible = 0;
 #endif
 
+  struct HOMThreadData {
+    occRasterizer *rasterizer;
+    CFrustum clip;
+    u32 last_frame;
+
+    HOMThreadData() {
+      rasterizer = new occRasterizer();
+      // rasterizer->clear(); // Will be cleared on use
+      last_frame = 0;
+    }
+    ~HOMThreadData() {
+      delete rasterizer;
+    }
+  };
+
+  static tbb::enumerable_thread_specific<HOMThreadData *> tls_data(
+      []() { return new HOMThreadData(); });
+
   // Perfrom selection, sorting, culling
-  tbb::parallel_for(tbb::blocked_range<CDB::RESULT *>(it, end),
-                    [&](const tbb::blocked_range<CDB::RESULT *> &range) {
-                      sPoly src, dst;
-                      for (CDB::RESULT *I = range.begin(); I != range.end();
-                           ++I) {
-                        // Control skipping
-                        occTri &T = m_pTris[I->id];
-                        u32 next = _frame + ((I->id + _frame) % 8 + 3);
+  tbb::task_group tg;
+  const size_t chunk_size = 64; // Smaller chunk size for variable workloads
+  size_t count = std::distance(it, end);
 
-                        // Test for good occluder - should be improved :)
-                        if (!(T.flags || (T.plane.classify(COP) > 0))) {
-                          T.skip = next;
-                          continue;
-                        }
+  for (size_t i = 0; i < count; i += chunk_size) {
+      tg.run([&, i, count, chunk_size, it] {
+          HOMThreadData *data = tls_data.local();
+          if (data->last_frame != Device.dwFrame) {
+              data->rasterizer->clear();
+              data->clip.CreateFromMatrix(Device.mFullTransform, FRUSTUM_P_NEAR);
+              data->last_frame = Device.dwFrame;
+          }
 
-                        // Access to triangle vertices
-                        CDB::TRI &t = m_pModel->get_tris()[I->id];
-                        Fvector *v = m_pModel->get_verts();
-                        src.clear();
-                        dst.clear();
-                        src.push_back(v[t.verts[0]]);
-                        src.push_back(v[t.verts[1]]);
-                        src.push_back(v[t.verts[2]]);
-                        sPoly *P = clip.ClipPoly(src, dst);
-                        if (0 == P) {
-                          T.skip = next;
-                          continue;
-                        }
+          occRasterizer *local_rasterizer = data->rasterizer;
+          CFrustum &clip = data->clip;
+          sPoly src, dst;
 
-      // XForm and Rasterize
-#ifdef DEBUG
-                        InterlockedIncrement((long *)&tris_in_frame_visible);
-#endif
-                        u32 pixels = 0;
-                        int limit = int(P->size()) - 1;
-                        for (int v = 1; v < limit; v++) {
-                          m_xform.transform(T.raster[0], (*P)[0]);
-                          m_xform.transform(T.raster[1], (*P)[v + 0]);
-                          m_xform.transform(T.raster[2], (*P)[v + 1]);
-                          pixels += Raster.rasterize(&T);
-                        }
-                        if (0 == pixels) {
-                          T.skip = next;
-                          continue;
-                        }
-                      }
-                    });
+          size_t current_chunk = std::min(chunk_size, count - i);
+          CDB::RESULT* chunk_start = it + i;
+          CDB::RESULT* chunk_end = chunk_start + current_chunk;
+
+          for (CDB::RESULT *I = chunk_start; I != chunk_end; ++I) {
+            // Control skipping
+            occTri &T = m_pTris[I->id];
+            u32 next = _frame + ((I->id + _frame) % 8 + 3);
+
+            // Test for good occluder - should be improved :)
+            if (!(T.flags || (T.plane.classify(COP) > 0))) {
+              T.skip = next;
+              continue;
+            }
+
+            // Access to triangle vertices
+            CDB::TRI &t = m_pModel->get_tris()[I->id];
+            Fvector *v = m_pModel->get_verts();
+            src.clear();
+            dst.clear();
+            src.push_back(v[t.verts[0]]);
+            src.push_back(v[t.verts[1]]);
+            src.push_back(v[t.verts[2]]);
+            sPoly *P = clip.ClipPoly(src, dst);
+            if (0 == P) {
+              T.skip = next;
+              continue;
+            }
+
+            // XForm and Rasterize
+  #ifdef DEBUG
+            InterlockedIncrement((long *)&tris_in_frame_visible);
+  #endif
+            u32 pixels = 0;
+            int limit = int(P->size()) - 1;
+            for (int v = 1; v < limit; v++) {
+              m_xform.transform(T.raster[0], (*P)[0]);
+              m_xform.transform(T.raster[1], (*P)[v + 0]);
+              m_xform.transform(T.raster[2], (*P)[v + 1]);
+              pixels += local_rasterizer->rasterize(&T);
+            }
+            if (0 == pixels) {
+              T.skip = next;
+              continue;
+            }
+          }
+      });
+  }
+  tg.wait();
+
+  // Merge results
+  for (auto data : tls_data) {
+    if (data->last_frame == Device.dwFrame) {
+        Raster.merge(*data->rasterizer);
+    }
+  }
 }
 
 void CHOM::Render(CFrustum &base) {

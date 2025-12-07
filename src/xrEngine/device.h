@@ -1,4 +1,4 @@
-﻿#ifndef xr_device
+#ifndef xr_device
 #define xr_device
 #pragma once
 
@@ -111,6 +111,7 @@ public:
   CRegistrator<pureAppStart> seqAppStart;
   CRegistrator<pureAppEnd> seqAppEnd;
   CRegistrator<pureFrame> seqFrame;
+  CRegistrator<pureFrame> seqFrameIndependent;
   CRegistrator<pureScreenResolutionChanged> seqResolutionChanged;
 
   HWND m_hWnd;
@@ -245,31 +246,9 @@ public:
 
   // float fFOV;
   // float fASPECT;
-
-  CRenderDevice()
-      : m_pRender(0)
-#ifdef INGAME_EDITOR
-        ,
-        m_editor_module(0), m_editor_initialize(0), m_editor_finalize(0),
-        m_editor(0), m_engine(0)
-#endif // #ifdef INGAME_EDITOR
-#ifdef PROFILE_CRITICAL_SECTIONS
-        ,
-        mt_csEnter(MUTEX_PROFILE_ID(CRenderDevice::mt_csEnter)),
-        mt_csLeave(MUTEX_PROFILE_ID(CRenderDevice::mt_csLeave))
-#endif // #ifdef PROFILE_CRITICAL_SECTIONS
-  {
-    m_hWnd = NULL;
-    b_is_Active = FALSE;
-    b_is_Ready = FALSE;
-    b_hide_cursor = FALSE;
-    Timer.Start();
-    m_bNearer = FALSE;
-
-    m_SecondViewport.SetSVPActive(false);
-    m_SecondViewport.SetSVPFrameDelay(2);
-    m_SecondViewport.isCamReady = false;
-  };
+  
+  CRenderDevice();
+  ~CRenderDevice();
 
   void Pause(BOOL bOn, BOOL bTimer, BOOL bSound, LPCSTR reason);
   bool Paused();
@@ -441,6 +420,15 @@ private:
 public:
   xr_imgui::ide &imgui() { return m_imgui; }
   bool imgui_shown() const { return m_imgui.is_shown(); }
+
+private:
+  struct DeviceFlowGraph;
+  DeviceFlowGraph* m_flow_graph;
+
+public:
+  void TaskRender();
+  void TaskLogic();
+
 #ifdef INGAME_EDITOR
 public:
   IC editor::ide *editor() const { return m_editor; }

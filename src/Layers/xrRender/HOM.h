@@ -26,6 +26,7 @@ private:
 
 	xrCriticalSection MT;
 	volatile u32 MT_frame_rendered;
+	BOOL m_bRendering;
 
 	void Render_DB(CFrustum& base);
 public:
