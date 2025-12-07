@@ -53,17 +53,25 @@ void CSoundRender_Core::update(const Fvector &P, const Fvector &D,
 
     tbb::task_group tg;
     size_t count = emitters_to_calc.size();
+
+#ifdef __linux__
+    // Sequential processing to avoid deadlocks on linux only
+    CDB::COLLIDER collider;
+    for (auto* E : emitters_to_calc) {
+        Fvector occluder[3];
+        float occ = get_occlusion_impl(E->p_source.position, .2f, occluder, ::Random, &collider);
+        E->m_current_occ_value = occ;
+        E->m_occ_value_ready = true;
+    }
+#else
+    // Windows stays with parallel processing
     const size_t chunk_size = 32;
 
     for (size_t i = 0; i < count; i += chunk_size) {
         tg.run([&, i, count, chunk_size] {
             thread_local CRandom th_rng(
                 std::hash<std::thread::id>{}(std::this_thread::get_id()));
-#ifdef __linux__
-            CDB::COLLIDER th_collider;
-#else
             thread_local CDB::COLLIDER th_collider;
-#endif
             
             size_t end = std::min(i + chunk_size, count);
             for (size_t j = i; j < end; ++j) {
@@ -77,6 +85,7 @@ void CSoundRender_Core::update(const Fvector &P, const Fvector &D,
         });
     }
     tg.wait();
+#endif
   }
 
   for (it = 0; it < s_targets.size(); it++) {

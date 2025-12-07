@@ -280,6 +280,9 @@ void CGamePersistent::WeathersUpdate()
 {
 	if (g_pGameLevel && !g_dedicated_server)
 	{
+		if (!Environment().CurrentEnv || !Environment().Current[0] || !Environment().Current[1])
+			return;
+
 		CActor* actor = smart_cast<CActor*>(Level().CurrentViewEntity());
 		BOOL bIndoor = TRUE;
 		if (actor) bIndoor = actor->renderable_ROS()->get_luminocity_hemi() < 0.05f;

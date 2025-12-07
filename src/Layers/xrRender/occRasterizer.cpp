@@ -4,7 +4,6 @@
 
 #include "stdafx.h"
 #include "occRasterizer.h"
-#include <tbb/spin_mutex.h>
 
 
 #if DEBUG

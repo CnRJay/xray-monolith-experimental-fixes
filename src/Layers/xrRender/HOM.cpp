@@ -9,6 +9,7 @@
 
 #include "dxRenderDeviceRender.h"
 
+#include <memory>
 #include <tbb/blocked_range.h>
 #include <tbb/task_group.h>
 #include <tbb/enumerable_thread_specific.h>
@@ -137,9 +138,11 @@ void CHOM::Load() {
 }
 
 void CHOM::Unload() {
+  MT.Enter();
+  bEnabled = FALSE;
   xr_delete(m_pModel);
   xr_free(m_pTris);
-  bEnabled = FALSE;
+  MT.Leave();
 }
 
 class pred_fb {
@@ -164,6 +167,21 @@ public:
     return T.skip > Device.dwFrame;
   }
 };
+
+  struct HOMThreadData {
+    occRasterizer *rasterizer;
+    CFrustum clip;
+    u32 last_frame;
+
+    HOMThreadData() {
+      rasterizer = new occRasterizer();
+      // rasterizer->clear(); // Will be cleared on use
+      last_frame = 0;
+    }
+    ~HOMThreadData() {
+      xr_delete(rasterizer);
+    }
+  };
 
 void CHOM::Render_DB(CFrustum &base) {
   // Update projection matrices on every frame to ensure valid HOM culling
@@ -212,23 +230,8 @@ void CHOM::Render_DB(CFrustum &base) {
   tris_in_frame_visible = 0;
 #endif
 
-  struct HOMThreadData {
-    occRasterizer *rasterizer;
-    CFrustum clip;
-    u32 last_frame;
-
-    HOMThreadData() {
-      rasterizer = new occRasterizer();
-      // rasterizer->clear(); // Will be cleared on use
-      last_frame = 0;
-    }
-    ~HOMThreadData() {
-      delete rasterizer;
-    }
-  };
-
-  static tbb::enumerable_thread_specific<HOMThreadData *> tls_data(
-      []() { return new HOMThreadData(); });
+  static tbb::enumerable_thread_specific<std::shared_ptr<HOMThreadData>> tls_data(
+      []() { return std::make_shared<HOMThreadData>(); });
 
   // Perfrom selection, sorting, culling
   tbb::task_group tg;
@@ -237,7 +240,7 @@ void CHOM::Render_DB(CFrustum &base) {
 
   for (size_t i = 0; i < count; i += chunk_size) {
       tg.run([&, i, count, chunk_size, it] {
-          HOMThreadData *data = tls_data.local();
+          HOMThreadData *data = tls_data.local().get();
           if (data->last_frame != Device.dwFrame) {
               data->rasterizer->clear();
               data->clip.CreateFromMatrix(Device.mFullTransform, FRUSTUM_P_NEAR);

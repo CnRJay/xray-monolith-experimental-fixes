@@ -1,6 +1,5 @@
 #include "stdafx.h"
 #include "occRasterizer.h"
-#include <tbb/spin_mutex.h>
 
 
 struct RasterCtx {
@@ -145,9 +144,6 @@ void i_scan(RasterCtx &Ctx, int curY, float leftX, float lhx, float rightX,
   occRasterizer& rasterizer = *Ctx.pRasterizer;
   occTri **pFrame = rasterizer.get_frame();
   float *pDepth = rasterizer.get_depth();
-
-  // lock scanline
-  tbb::spin_mutex::scoped_lock lock(rasterizer.m_locks[curY].mutex);
 
   // left connector
   int i_base = curY * occ_dim;

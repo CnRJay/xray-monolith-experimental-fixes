@@ -1,13 +1,6 @@
 // occRasterizer.h: interface for the occRasterizer class.
 //////////////////////////////////////////////////////////////////////
 #pragma once
-#include <tbb/spin_mutex.h>
-
-struct PaddedSpinMutex {
-	tbb::spin_mutex mutex;
-	// Pad to 64 bytes to avoid false sharing
-	char padding[64 - sizeof(tbb::spin_mutex)];
-};
 
 const int occ_dim_0 = 64;
 const int occ_dim_1 = occ_dim_0 / 2;
@@ -41,7 +34,6 @@ private:
   occD bufDepth_3[occ_dim_3][occ_dim_3];
 
 public:
-  PaddedSpinMutex m_locks[occ_dim];
   IC int df_2_s32(float d) { return iFloor(d * occQ_s32); }
   IC s16 df_2_s16(float d) { return s16(iFloor(d * occQ_s16)); }
   IC int df_2_s32up(float d) { return iCeil(d * occQ_s32); }
