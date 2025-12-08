@@ -6,15 +6,15 @@
 #define XRSOUND_API
 //__declspec(dllexport)
 #else
-	#define XRSOUND_API
+#define XRSOUND_API
 //__declspec(dllimport)
 #endif
 
 #ifdef __BORLANDC__
-	#define XRSOUND_EDITOR_API XRSOUND_API
+#define XRSOUND_EDITOR_API XRSOUND_API
 
-	// editor only refs
-	class XRSOUND_EDITOR_API SoundEnvironment_LIB;
+// editor only refs
+class XRSOUND_EDITOR_API SoundEnvironment_LIB;
 #else
 #define XRSOUND_EDITOR_API
 #endif
@@ -97,8 +97,8 @@ public:
 	{
 	}
 
-	virtual void accept(CSound_UserDataVisitor*) =0;
-	virtual void invalidate() =0;
+	virtual void accept(CSound_UserDataVisitor*) = 0;
+	virtual void invalidate() = 0;
 };
 
 typedef resptr_core<CSound_UserData, resptr_base<CSound_UserData>> CSound_UserDataPtr;
@@ -113,7 +113,7 @@ public:
 	int g_type; //!< Sound type, usually for AI
 	CObject* g_object; //!< Game object that emitts ref_sound
 	CSound_UserDataPtr g_userdata;
-	shared_str fn_attached [2];
+	shared_str fn_attached[2];
 
 	u32 dwBytesTotal;
 	float fTimeTotal;
@@ -130,7 +130,7 @@ typedef resptr_core<ref_sound_data, resptr_base<ref_sound_data>> ref_sound_data_
 \brief Sound source + control
 
 The main class respresenting source/emitter interface
-This class infact just hides internals and redirect calls to 
+This class infact just hides internals and redirect calls to
 specific sub-systems
 */
 struct ref_sound
@@ -181,7 +181,7 @@ public:
 	IC void play(CObject* O, u32 flags = 0, float delay = 0.f);
 	IC void play_at_pos(CObject* O, const Fvector& pos, u32 flags = 0, float delay = 0.f);
 	IC void play_no_feedback(CObject* O, u32 flags = 0, float delay = 0.f, Fvector* pos = 0, float* vol = 0,
-	                         float* freq = 0, Fvector2* range = 0);
+		float* freq = 0, Fvector2* range = 0);
 
 	IC void stop();
 	IC void stop_deffered();
@@ -231,14 +231,14 @@ class XRSOUND_API CSound_params
 public:
 	CSound_params() :
 		set(false)
-		{
-			position.set(0.0f, 0.0f, 0.0f);
-			velocity.set(0.0f, 0.0f, 0.0f);
-			accVelocity.set(0.f, 0.f, 0.f);
+	{
+		position.set(0.0f, 0.0f, 0.0f);
+		velocity.set(0.0f, 0.0f, 0.0f);
+		accVelocity.set(0.f, 0.f, 0.f);
 
-			// demonized: add pitch variation
-			pitch_variation = 0.02 * Random.randF(-1.f, 1.f) * soundSmoothingParams::pitchVariationPower;
-		}
+		// demonized: add pitch variation
+		pitch_variation = 0.02 * Random.randF(-1.f, 1.f) * soundSmoothingParams::pitchVariationPower;
+	}
 
 private:
 	bool set;
@@ -338,8 +338,8 @@ public:
 
 		struct
 		{
-			u32 _3D :1;
-			u32 _rendered :1;
+			u32 _3D : 1;
+			u32 _rendered : 1;
 		};
 	};
 
@@ -352,8 +352,6 @@ public:
 
 /// definition (Sound Callback)
 typedef void __stdcall sound_event(ref_sound_data_ptr S, float range);
-
-typedef std::pair<ref_sound_data_ptr, float> SoundEvent;
 
 /// definition (Sound Manager Interface)
 class XRSOUND_API CSound_manager_interface
@@ -386,7 +384,7 @@ public:
 	virtual void play(ref_sound& S, CObject* O, u32 flags = 0, float delay = 0.f) = 0;
 	virtual void play_at_pos(ref_sound& S, CObject* O, const Fvector& pos, u32 flags = 0, float delay = 0.f) = 0;
 	virtual void play_no_feedback(ref_sound& S, CObject* O, u32 flags = 0, float delay = 0.f, Fvector* pos = 0,
-	                              float* vol = 0, float* freq = 0, Fvector2* range = 0) = 0;
+		float* vol = 0, float* freq = 0, Fvector2* range = 0) = 0;
 
 	virtual void set_master_volume(float f = 1.f) = 0;
 	virtual void set_geometry_env(IReader* I) = 0;
@@ -402,14 +400,13 @@ public:
 
 	virtual void object_relcase(CObject* obj) = 0;
 	virtual const Fvector& listener_position() = 0;
-	virtual const xr_vector<SoundEvent>& GetEvents() const = 0;
 #ifdef __BORLANDC__
-	virtual SoundEnvironment_LIB*	get_env_library			()																						= 0;
-	virtual void					refresh_env_library		()																						= 0;
-	virtual void					set_user_env			(CSound_environment* E)																	= 0;
-	virtual void					refresh_sources			()																						= 0;
-    virtual void					set_environment			(u32 id, CSound_environment** dst_env)													= 0;
-    virtual void					set_environment_size	(CSound_environment* src_env, CSound_environment** dst_env)								= 0;
+	virtual SoundEnvironment_LIB* get_env_library() = 0;
+	virtual void					refresh_env_library() = 0;
+	virtual void					set_user_env(CSound_environment* E) = 0;
+	virtual void					refresh_sources() = 0;
+	virtual void					set_environment(u32 id, CSound_environment** dst_env) = 0;
+	virtual void					set_environment_size(CSound_environment* src_env, CSound_environment** dst_env) = 0;
 #endif
 };
 
@@ -469,7 +466,7 @@ IC void ref_sound::play_at_pos(CObject* O, const Fvector& pos, u32 flags, float 
 }
 
 IC void ref_sound::play_no_feedback(CObject* O, u32 flags, float d, Fvector* pos, float* vol, float* freq,
-                                    Fvector2* range)
+	Fvector2* range)
 {
 	VERIFY(!::Sound->i_locked());
 	::Sound->play_no_feedback(*this, O, flags, d, pos, vol, freq, range);

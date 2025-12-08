@@ -62,9 +62,6 @@ void dxRainRender::Render(CEffect_Rain& owner)
 	float factor = g_pGamePersistent->Environment().CurrentEnv->rain_density;
 	if (factor < EPS_L) return;
 
-	const int MAX_RAIN_RAYCASTS = 60;
-	int raycasts_this_frame = 0;
-
 #if defined(USE_DX11)
 	PIX_EVENT(SSFX_RAIN_RENDER);
 #endif
@@ -147,67 +144,69 @@ void dxRainRender::Render(CEffect_Rain& owner)
 		float dt = Device.fTimeDelta;
 		one.P.mad(one.D, one.fSpeed * dt);
 
-		// Device.Statistic->TEST1.Begin();
-		Fvector wdir;
-		wdir.set(one.P.x - vEye.x, 0, one.P.z - vEye.z);
-		float wlen = wdir.square_magnitude();
-		if (wlen > b_radius_wrap_sqr)
-		{
-			wlen = _sqrt(wlen);
-			//.			Device.Statistic->TEST3.Begin();
-			if ((one.P.y - vEye.y) < sink_offset)
+			Device.Statistic->TEST1.Begin();
+			Fvector wdir;
+			wdir.set(one.P.x - vEye.x, 0, one.P.z - vEye.z);
+			float wlen = wdir.square_magnitude();
+			if (wlen > b_radius_wrap_sqr)
 			{
-				// need born
-				one.invalidate();
-			}
-			else
-			{
-				Fvector inv_dir, src_p;
-				inv_dir.invert(one.D);
-				wdir.div(wlen);
-				one.P.mad(one.P, wdir, -(wlen + rain_radius));
-				if (src_plane.intersectRayPoint(one.P, inv_dir, src_p))
+				wlen = _sqrt(wlen);
+				//.			Device.Statistic->TEST3.Begin();
+				if ((one.P.y - vEye.y) < sink_offset)
 				{
-					float dist_sqr = one.P.distance_to_sqr(src_p);
-					float height = max_distance;
-
-					// Throttling RayPick to avoid CPU spikes
-					bool bHit = false;
-					if (raycasts_this_frame < MAX_RAIN_RAYCASTS)
+					// need born
+					one.invalidate();
+				}
+				else
+				{
+					Fvector inv_dir, src_p;
+					inv_dir.invert(one.D);
+					wdir.div(wlen);
+					one.P.mad(one.P, wdir, -(wlen + rain_radius));
+					if (src_plane.intersectRayPoint(one.P, inv_dir, src_p))
 					{
-						bHit = owner.RayPick(src_p, one.D, height, collide::rqtBoth);
-						raycasts_this_frame++;
-					}
-
-					if (bHit)
-					{
-						if (_sqr(height) <= dist_sqr)
+						float dist_sqr = one.P.distance_to_sqr(src_p);
+						float height = max_distance;
+						if (owner.RayPick(src_p, one.D, height, collide::rqtBoth))
 						{
-							one.invalidate(); // need born
-							//							Log("1");
+							if (_sqr(height) <= dist_sqr)
+							{
+								one.invalidate(); // need born
+								//							Log("1");
+							}
+							else
+							{
+								owner.RenewItem(one, height - _sqrt(dist_sqr), TRUE); // fly to point
+								//							Log("2",height-dist);
+							}
 						}
 						else
 						{
-							owner.RenewItem(one, height - _sqrt(dist_sqr), TRUE); // fly to point
-							//							Log("2",height-dist);
+							owner.RenewItem(one, max_distance - _sqrt(dist_sqr), FALSE); // fly ...
+							//						Log("3",1.5f*b_height-dist);
 						}
 					}
 					else
 					{
-						owner.RenewItem(one, max_distance - _sqrt(dist_sqr), FALSE); // fly ...
-						//						Log("3",1.5f*b_height-dist);
+						// need born
+						one.invalidate();
+						//					Log("4");
 					}
 				}
-				else
-				{
-					// need born
-					one.invalidate();
-					//					Log("4");
-				}
+				//.			Device.Statistic->TEST3.End();
 			}
-			//.			Device.Statistic->TEST3.End();
+			Device.Statistic->TEST1.End();
 		}
-		// Device.Statistic->TEST1.End(); // Optimization: Remove profiling in release
+	}
+
+	// Generate geometry
+	u32 vOffset;
+	FVF::LIT* verts = (FVF::LIT*)RCache.Vertex.Lock(desired_items * 4, hGeom_Rain->vb_stride, vOffset);
+	FVF::LIT* start = verts;
+	for (u32 I = 0; I < current_items; I++)
+	{
+		// physics and time control
+		CEffect_Rain::Item& one = owner.items[I];
 
 		// Build line
 		Fvector& pos_head = one.P;
@@ -215,11 +214,13 @@ void dxRainRender::Render(CEffect_Rain& owner)
 		pos_trail.mad(pos_head, one.D, -_drop_len * factor_visual);
 
 		// Culling
-		Fvector sC;
-		Fvector lineD = one.D;
-		float sR = _drop_len * factor_visual * 0.5f;
-		sC.mad(pos_head, lineD, -sR);
-
+		Fvector sC, lineD;
+		float sR;
+		sC.sub(pos_head, pos_trail);
+		lineD.normalize(sC);
+		sC.mul(.5f);
+		sR = sC.magnitude();
+		sC.add(pos_trail);
 		if (!::Render->ViewBase.testSphere_dirty(sC, sR)) continue;
 
 		static Fvector2 UV[2][4] = {

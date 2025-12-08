@@ -9,7 +9,7 @@
 #pragma once
 
 IC CSoundMemoryManager::CSoundMemoryManager(CCustomMonster* object, CAI_Stalker* stalker,
-                                            CSound_UserDataVisitor* visitor)
+	CSound_UserDataVisitor* visitor)
 {
 	VERIFY(object);
 	m_object = object;
@@ -18,7 +18,7 @@ IC CSoundMemoryManager::CSoundMemoryManager(CCustomMonster* object, CAI_Stalker*
 	m_stalker = stalker;
 	m_max_sound_count = 0;
 #ifdef USE_SELECTED_SOUND
-	m_selected_sound			= 0;
+	m_selected_sound = 0;
 #endif
 }
 
@@ -36,7 +36,7 @@ IC void CSoundMemoryManager::priority(const ESoundTypes& sound_type, u32 priorit
 }
 
 #ifdef USE_SELECTED_SOUND
-IC	const MemorySpace::CSoundObject *CSoundMemoryManager::sound		() const
+IC	const MemorySpace::CSoundObject* CSoundMemoryManager::sound() const
 {
 	return						(m_selected_sound);
 }
@@ -51,11 +51,6 @@ IC void CSoundMemoryManager::set_threshold(float threshold)
 {
 	m_sound_threshold = threshold;
 	VERIFY(_valid(m_sound_threshold));
-}
-
-IC float CSoundMemoryManager::threshold() const
-{
-	return m_sound_threshold;
 }
 
 IC void CSoundMemoryManager::restore_threshold()

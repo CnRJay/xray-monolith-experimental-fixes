@@ -74,24 +74,17 @@ public:
 		BENDER_ANIM_SUCK = 3,
 		BENDER_ANIM_BLOW = 4,
 		BENDER_ANIM_PULSE = 5,
-	}; 
+	};
 
 	void GrassBendersUpdateAnimations();
 	void GrassBendersAddExplosion(u16 id, Fvector position, Fvector3 dir, float fade, float speed, float intensity, float radius);
 	void GrassBendersAddShot(u16 id, Fvector position, Fvector3 dir, float fade, float speed, float intensity, float radius);
 	void GrassBendersRemoveById(u16 id);
 	void GrassBendersRemoveByIndex(u8& idx);
-	void GrassBendersUpdate(u16 id, u8& data_idx, u32& data_frame, Fvector& position, float radius, float str, bool CheckDistance );
+	void GrassBendersUpdate(u16 id, u8& data_idx, u32& data_frame, Fvector& position, float radius, float str, bool CheckDistance);
 	void GrassBendersReset(u8 idx);
 	void GrassBendersSet(u8 idx, u16 id, Fvector position, Fvector3 dir, float fade, float speed, float str, float radius, GrassBenders_Anim anim, bool resetTime);
 	float GrassBenderToValue(float& current, float go_to, float intensity, bool use_easing);
-
-	class CEnvironmentRegistrator : public pureFrame {
-		IGame_Persistent* m_owner;
-	public:
-		CEnvironmentRegistrator(IGame_Persistent* owner) : m_owner(owner) {}
-		virtual void _BCL OnFrame();
-	} m_env_registrator;
 
 	CPerlinNoise1D* PerlinNoise1D;
 
@@ -168,15 +161,15 @@ public:
 
 	virtual void RegisterModel(IRenderVisual* V)
 #ifndef _EDITOR
-	= 0;
+		= 0;
 #else
-    {}
+	{}
 #endif
 	virtual float MtlTransparent(u32 mtl_idx)
 #ifndef _EDITOR
-	= 0;
+		= 0;
 #else
-    {return 1.f; }
+	{ return 1.f; }
 #endif
 
 	struct act_dat
@@ -193,9 +186,9 @@ public:
 	ICF u32 GameType() { return m_game_params.m_e_game_type; };
 	virtual void Statistics(CGameFont* F)
 #ifndef _EDITOR
-	= 0;
+		= 0;
 #else
-    {}
+	{}
 #endif
 	virtual void LoadTitle(bool change_tip = false, shared_str map_name = "")
 	{

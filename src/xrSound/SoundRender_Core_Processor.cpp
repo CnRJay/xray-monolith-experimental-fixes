@@ -1,370 +1,321 @@
 #include "stdafx.h"
 #pragma hdrstop
 
-#include "SoundRender_Core.h"
-#include "SoundRender_CoreA.h"
-#include "SoundRender_Emitter.h"
-#include "SoundRender_Source.h"
-#include "SoundRender_TargetA.h"
 #include "cl_intersect.h"
-#include <mutex>
-#include <tbb/blocked_range.h>
-#include <tbb/task_group.h>
+#include "SoundRender_Core.h"
+#include "SoundRender_Emitter.h"
+#include "SoundRender_TargetA.h"
+#include "SoundRender_Source.h"
+#include "SoundRender_CoreA.h"
 
-
-CSoundRender_Emitter *CSoundRender_Core::i_play(ref_sound *S, BOOL _loop,
-                                                float delay) {
-  VERIFY(S->_p->feedback == 0);
-  CSoundRender_Emitter *E = xr_new<CSoundRender_Emitter>();
-  S->_p->feedback = E;
-  E->start(S, _loop, delay);
-  s_emitters.push_back(E);
-  return E;
+CSoundRender_Emitter* CSoundRender_Core::i_play(ref_sound* S, BOOL _loop, float delay)
+{
+	VERIFY(S->_p->feedback == 0);
+	CSoundRender_Emitter* E = xr_new<CSoundRender_Emitter>();
+	S->_p->feedback = E;
+	E->start(S, _loop, delay);
+	s_emitters.push_back(E);
+	return E;
 }
 
-void CSoundRender_Core::update(const Fvector &P, const Fvector &D,
-                               const Fvector &N) {
-  u32 it;
+void CSoundRender_Core::update(const Fvector& P, const Fvector& D, const Fvector& N)
+{
+	u32 it;
 
-  if (0 == bReady)
-    return;
-  bLocked = TRUE;
-  float new_tm = Timer.GetElapsed_sec();
-  fTimer_Delta = new_tm - fTimer_Value;
-  //.	float dt					=
-  // float(Timer_Delta)/1000.f;
-  float dt_sec = fTimer_Delta;
-  fTimer_Value = new_tm;
+	if (0 == bReady) return;
+	bLocked = TRUE;
+	float new_tm = Timer.GetElapsed_sec();
+	fTimer_Delta = new_tm - fTimer_Value;
+	//.	float dt					= float(Timer_Delta)/1000.f;
+	float dt_sec = fTimer_Delta;
+	fTimer_Value = new_tm;
 
-  s_emitters_u++;
+	s_emitters_u++;
 
-  // Firstly update emitters, which are now being rendered
-  // Msg	("! update: r-emitters");
+	// Firstly update emitters, which are now being rendered
+	//Msg	("! update: r-emitters");
+	for (it = 0; it < s_targets.size(); it++)
+	{
+		CSoundRender_Target* T = s_targets[it];
+		CSoundRender_Emitter* E = T->get_emitter();
+		if (E)
+		{
+			E->update(dt_sec);
+			E->marker = s_emitters_u;
+			E = T->get_emitter(); // update can stop itself
+			if (E) T->priority = E->priority();
+			else T->priority = -1;
+		}
+		else
+		{
+			T->priority = -1;
+		}
+	}
 
-  // Parallel Occlusion Calculation
-  {
-    xr_vector<CSoundRender_Emitter *> emitters_to_calc;
-    emitters_to_calc.reserve(s_emitters.size());
-    for (auto *E : s_emitters) {
-      if (E->isPlaying() && !E->b2D) {
-        emitters_to_calc.push_back(E);
-      }
-    }
+	// Update emmitters
+	//Msg	("! update: emitters");
+	for (it = 0; it < s_emitters.size(); it++)
+	{
+		CSoundRender_Emitter* pEmitter = s_emitters[it];
+		if (pEmitter->marker != s_emitters_u)
+		{
+			pEmitter->update(dt_sec);
+			pEmitter->marker = s_emitters_u;
+		}
+		if (!pEmitter->isPlaying())
+		{
+			// Stopped
+			xr_delete(pEmitter);
+			s_emitters.erase(s_emitters.begin() + it);
+			it--;
+		}
+	}
 
-    tbb::task_group tg;
-    size_t count = emitters_to_calc.size();
+	// Get currently rendering emitters
+	//Msg	("! update: targets");
+	s_targets_defer.clear();
+	s_targets_pu++;
+	// u32 PU				= s_targets_pu%s_targets.size();
+	for (it = 0; it < s_targets.size(); it++)
+	{
+		CSoundRender_Target* T = s_targets[it];
+		if (T->get_emitter())
+		{
+			// Has emmitter, maybe just not started rendering
+			if (T->get_Rendering())
+			{
+				/*if	(PU == it)*/
+				T->fill_parameters();
+				T->update();
+			}
+			else
+				s_targets_defer.push_back(T);
+		}
+	}
 
-#ifdef __linux__
-    // Sequential processing to avoid deadlocks on linux only
-    CDB::COLLIDER collider;
-    for (auto* E : emitters_to_calc) {
-        Fvector occluder[3];
-        float occ = get_occlusion_impl(E->p_source.position, .2f, occluder, ::Random, &collider);
-        E->m_current_occ_value = occ;
-        E->m_occ_value_ready = true;
-    }
-#else
-    // Windows stays with parallel processing
-    const size_t chunk_size = 32;
+	// Commit parameters from pending targets
+	if (!s_targets_defer.empty())
+	{
+		//Msg	("! update: start render - commit");
+		s_targets_defer.erase(std::unique(s_targets_defer.begin(), s_targets_defer.end()), s_targets_defer.end());
+		for (it = 0; it < s_targets_defer.size(); it++)
+			s_targets_defer[it]->fill_parameters();
+	}
 
-    for (size_t i = 0; i < count; i += chunk_size) {
-        tg.run([&, i, count, chunk_size] {
-            thread_local CRandom th_rng(
-                std::hash<std::thread::id>{}(std::this_thread::get_id()));
-            thread_local CDB::COLLIDER th_collider;
-            
-            size_t end = std::min(i + chunk_size, count);
-            for (size_t j = i; j < end; ++j) {
-                CSoundRender_Emitter *E = emitters_to_calc[j];
-                Fvector occluder[3];
-                float occ =
-                    get_occlusion_impl(E->p_source.position, .2f, occluder, th_rng, &th_collider);
-                E->m_current_occ_value = occ;
-                E->m_occ_value_ready = true;
-            }
-        });
-    }
-    tg.wait();
-#endif
-  }
+	// update EFX
+	if (m_is_supported)
+	{
+		if (bListenerMoved)
+		{
+			bListenerMoved = FALSE;
+			e_target_ptr = get_environment(P);
+			if (!e_target_ptr)
+				e_target_ptr = &e_identity;
+		}
 
-  for (it = 0; it < s_targets.size(); it++) {
-    CSoundRender_Target *T = s_targets[it];
-    CSoundRender_Emitter *E = T->get_emitter();
-    if (E) {
-      E->update(dt_sec);
-      E->marker = s_emitters_u;
-      E = T->get_emitter(); // update can stop itself
-      if (E)
-        T->priority = E->priority();
-      else
-        T->priority = -1;
-    } else {
-      T->priority = -1;
-    }
-  }
+		// demonized: Interpolate from e_current to 95% of e_target in close to exact time
+		constexpr float percent = 0.95f;
+		float alpha = 1.0f - std::exp(std::log(1.0f - percent) * dt_sec / snd_efx_environment_change_time);
+		clamp(alpha, 0.f, 1.f);
+		//Msg("interpolating from e_current to e_target %.2f", std::min(e_current.Reverb, e_target_ptr->Reverb) / std::max(e_current.Reverb, e_target_ptr->Reverb));
+		e_current.lerp(e_current, *e_target_ptr, alpha);
 
-  // Update emmitters
-  // Msg	("! update: emitters");
-  for (it = 0; it < s_emitters.size(); it++) {
-    CSoundRender_Emitter *pEmitter = s_emitters[it];
-    if (pEmitter->marker != s_emitters_u) {
-      pEmitter->update(dt_sec);
-      pEmitter->marker = s_emitters_u;
-    }
-    if (!pEmitter->isPlaying()) {
-      // Stopped
-      xr_delete(pEmitter);
-      s_emitters.erase(s_emitters.begin() + it);
-      it--;
-    }
-  }
+		set_listener(e_current);
+		commit();
+	}
 
-  // Get currently rendering emitters
-  // Msg	("! update: targets");
-  s_targets_defer.clear();
-  s_targets_pu++;
-  // u32 PU				= s_targets_pu%s_targets.size();
-  for (it = 0; it < s_targets.size(); it++) {
-    CSoundRender_Target *T = s_targets[it];
-    if (T->get_emitter()) {
-      // Has emmitter, maybe just not started rendering
-      if (T->get_Rendering()) {
-        /*if	(PU == it)*/
-        T->fill_parameters();
-        T->update();
-      } else
-        s_targets_defer.push_back(T);
-    }
-  }
+	// update listener
+	update_listener(P, D, N, dt_sec);
 
-  // Commit parameters from pending targets
-  if (!s_targets_defer.empty()) {
-    // Msg	("! update: start render - commit");
-    s_targets_defer.erase(
-        std::unique(s_targets_defer.begin(), s_targets_defer.end()),
-        s_targets_defer.end());
-    for (it = 0; it < s_targets_defer.size(); it++)
-      s_targets_defer[it]->fill_parameters();
-  }
+	// Start rendering of pending targets
+	if (!s_targets_defer.empty())
+	{
+		CSoundRender_CoreA* Core = (CSoundRender_CoreA*)this;
+		//Msg	("! update: start render");
+		for (it = 0; it < s_targets_defer.size(); it++)
+		{
+			CSoundRender_TargetA* Ptr = (CSoundRender_TargetA*)s_targets_defer[it];
+			if (m_is_supported)
+				Ptr->SetSlot(Core->slot);
+			Ptr->render();
+		}
+	}
 
-  // update EFX
-  if (m_is_supported) {
-    if (bListenerMoved) {
-      bListenerMoved = FALSE;
-      e_target_ptr = get_environment(P);
-      if (!e_target_ptr)
-        e_target_ptr = &e_identity;
-    }
+	// Events
+	update_events();
 
-    // demonized: Interpolate from e_current to 95% of e_target in close to
-    // exact time
-    constexpr float percent = 0.95f;
-    float alpha = 1.0f - std::exp(std::log(1.0f - percent) * dt_sec /
-                                  snd_efx_environment_change_time);
-    clamp(alpha, 0.f, 1.f);
-    // Msg("interpolating from e_current to e_target %.2f",
-    // std::min(e_current.Reverb, e_target_ptr->Reverb) /
-    // std::max(e_current.Reverb, e_target_ptr->Reverb));
-    e_current.lerp(e_current, *e_target_ptr, alpha);
-
-    set_listener(e_current);
-    commit();
-  }
-
-  // update listener
-  update_listener(P, D, N, dt_sec);
-
-  // Start rendering of pending targets
-  if (!s_targets_defer.empty()) {
-    CSoundRender_CoreA *Core = (CSoundRender_CoreA *)this;
-    // Msg	("! update: start render");
-    for (it = 0; it < s_targets_defer.size(); it++) {
-      CSoundRender_TargetA *Ptr = (CSoundRender_TargetA *)s_targets_defer[it];
-      if (m_is_supported)
-        Ptr->SetSlot(Core->slot);
-      Ptr->render();
-    }
-  }
-
-  // Events
-  update_events();
-
-  bLocked = FALSE;
+	bLocked = FALSE;
 }
 
 static u32 g_saved_event_count = 0;
 
-void CSoundRender_Core::update_events() {
-  g_saved_event_count = s_events.size();
-  for (u32 it = 0; it < s_events.size(); it++) {
-    event &E = s_events[it];
-    Handler(E.first, E.second);
-  }
-  s_events.clear_not_free();
+void CSoundRender_Core::update_events()
+{
+	g_saved_event_count = s_events.size();
+	for (u32 it = 0; it < s_events.size(); it++)
+	{
+		event& E = s_events[it];
+		Handler(E.first, E.second);
+	}
+	s_events.clear_not_free();
 }
 
-void CSoundRender_Core::statistic(CSound_stats *dest, CSound_stats_ext *ext) {
-  if (dest) {
-    dest->_rendered = 0;
-    for (u32 it = 0; it < s_targets.size(); it++) {
-      CSoundRender_Target *T = s_targets[it];
-      if (T->get_emitter() && T->get_Rendering())
-        dest->_rendered++;
-    }
-    dest->_simulated = s_emitters.size();
-    dest->_cache_hits = cache._stat_hit;
-    dest->_cache_misses = cache._stat_miss;
-    dest->_events = g_saved_event_count;
-    cache.stats_clear();
-  }
-  if (ext) {
-    for (u32 it = 0; it < s_emitters.size(); it++) {
-      CSoundRender_Emitter *_E = s_emitters[it];
-      CSound_stats_ext::SItem _I;
-      _I._3D = !_E->b2D;
-      _I._rendered = !!_E->target;
-      _I.params = _E->p_source;
-      _I.volume = _E->smooth_volume;
-      if (_E->owner_data) {
-        _I.name = _E->source()->fname;
-        _I.game_object = _E->owner_data->g_object;
-        _I.game_type = _E->owner_data->g_type;
-        _I.type = _E->owner_data->s_type;
-      } else {
-        _I.game_object = 0;
-        _I.game_type = 0;
-        _I.type = st_Effect;
-      }
-      ext->append(_I);
-    }
-  }
+void CSoundRender_Core::statistic(CSound_stats* dest, CSound_stats_ext* ext)
+{
+	if (dest)
+	{
+		dest->_rendered = 0;
+		for (u32 it = 0; it < s_targets.size(); it++)
+		{
+			CSoundRender_Target* T = s_targets[it];
+			if (T->get_emitter() && T->get_Rendering()) dest->_rendered++;
+		}
+		dest->_simulated = s_emitters.size();
+		dest->_cache_hits = cache._stat_hit;
+		dest->_cache_misses = cache._stat_miss;
+		dest->_events = g_saved_event_count;
+		cache.stats_clear();
+	}
+	if (ext)
+	{
+		for (u32 it = 0; it < s_emitters.size(); it++)
+		{
+			CSoundRender_Emitter* _E = s_emitters[it];
+			CSound_stats_ext::SItem _I;
+			_I._3D = !_E->b2D;
+			_I._rendered = !!_E->target;
+			_I.params = _E->p_source;
+			_I.volume = _E->smooth_volume;
+			if (_E->owner_data)
+			{
+				_I.name = _E->source()->fname;
+				_I.game_object = _E->owner_data->g_object;
+				_I.game_type = _E->owner_data->g_type;
+				_I.type = _E->owner_data->s_type;
+			}
+			else
+			{
+				_I.game_object = 0;
+				_I.game_type = 0;
+				_I.type = st_Effect;
+			}
+			ext->append(_I);
+		}
+	}
 }
 
-float CSoundRender_Core::get_occlusion_to(const Fvector &hear_pt,
-                                          const Fvector &snd_pt,
-                                          float dispersion) {
-  return get_occlusion_to_impl(hear_pt, snd_pt, dispersion, ::Random);
-}
 
-float CSoundRender_Core::get_occlusion_to_impl(const Fvector &hear_pt,
-                                               const Fvector &snd_pt,
-                                               float dispersion, CRandom &RNG) {
-  float occ_value = 1.f;
+float CSoundRender_Core::get_occlusion_to(const Fvector& hear_pt, const Fvector& snd_pt, float dispersion)
+{
+	float occ_value = 1.f;
 
-  if (0 != geom_SOM) {
-    std::shared_lock<std::shared_mutex> lock(m_sound_model_mutex);
-    // Calculate RAY params
-    Fvector pos, dir;
-    pos.random_dir(RNG);
-    pos.mul(dispersion);
-    pos.add(snd_pt);
-    dir.sub(pos, hear_pt);
-    float range = dir.magnitude();
-    dir.div(range);
+	if (0 != geom_SOM)
+	{
+		// Calculate RAY params
+		Fvector pos, dir;
+		pos.random_dir();
+		pos.mul(dispersion);
+		pos.add(snd_pt);
+		dir.sub(pos, hear_pt);
+		float range = dir.magnitude();
+		dir.div(range);
 
-    thread_local CDB::COLLIDER th_collider;
 #ifdef _EDITOR
-    ETOOLS::ray_options(CDB::OPT_CULL);
-    ETOOLS::ray_query(geom_SOM, hear_pt, dir, range);
-    u32 r_cnt = ETOOLS::r_count();
-    CDB::RESULT *_B = ETOOLS::r_begin();
+		ETOOLS::ray_options(CDB::OPT_CULL);
+		ETOOLS::ray_query(geom_SOM, hear_pt, dir, range);
+		u32 r_cnt = ETOOLS::r_count();
+		CDB::RESULT* _B = ETOOLS::r_begin();
 #else
-    th_collider.ray_options(CDB::OPT_CULL);
-    th_collider.ray_query(geom_SOM, hear_pt, dir, range);
-    u32 r_cnt = th_collider.r_count();
-    CDB::RESULT *_B = th_collider.r_begin();
+		geom_DB.ray_options(CDB::OPT_CULL);
+		geom_DB.ray_query(geom_SOM, hear_pt, dir, range);
+		u32 r_cnt = geom_DB.r_count();
+		CDB::RESULT* _B = geom_DB.r_begin();
 #endif
-    if (0 != r_cnt) {
-      for (u32 k = 0; k < r_cnt; k++) {
-        CDB::RESULT *R = _B + k;
-        occ_value *= *(float *)&R->dummy;
-      }
-    }
-  }
-  return occ_value;
+		if (0 != r_cnt)
+		{
+			for (u32 k = 0; k < r_cnt; k++)
+			{
+				CDB::RESULT* R = _B + k;
+				occ_value *= *(float*)&R->dummy;
+			}
+		}
+	}
+	return occ_value;
 }
 
-float CSoundRender_Core::get_occlusion(Fvector &P, float R, Fvector *occ) {
-  return get_occlusion_impl(P, R, occ, ::Random);
-}
+float CSoundRender_Core::get_occlusion(Fvector& P, float R, Fvector* occ)
+{
+	float occ_value = 1.f;
 
-float CSoundRender_Core::get_occlusion_impl(Fvector &P, float R, Fvector *occ,
-                                            CRandom &RNG, CDB::COLLIDER* parent_collider) {
-  float occ_value = 1.f;
+	// Calculate RAY params
+	Fvector base = listener_position();
+	Fvector pos, dir;
+	float range;
+	pos.random_dir();
+	pos.mul(R);
+	pos.add(P);
+	dir.sub(pos, base);
+	range = dir.magnitude();
+	dir.div(range);
 
-  // Calculate RAY params
-  Fvector base = listener_position();
-  Fvector pos, dir;
-  float range;
-  pos.random_dir(RNG);
-  pos.mul(R);
-  pos.add(P);
-  dir.sub(pos, base);
-  range = dir.magnitude();
-  dir.div(range);
-
-  std::shared_lock<std::shared_mutex> lock(m_sound_model_mutex);
-
-#ifndef _EDITOR
-  CDB::COLLIDER* collider = parent_collider;
-  if (!collider) {
-      thread_local CDB::COLLIDER th_collider;
-      collider = &th_collider;
-  }
-#endif
-
-  if (0 != geom_MODEL) {
-    bool bNeedFullTest = true;
-    // 1. Check cached polygon
-    float _u, _v, _range;
-    if (CDB::TestRayTri(base, dir, occ, _u, _v, _range, true))
-      if (_range > 0 && _range < range) {
-        occ_value = psSoundOcclusionScale;
-        bNeedFullTest = false;
-      }
-    // 2. Polygon doesn't picked up - real database query
-    if (bNeedFullTest) {
+	if (0 != geom_MODEL)
+	{
+		bool bNeedFullTest = true;
+		// 1. Check cached polygon
+		float _u, _v, _range;
+		if (CDB::TestRayTri(base, dir, occ, _u, _v, _range, true))
+			if (_range > 0 && _range < range)
+			{
+				occ_value = psSoundOcclusionScale;
+				bNeedFullTest = false;
+			}
+		// 2. Polygon doesn't picked up - real database query
+		if (bNeedFullTest)
+		{
 #ifdef _EDITOR
-      ETOOLS::ray_options(CDB::OPT_ONLYNEAREST);
-      ETOOLS::ray_query(geom_MODEL, base, dir, range);
-      if (0 != ETOOLS::r_count()) {
-        // cache polygon
-        const CDB::RESULT *R = ETOOLS::r_begin();
+			ETOOLS::ray_options(CDB::OPT_ONLYNEAREST);
+			ETOOLS::ray_query(geom_MODEL, base, dir, range);
+			if (0 != ETOOLS::r_count()) {
+				// cache polygon
+				const CDB::RESULT* R = ETOOLS::r_begin();
 #else
-      collider->ray_options(CDB::OPT_ONLYNEAREST);
-      collider->ray_query(geom_MODEL, base, dir, range);
-      if (0 != collider->r_count()) {
-        // cache polygon
-        const CDB::RESULT *R = collider->r_begin();
+			geom_DB.ray_options(CDB::OPT_ONLYNEAREST);
+			geom_DB.ray_query(geom_MODEL, base, dir, range);
+			if (0 != geom_DB.r_count())
+			{
+				// cache polygon
+				const CDB::RESULT* R = geom_DB.r_begin();
 #endif
-        const CDB::TRI &T = geom_MODEL->get_tris()[R->id];
-        const Fvector *V = geom_MODEL->get_verts();
-        occ[0].set(V[T.verts[0]]);
-        occ[1].set(V[T.verts[1]]);
-        occ[2].set(V[T.verts[2]]);
-        occ_value = psSoundOcclusionScale;
-      }
-    }
-  }
-  if (0 != geom_SOM) {
+				const CDB::TRI& T = geom_MODEL->get_tris()[R->id];
+				const Fvector* V = geom_MODEL->get_verts();
+				occ[0].set(V[T.verts[0]]);
+				occ[1].set(V[T.verts[1]]);
+				occ[2].set(V[T.verts[2]]);
+				occ_value = psSoundOcclusionScale;
+			}
+			}
+		}
+	if (0 != geom_SOM)
+	{
 #ifdef _EDITOR
-    ETOOLS::ray_options(CDB::OPT_CULL);
-    ETOOLS::ray_query(geom_SOM, base, dir, range);
-    u32 r_cnt = ETOOLS::r_count();
-    CDB::RESULT *_B = ETOOLS::r_begin();
+		ETOOLS::ray_options(CDB::OPT_CULL);
+		ETOOLS::ray_query(geom_SOM, base, dir, range);
+		u32 r_cnt = ETOOLS::r_count();
+		CDB::RESULT* _B = ETOOLS::r_begin();
 #else
-    collider->ray_options(CDB::OPT_CULL);
-    collider->ray_query(geom_SOM, base, dir, range);
-    u32 r_cnt = collider->r_count();
-    CDB::RESULT *_B = collider->r_begin();
+		geom_DB.ray_options(CDB::OPT_CULL);
+		geom_DB.ray_query(geom_SOM, base, dir, range);
+		u32 r_cnt = geom_DB.r_count();
+		CDB::RESULT* _B = geom_DB.r_begin();
 #endif
-    if (0 != r_cnt) {
-      for (u32 k = 0; k < r_cnt; k++) {
-        CDB::RESULT *R = _B + k;
-        occ_value *= *(float *)&R->dummy;
-      }
-    }
-  }
-  return occ_value;
-}
+		if (0 != r_cnt)
+		{
+			for (u32 k = 0; k < r_cnt; k++)
+			{
+				CDB::RESULT* R = _B + k;
+				occ_value *= *(float*)&R->dummy;
+			}
+		}
+	}
+	return occ_value;
+	}

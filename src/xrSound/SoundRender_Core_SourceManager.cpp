@@ -22,7 +22,7 @@ CSoundRender_Source* CSoundRender_Core::i_create_source(LPCSTR name)
 	// Load a _new one
 	CSoundRender_Source* S = xr_new<CSoundRender_Source>();
 	S->load(id);
-	s_sources.insert({id, S});
+	s_sources.insert({ id, S });
 	return S;
 }
 
@@ -43,29 +43,29 @@ void CSoundRender_Core::i_create_all_sources()
 
 	Lock lock;
 	const auto processFile = [&](const FS_File& file)
-	{
-		string256 id;
-		xr_strcpy(id, file.name.c_str());
-
-		xr_strlwr(id);
-		if (strext(id))
-			*strext(id) = 0;
-
 		{
-			ScopeLock scope(&lock);
-			const auto it = s_sources.find(id);
-			if (it != s_sources.end())
-				return;
-			UNUSED(scope);
-		}
+			string256 id;
+			xr_strcpy(id, file.name.c_str());
 
-		CSoundRender_Source* S = new CSoundRender_Source();
-		S->load(id);
+			xr_strlwr(id);
+			if (strext(id))
+				*strext(id) = 0;
 
-		lock.Enter();
-		s_sources.insert({ id, S });
-		lock.Leave();
-	};
+			{
+				ScopeLock scope(&lock);
+				const auto it = s_sources.find(id);
+				if (it != s_sources.end())
+					return;
+				UNUSED(scope);
+			}
+
+			CSoundRender_Source* S = new CSoundRender_Source();
+			S->load(id);
+
+			lock.Enter();
+			s_sources.insert({ id, S });
+			lock.Leave();
+		};
 
 	tbb::parallel_for_each(flist, processFile);
 

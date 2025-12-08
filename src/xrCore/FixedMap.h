@@ -145,6 +145,9 @@ public:
 			for (TNode* cur = begin(); cur != last(); cur++)
 				cur->~TNode();
 			allocator::dealloc(nodes);
+			nodes = 0;
+			pool = 0;
+			limit = 0;
 		}
 	}
 
