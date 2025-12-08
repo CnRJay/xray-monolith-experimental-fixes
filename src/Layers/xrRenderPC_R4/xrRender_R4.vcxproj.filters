@@ -818,7 +818,7 @@
     <ClCompile Include="r2_R_calculate.cpp">
       <Filter>Core</Filter>
     </ClCompile>
-    <ClCompile Include="r2_R_lights.cpp">
+    <ClCompile Include="r4_R_lights.cpp">
       <Filter>Core</Filter>
     </ClCompile>
     <ClCompile Include="r2_R_sun.cpp">

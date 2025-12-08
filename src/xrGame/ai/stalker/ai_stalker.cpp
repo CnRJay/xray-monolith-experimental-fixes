@@ -1637,7 +1637,15 @@ void CAI_Stalker::BoneCallback(CBoneInstance* B)
 {
 	CAI_Stalker* self = static_cast<CAI_Stalker*>(B->callback_param());
 	self->LookAtActor(B);
-	//R_ASSERT2(_valid(B->mTransform), "CAI_Stalker::BoneCallback");
+//<<<<<<< HEAD
+//	//R_ASSERT2(_valid(B->mTransform), "CAI_Stalker::BoneCallback");
+//=======
+//	
+//	if (!_valid(B->mTransform)) {
+//		Msg("![CAI_Stalker::BoneCallback] invalid mTransform for %s, section %s, id %d", self->cName().c_str(), self->cNameSect().c_str(), self->ID());
+//		R_ASSERT(false);
+//	}
+//>>>>>>> svp/release
 }
 
 void CAI_Stalker::AdjustHeadOrientation(float targetPitch, float targetYaw, float targetRoll)

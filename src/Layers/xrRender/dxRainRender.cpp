@@ -65,6 +65,10 @@ void dxRainRender::Render(CEffect_Rain& owner)
 	const int MAX_RAIN_RAYCASTS = 60;
 	int raycasts_this_frame = 0;
 
+#if defined(USE_DX11)
+	PIX_EVENT(SSFX_RAIN_RENDER);
+#endif
+
 	float _drop_len = drop_length;
 	float _drop_width = drop_width;
 	float _drop_speed = 1.0f;
@@ -119,25 +123,23 @@ void dxRainRender::Render(CEffect_Rain& owner)
 	src_plane.build(upper, norm);
 
 	// perform update
-	u32 vOffset;
-	FVF::LIT* verts = (FVF::LIT *)RCache.Vertex.Lock(desired_items * 4, hGeom_Rain->vb_stride, vOffset);
-	FVF::LIT* start = verts;
 	const Fvector& vEye = Device.vCameraPosition;
-	for (u32 I = 0; I < current_items; I++)
-	{
-		// physics and time control
-		CEffect_Rain::Item& one = owner.items[I];
+	if (!Device.m_SecondViewport.IsSVPFrame()) {
+		for (u32 I = 0; I < current_items; I++)
+		{
+			// physics and time control
+			CEffect_Rain::Item& one = owner.items[I];
 
-		if (one.dwTime_Hit < Device.dwTimeGlobal) 
-		{
-			owner.Hit(one.Phit);
-			if (current_items > desired_items) current_items--; // Hit something
-		}
-		if (one.dwTime_Life < Device.dwTimeGlobal)
-		{
-			owner.Born(one, rain_radius, _drop_speed);
-			if (current_items > desired_items) current_items--; // Out of life ( invalidated, never hit something, etc. )
-		}
+			if (one.dwTime_Hit < Device.dwTimeGlobal)
+			{
+				owner.Hit(one.Phit);
+				if (current_items > desired_items) current_items--; // Hit something
+			}
+			if (one.dwTime_Life < Device.dwTimeGlobal)
+			{
+				owner.Born(one, rain_radius, _drop_speed);
+				if (current_items > desired_items) current_items--; // Out of life ( invalidated, never hit something, etc. )
+			}
 
 		// последняя дельта ??
 		//.		float xdt		= float(one.dwTime_Hit-Device.dwTimeGlobal)/1000.f;

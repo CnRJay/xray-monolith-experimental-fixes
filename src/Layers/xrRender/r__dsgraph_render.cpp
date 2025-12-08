@@ -95,11 +95,11 @@ void __fastcall water_node_ssr(mapSorted_Node* N)
 	RImplementation.apply_object(N->val.pObject);
 	RImplementation.apply_lmaterial();
 
-	RCache.set_c("cam_pos", RImplementation.Target->Position_previous.x, RImplementation.Target->Position_previous.y, RImplementation.Target->Position_previous.z, 0.0f);
+	RCache.set_c("cam_pos", RImplementation.Target->GetPrevious()->Position_previous.x, RImplementation.Target->GetPrevious()->Position_previous.y, RImplementation.Target->GetPrevious()->Position_previous.z, 0.0f);
 
 	// Previous matrix data
-	RCache.set_c("m_current", RImplementation.Target->Matrix_current);
-	RCache.set_c("m_previous", RImplementation.Target->Matrix_previous);
+	RCache.set_c("m_current", RImplementation.Target->GetPrevious()->Matrix_current);
+	RCache.set_c("m_previous", RImplementation.Target->GetPrevious()->Matrix_previous);
 
 	V->Render(calcLOD(N->key, V->vis.sphere.R));
 #endif
@@ -145,17 +145,17 @@ void __fastcall water_node(mapSorted_Node* N)
 	int skinning = N->val.se->passes[0]->vs->skinning;
 	RCache.set_Shader(RImplementation.Target->s_ssfx_hud[skinning]);
 
-	RImplementation.Target->Matrix_HUD_previous.set(N->val.PrevMatrix);
+	RImplementation.Target->GetPrevious()->Matrix_HUD_previous.set(N->val.PrevMatrix);
 	N->val.PrevMatrix.set(RCache.xforms.m_wvp);
 
-	RImplementation.Target->RVelocity = true;
+	RImplementation.Target->GetPrevious()->RVelocity = true;
 
 #endif
 
 	V->Render(calcLOD(N->key, V->vis.sphere.R));
 
 #ifdef USE_DX11
-	RImplementation.Target->RVelocity = false;
+	RImplementation.Target->GetPrevious()->RVelocity = false;
 #endif
 }*/
 
@@ -597,22 +597,6 @@ void R_dsgraph_structure::r_dsgraph_render_hud(bool NoPS)
 		mapHUD.clear();
 
 		rmNormal();
-		
-#if defined(USE_DX11) //  Redotix99: for 3D Shader Based Scopes 		
-
-		if (scope_3D_fake_enabled)
-		{
-			RCache.set_RT(RImplementation.Target->rt_ssfx_temp->pRT, 3); // Render scope_3D to any buffer
-			
-			mapScopeHUD.traverseLR(sorted_L1);
-
-			if (!RImplementation.o.ssfx_motionvectors)
-				RCache.set_RT(NULL, 3);
-			else
-				RCache.set_RT(RImplementation.Target->rt_ssfx_motion_vectors->pRT, 3);
-		}
-		mapScopeHUD.clear();
-#endif
 
 		if (mapCamAttached.size())
 		{
@@ -756,29 +740,6 @@ void R_dsgraph_structure::r_dsgraph_render_sorted()
 	RCache.set_xform_project(Device.mProject);
 }
 
-#if defined(USE_DX11)
-//////////////////////////////////////////////////////////////////////////
-// strict-sorted render
-void R_dsgraph_structure::r_dsgraph_render_ScopeSorted()  //  Redotix99: for 3D Shader Based Scopes 	
-{
-	// Change projection
-	Fmatrix FTold = Device.mFullTransform;
-
-	Device.mFullTransform = Device.mFullTransformHud;
-	RCache.set_xform_project(Device.mProjectHud);
-
-	// Rendering
-	rmNear();
-	mapScopeHUDSorted.traverseRL(sorted_L1);
-	mapScopeHUDSorted.clear();
-	rmNormal();
-
-	// Restore projection
-	Device.mFullTransform = FTold;
-	RCache.set_xform_project(Device.mProject);
-}
-#endif
-
 //////////////////////////////////////////////////////////////////////////
 // strict-sorted render
 void R_dsgraph_structure::r_dsgraph_render_emissive(bool clear, bool renderHUD)
@@ -786,8 +747,6 @@ void R_dsgraph_structure::r_dsgraph_render_emissive(bool clear, bool renderHUD)
 #if	RENDER!=R_R1
 	// Sorted (back to front)
 	mapEmissive.traverseLR(sorted_L1);
-	if (clear)
-		mapEmissive.clear();
 
 	// Change projection
 	Fmatrix FTold = Device.mFullTransform;
@@ -800,9 +759,6 @@ void R_dsgraph_structure::r_dsgraph_render_emissive(bool clear, bool renderHUD)
 	// Sorted (back to front)
 	mapHUDEmissive.traverseLR(sorted_L1);
 	
-	if (clear)
-		mapHUDEmissive.clear();
-
 	if (renderHUD)
 		mapHUDSorted.traverseRL(sorted_L1);
 
@@ -816,13 +772,13 @@ void R_dsgraph_structure::r_dsgraph_render_emissive(bool clear, bool renderHUD)
 
 void R_dsgraph_structure::r_dsgraph_render_water_ssr()
 {
-	mapWater.traverseLR(water_node_ssr);
+	mapWater[Device.m_SecondViewport.IsSVPFrame()].traverseLR(water_node_ssr);
 }
 
 void R_dsgraph_structure::r_dsgraph_render_water()
 {
-	mapWater.traverseLR(water_node);
-	mapWater.clear();
+	mapWater[Device.m_SecondViewport.IsSVPFrame()].traverseLR(water_node);
+	mapWater[Device.m_SecondViewport.IsSVPFrame()].clear();
 }
 
 //////////////////////////////////////////////////////////////////////////

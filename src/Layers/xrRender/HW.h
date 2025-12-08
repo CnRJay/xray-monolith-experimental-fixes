@@ -19,6 +19,16 @@
 #include "stats_manager.h"
 #endif
 
+// So I don't have to Update R1-R3
+#if defined(USE_DX11)
+#define SECRET_P_BASE_RT secret_pBaseRT
+#define SECRET_P_BASE_ZB secret_pBaseZB
+#else
+#define SECRET_P_BASE_RT pBaseRT
+#define SECRET_P_BASE_ZB pBaseZB
+#endif
+
+
 class CHW
 #if defined(USE_DX10) || defined(USE_DX11)
 	:	public pureAppActivate,
@@ -60,7 +70,14 @@ public:
 #endif
 
 	//	Variables section
+
 #if defined(USE_DX11)	//	USE_DX10
+private:
+	friend class CRenderTarget;
+	// These are the real base buffers
+	//   the game mutates pBaseRT/ZB, so we need to ensure HW points to the real deal
+	ID3D11RenderTargetView*	secret_pBaseRT;	//	combine with DX9 pBaseRT via typedef
+	ID3D11DepthStencilView*	secret_pBaseZB;
 public:
     IDXGIFactory2*          m_pFactory; //  DXGI factory
 	IDXGIAdapter1*			m_pAdapter;	//	pD3D equivalent

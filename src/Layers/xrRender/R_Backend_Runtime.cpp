@@ -19,8 +19,13 @@ void CBackend::OnFrameEnd()
 #ifndef _EDITOR
 	if (!g_dedicated_server)
 #endif
-	{
+	{	
+#if defined(USE_DX11)
+		RImplementation.TargetMain->SetActive();
+#endif
+
 #if defined(USE_DX10) || defined(USE_DX11)
+
 		HW.pContext->ClearState();
 		Invalidate();
 #else	//	USE_DX10
@@ -49,8 +54,14 @@ void CBackend::OnFrameBegin()
 		Invalidate();
 		//	DX9 sets base rt nd base zb by default
 		RImplementation.rmNormal();
+#if defined(USE_DX11)
+		RImplementation.TargetMain->SetActive();
 		set_RT(HW.pBaseRT);
 		set_ZB(HW.pBaseZB);
+#else
+		set_RT(HW.pBaseRT);
+		set_ZB(HW.pBaseZB);
+#endif
 #endif	//	USE_DX10
 		Memory.mem_fill(&stat, 0, sizeof(stat));
 		Vertex.Flush();
@@ -138,6 +149,8 @@ void CBackend::Invalidate()
 	for (u32 hs_it = 0; hs_it < mtMaxHullShaderTextures;) textures_hs[hs_it++] = 0;
 	for (u32 ds_it = 0; ds_it < mtMaxDomainShaderTextures;) textures_ds[ds_it++] = 0;
 	for (u32 cs_it = 0; cs_it < mtMaxComputeShaderTextures;) textures_cs[cs_it++] = 0;
+
+	textureOverrides.clear();
 #endif
 #endif	//	USE_DX10
 
@@ -206,6 +219,13 @@ void CBackend::set_ClipPlanes(u32 _enable, Fmatrix* _xform /*=NULL */, u32 fmask
 	set_ClipPlanes(_enable, F.planes, F.p_count);
 }
 
+#if defined(USE_DX11)
+void CBackend::override_Texture(shared_str name, ref_texture texture) {
+	textureOverrides[name] = texture;
+	T = NULL; // Make sure to clear the current cached textures to force a rebind
+}
+#endif
+
 void CBackend::set_Textures(STextureList* _T)
 {
 	if (T == _T) return;
@@ -229,6 +249,11 @@ void CBackend::set_Textures(STextureList* _T)
 		std::pair<u32, ref_texture>& loader = *_it;
 		u32 load_id = loader.first;
 		CTexture* load_surf = &*loader.second;
+#if defined(USE_DX11) 
+		if (nullptr != load_surf && textureOverrides.count(load_surf->cName))
+			load_surf = textureOverrides[load_surf->cName]._get();
+#endif
+
 		//		if (load_id < 256)		{
 		if (load_id < CTexture::rstVertex)
 		{

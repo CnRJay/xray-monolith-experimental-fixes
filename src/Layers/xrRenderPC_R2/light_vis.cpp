@@ -74,10 +74,12 @@ void light::vis_update()
 	u32 frame = Device.dwFrame;
 	u32 fragments = RImplementation.occq_get(vis.query_id);
 
-	vis.visible = (fragments > cullfragments);
+	vis.visible_frags = fragments;
+	vis.visible = (vis.visible_frags > cullfragments);
 	vis.pending = false;
 	if (vis.visible)
 	{
+		vis.visible_frags += fragments;
 		vis.frame2test = frame + ::Random.randI(delay_large_min, delay_large_max);
 	}
 	else

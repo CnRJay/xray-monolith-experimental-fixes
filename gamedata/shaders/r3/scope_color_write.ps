@@ -1,0 +1,52 @@
+// DO NOT EDIT, OR INCLUDE IN MODS
+
+#include "scope_common.h"
+
+// Forward declare functions for better error messages
+float3 scope_custom_image(Scope s);
+#include "scope_custom_image.h"
+
+float4 scope_custom_reticle(Scope s);
+#include "scope_custom_reticle.h"
+
+float scope_custom_shadow(Scope s);
+#include "scope_custom_shadow.h"
+
+float4 scope_custom_lens(Scope s);
+#include "scope_custom_lens.h"
+
+float4 main(v_out I) : SV_Target 
+{
+    scope = new_Scope(I);
+
+    bool valid = VALID(scope.sfp);
+
+    float4 o;
+    if (scope_phase == 0) {
+        discard;
+    }
+
+    if (scope_phase & SCOPE_PHASE_JITTERFIX) {
+        return float4(0,0,0,1);
+    }
+
+    if (scope_phase & SCOPE_PHASE_IMAGE) {
+        o = float4(scope_custom_image(scope), 1);
+    }
+    if (scope_phase & SCOPE_PHASE_RETICLE) {
+        o = scope_custom_reticle(scope);
+        if (scope_debug >= 3 && scope.dbg.a > 0.5)
+            o = scope.dbg;
+    }
+
+    if (scope_phase & SCOPE_PHASE_SHADOW) {
+        float c = scope_custom_shadow(scope);
+        o = float4(0,0,0,c);
+    }
+
+    if (scope_phase & SCOPE_PHASE_LENS) {
+        o = scope_custom_lens(scope);
+    }
+
+    return o;
+}

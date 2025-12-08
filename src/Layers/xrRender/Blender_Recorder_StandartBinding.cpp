@@ -429,6 +429,16 @@ static class s3ds_param_4 : public R_constant_setup
 	}
 }    s3ds_param_4;
 
+// For passing scope magnification information
+extern Fvector4 ps_shader_scope_params;
+static class shader_scope_params : public R_constant_setup
+{
+	virtual void setup(R_constant* C)
+	{
+		RCache.set_c(C, ps_shader_scope_params.x, ps_shader_scope_params.y, ps_shader_scope_params.z, ps_shader_scope_params.w);
+	}
+}    shader_scope_params;
+
 //--DSR-- SilencerOverheat_start
 static class cl_silencer_glowing : public R_constant_setup
 {
@@ -1104,7 +1114,7 @@ static class ssfx_issvp : public R_constant_setup
 {
 	virtual void setup(R_constant* C)
 	{
-		RCache.set_c(C, Device.m_SecondViewport.IsSVPFrame(), 0, 0, 0);
+		RCache.set_c(C, 0, 0, 0, 0);
 	}
 }    ssfx_issvp;
 
@@ -1515,6 +1525,8 @@ void CBlender_Compile::SetMapping()
 	r_Constant("s3ds_param_2", &s3ds_param_2);
 	r_Constant("s3ds_param_3", &s3ds_param_3);
 	r_Constant("s3ds_param_4", &s3ds_param_4);
+
+	r_Constant("shader_scope_params", &shader_scope_params);
 
 	// crookr
 	r_Constant("fakescope_params1", &binder_fakescope_params);

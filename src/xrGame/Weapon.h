@@ -15,6 +15,7 @@
 #include "CameraRecoil.h"
 
 #include "NewZoomFlag.h"
+#include <Layers/xrRender/xrRender_console.h>
 
 class CEntity;
 class ENGINE_API CMotionDef;
@@ -44,6 +45,11 @@ struct SafemodeAnm
 {
 	LPCSTR name;
 	float power, speed;
+};
+
+struct Lens {
+	Fmatrix transform = Fmatrix().identity();
+	float radius = 0.0;
 };
 
 class CWeapon : public CHudItemObject,
@@ -86,8 +92,12 @@ public:
 
 	float CWeapon::GetSecondVPFov() const;
 	IC float GetZRotatingFactor()    const { return m_zoom_params.m_fZoomRotationFactor; }
-	IC float GetSecondVPZoomFactor() const { return m_zoom_params.m_fSecondVPFovFactor; }
-	IC float IsSecondVPZoomPresent() const { return GetSecondVPZoomFactor() > 0.005f; }
+	IC float GetSecondVPZoomFactor() const { return GetZoomFactor(); }
+	float IsSecondVPZoomPresent() { 
+		return scope_svp_enabled
+			&& GetSecondVPZoomFactor() > 0.005f
+			&& GetSVPCameraMatrix(Fmatrix());
+	}
 
 	// Up
 	// Magazine system & etc
@@ -113,6 +123,8 @@ public:
 	virtual void HUD_VisualBulletUpdate(bool force = false, int force_idx = -1);
 
 	void UpdateSecondVP();
+	bool CWeapon::GetSVPCameraMatrix(Fmatrix& camera);
+
 
 	virtual void UpdateCL();
 	virtual void shedule_Update(u32 dt);
@@ -563,6 +575,7 @@ protected:
 	};
 
 	virtual void LoadFireParams(LPCSTR section);
+	void DebugDrawWeapon();
 public:
 	IC const Fvector& get_LastFP()
 	{

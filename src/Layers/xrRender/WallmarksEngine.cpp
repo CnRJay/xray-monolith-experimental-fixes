@@ -395,7 +395,9 @@ void CWallmarksEngine::Render()
 
 	Fmatrix mSavedView = Device.mView;
 	Fvector mViewPos;
-	mViewPos.mad(Device.vCameraPosition, Device.vCameraDirection, ps_r__WallmarkSHIFT_V);
+	Fvector vCameraPosition = Device.mInvView.c; // vCameraPosition may not be correct in SVP frame
+
+	mViewPos.mad(vCameraPosition, Device.vCameraDirection, ps_r__WallmarkSHIFT_V);
 	Device.mView.build_camera_dir(mViewPos, Device.vCameraDirection, Device.vCameraTop);
 	RCache.set_xform_view(Device.mView);
 
@@ -421,7 +423,7 @@ void CWallmarksEngine::Render()
 			if (RImplementation.ViewBase.testSphere_dirty(W->bounds.P, W->bounds.R))
 			{
 				Device.Statistic->RenderDUMP_WMS_Count++;
-				float dst = Device.vCameraPosition.distance_to_sqr(W->bounds.P);
+				float dst = vCameraPosition.distance_to_sqr(W->bounds.P);
 				float ssa = W->bounds.R * W->bounds.R / dst;
 				if (ssa >= ssaCLIP)
 				{

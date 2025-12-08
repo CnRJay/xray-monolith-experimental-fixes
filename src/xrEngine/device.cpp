@@ -250,6 +250,33 @@ void mt_FreezeThread(void *ptr) {
   }
 }
 
+void CRenderDevice::prepare_matrices()
+{
+	auto svp = m_SecondViewport.IsSVPFrame();
+	// Previous frame data -- 
+	mView_prev = Device.matrices_previous[svp].mView;
+	mProject_prev = Device.matrices_previous[svp].mProject;
+	//mFullTransform_prev = mFullTransform_saved; // Unused?
+
+	m_pRender->SetCacheXform_prev(mView_prev, mProject_prev);
+
+	// Save previous frame grass benders data
+	IGame_Persistent::grass_data& GData = g_pGamePersistent->grass_shader_data;
+
+	GData.prev_pos[svp][0].set(Device.vCameraPosition.x, Device.vCameraPosition.y, Device.vCameraPosition.z, -1);
+	GData.prev_dir[svp][0].set(0.0f, -99.0f, 0.0f, 1.0f);
+
+	for (int pBend = 1; pBend < _min(16, ps_ssfx_grass_interactive.y + 1); pBend++)
+	{
+		GData.prev_pos[svp][pBend].set(GData.pos[pBend].x, GData.pos[pBend].y, GData.pos[pBend].z, GData.radius_curr[pBend]);
+		GData.prev_dir[svp][pBend].set(GData.dir[pBend].x, GData.dir[pBend].y, GData.dir[pBend].z, GData.str[pBend]);
+	}
+
+	// Save wind animation position
+	wind_anim_prev = wind_anim_saved;
+	wind_anim_saved = g_pGamePersistent->Environment().wind_anim;
+}
+
 struct CRenderDevice::DeviceFlowGraph {
     tbb::flow::graph graph;
     tbb::flow::broadcast_node<tbb::flow::continue_msg> start_node;
@@ -406,6 +433,14 @@ void CRenderDevice::on_idle() {
   mFullTransformHud.mul(mProjectHud, mView);
   m_pRender->SetCacheXform(mView, mProject);
 
+	Device.matrices_previous[0] = Device.matrices[0];
+	Device.matrices_previous[1] = Device.matrices[1];
+
+	Device.matrices[0].mView = mView;
+	Device.matrices[0].mProject = mProject;
+	Device.matrices[0].mProjectHud = mProjectHud;
+
+	prepare_matrices();
   // Previous frame data --
   mView_prev = mView_saved;
   mProject_prev = mProject_saved;

@@ -1118,6 +1118,7 @@ extern int ps_r4_hdr10_pda; // NOTE: this is a hack to avoid double HDR tonemapp
 
 void CLevel::OnRender()
 {
+	Device.dwViewport++;
 	// PDA
 	if (game && CurrentGameUI() && &CurrentGameUI()->GetPdaMenu() != nullptr)
 	{
@@ -1180,10 +1181,10 @@ void CLevel::OnRender()
 	if (!game)
 		return;
 	Game().OnRender();
-	BulletManager().Render();
 
-	if (Device.m_SecondViewport.IsSVPFrame())
-		Render->RenderToTarget(Render->rtSVP);
+	// Tracers are not accurately rendered under SVP, so disable them.
+	if (!Device.m_SecondViewport.IsSVPActive()) 
+		BulletManager().Render();
 
 	if (use_reshade)
 		render_reshade_effects();

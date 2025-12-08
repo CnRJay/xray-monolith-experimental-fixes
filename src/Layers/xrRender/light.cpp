@@ -40,6 +40,8 @@ light::light(void) : ISpatial(g_SpatialSpace)
 	vis.query_id = 0;
 	vis.query_order = 0;
 	vis.visible = true;
+	vis.visible_frags = 0;
+	vis.accumulating_frags = 0;
 	vis.pending = false;
 #endif // (RENDER==R_R2) || (RENDER==R_R3) || (RENDER==R_R4)
 }
@@ -50,12 +52,6 @@ light::~light()
 	for (int f = 0; f < 6; f++) xr_delete(omnipart[f]);
 #endif // (RENDER==R_R2) || (RENDER==R_R3) || (RENDER==R_R4)
 	set_active(false);
-
-	// remove from Lights_LastFrame
-#if (RENDER==R_R2) || (RENDER==R_R3) || (RENDER==R_R4)
-	for (u32 it = 0; it < RImplementation.Lights_LastFrame.size(); it++)
-		if (this == RImplementation.Lights_LastFrame[it]) RImplementation.Lights_LastFrame[it] = 0;
-#endif // (RENDER==R_R2) || (RENDER==R_R3) || (RENDER==R_R4)
 }
 
 #if (RENDER==R_R2) || (RENDER==R_R3) || (RENDER==R_R4)

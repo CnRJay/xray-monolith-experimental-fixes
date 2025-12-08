@@ -1,4 +1,5 @@
 #include "stdafx.h"
+#include "../../xrGame/debug_renderer.h"
 
 IC bool pred_area(light* _1, light* _2)
 {
@@ -51,108 +52,57 @@ IC void hud_light_restore(xr_map<light*, std::pair<Fvector, Fvector>>& saved_pos
 	}
 }
 
-void CRender::render_lights(light_Package& LP)
-{
-	xr_map<light*, std::pair<Fvector, Fvector>> saved_pos;
-	//////////////////////////////////////////////////////////////////////////
-	// 0. apply hud_mode projection if necessary
-	hud_light_apply(saved_pos, LP.v_shadowed);
-	hud_light_apply(saved_pos, LP.v_point);
-	hud_light_apply(saved_pos, LP.v_spot);
-	// Refactor order based on ability to pack shadow-maps
-	// 1. calculate area + sort in descending order
-	// const	u16		smap_unassigned		= u16(-1);
-	{
-		xr_vector<light*>& source = LP.v_shadowed;
-		for (u32 it = 0; it < source.size(); it++)
-		{
-			light* L = source[it];
-			L->vis_update();
-			if (!L->vis.visible)
-			{
-				source.erase(source.begin() + it);
-				it--;
-			}
-			else
-			{
-				LR.compute_xf_spot(L);
-			}
-		}
-	}
-
-	// 2. refactor - infact we could go from the backside and sort in ascending order
-	{
-		xr_vector<light*>& source = LP.v_shadowed;
-		xr_vector<light*> refactored;
-		refactored.reserve(source.size());
-		u32 total = source.size();
-
-		for (u16 smap_ID = 0; refactored.size() != total; smap_ID++)
-		{
-			LP_smap_pool.initialize(RImplementation.o.smapsize);
-			std::sort(source.begin(), source.end(), pred_area);
-			for (u32 test = 0; test < source.size(); test++)
-			{
-				light* L = source[test];
-				SMAP_Rect R;
-				if (LP_smap_pool.push(R, L->X.S.size))
-				{
-					// OK
-					L->X.S.posX = R.min.x;
-					L->X.S.posY = R.min.y;
-					L->vis.smap_ID = smap_ID;
-					refactored.push_back(L);
-					source.erase(source.begin() + test);
-					test --;
-				}
-			}
-		}
-
-		// save (lights are popped from back)
-		std::reverse(refactored.begin(), refactored.end());
-		LP.v_shadowed = refactored;
-	}
-
+void CRender::render_lights_shadowmaps(light_Package& LP) {
 	PIX_EVENT(SHADOWED_LIGHTS);
 
-	//////////////////////////////////////////////////////////////////////////
-	// sort lights by importance???
-	// while (has_any_lights_that_cast_shadows) {
-	//		if (has_point_shadowed)		->	generate point shadowmap
-	//		if (has_spot_shadowed)		->	generate spot shadowmap
-	//		switch-to-accumulator
-	//		if (has_point_unshadowed)	-> 	accum point unshadowed
-	//		if (has_spot_unshadowed)	-> 	accum spot unshadowed
-	//		if (was_point_shadowed)		->	accum point shadowed
-	//		if (was_spot_shadowed)		->	accum spot shadowed
-	//	}
-	//	if (left_some_lights_that_doesn't cast shadows)
-	//		accumulate them
+	Target->phase_smap_spot_clear(Target->rt_smap_depth);
 	HOM.Disable();
-	while (LP.v_shadowed.size())
-	{
-		// if (has_spot_shadowed)
-		xr_vector<light*> L_spot_s;
-		stats.s_used ++;
 
-		// generate spot shadowmap
-		Target->phase_smap_spot_clear();
-		xr_vector<light*>& source = LP.v_shadowed;
-		light* L = source.back();
-		u16 sid = L->vis.smap_ID;
-		while (true)
+	// Rebuild atlas until all lights fit
+	bool success = false;
+	float size_factor = 1.0;
+	while(!success) {
+		success = true;
+		LP_smap_pool.initialize(RImplementation.o.smapsize);	
+		for (auto L : LP.v_shadowed)
 		{
-			if (source.empty()) break;
-			L = source.back();
-			if (L->vis.smap_ID != sid) break;
-			source.pop_back();
-			Lights_LastFrame.push_back(L);
+			LR.compute_xf_spot(L);
+			SMAP_Rect R;
+			if (LP_smap_pool.push(R, int(L->X.S.size * size_factor))) {
+				L->X.S.posX = R.min.x;
+				L->X.S.posY = R.min.y;
+			}
+			else 
+			{
+				success = false;
+			}
+		}
+		if (!success)
+			size_factor *= 0.8;
+	}
+
+	// Render the shadowmaps
+	for (auto L : LP.v_shadowed)
+	{
+		stats.s_used ++;
+		
+		// Make sure to use the scaled size we computed above
+		L->X.S.size *= size_factor;
+
+		auto pixels = Device.dwWidth*Device.dwHeight;
+		auto c = L->vis.visible 
+			? color_argb_f(1, L->vis.visible_frags/pixels*.75 + .25, 0, 0)
+			: 0xffcccccc;
+		if (scope_debug >= 3) CDebugRenderer().draw_line(Fmatrix(), L->position, Fvector(L->direction).mul(L->range).add(L->position), c, false);
+
+		{
+			PIX_EVENT(LIGHT_SHADOWMAP_RENDER);
 
 			// render
 			phase = PHASE_SMAP;
 			if (RImplementation.o.Tshadows) r_pmask(true, true);
 			else r_pmask(true, false);
-			L->svis.begin();
+			//L->svis.begin();
 			PIX_EVENT(SHADOWED_LIGHTS_RENDER_SUBSPACE);
 			r_dsgraph_render_subspace(L->spatial.sector, L->X.S.combine, L->position, TRUE);
 			bool bNormal = mapNormalPasses[0][0].size() || mapMatrixPasses[0][0].size();
@@ -160,7 +110,6 @@ void CRender::render_lights(light_Package& LP)
 			if (bNormal || bSpecial)
 			{
 				stats.s_merged ++;
-				L_spot_s.push_back(L);
 				Target->phase_smap_spot(L);
 				RCache.set_xform_world(Fidentity);
 				RCache.set_xform_view(L->X.S.view);
@@ -190,58 +139,47 @@ void CRender::render_lights(light_Package& LP)
 			{
 				stats.s_finalclip ++;
 			}
-			L->svis.end();
+			//L->svis.end();
 			r_pmask(true, false);
 		}
+	}
+}
 
-		PIX_EVENT(UNSHADOWED_LIGHTS);
+void CRender::render_lights(light_Package& LP)
+{
+	xr_map<light*, std::pair<Fvector, Fvector>> saved_pos;
+	//////////////////////////////////////////////////////////////////////////
+	// 0. apply hud_mode projection if necessary
+	hud_light_apply(saved_pos, LP.v_shadowed);
+	hud_light_apply(saved_pos, LP.v_point);
+	hud_light_apply(saved_pos, LP.v_spot);
 
+	{
+		PIX_EVENT(SHADOWED_LIGHTS);
+		//////////////////////////////////////////////////////////////////////////
+		// sort lights by importance???
+		// while (has_any_lights_that_cast_shadows) {
+		//		if (has_point_shadowed)		->	generate point shadowmap
+		//		if (has_spot_shadowed)		->	generate spot shadowmap
 		//		switch-to-accumulator
-		Target->phase_accumulator();
-		HOM.Disable();
-
-		PIX_EVENT(POINT_LIGHTS);
-
 		//		if (has_point_unshadowed)	-> 	accum point unshadowed
-		if (!LP.v_point.empty())
-		{
-			light* L = LP.v_point.back();
-			LP.v_point.pop_back();
-			L->vis_update();
-			if (L->vis.visible)
-			{
-				Target->accum_point(L);
-				render_indirect(L);
-			}
-		}
-
-		PIX_EVENT(SPOT_LIGHTS);
-
 		//		if (has_spot_unshadowed)	-> 	accum spot unshadowed
-		if (!LP.v_spot.empty())
-		{
-			light* L = LP.v_spot.back();
-			LP.v_spot.pop_back();
-			L->vis_update();
-			if (L->vis.visible)
-			{
-				LR.compute_xf_spot(L);
-				Target->accum_spot(L);
-				render_indirect(L);
-			}
-		}
-
-		PIX_EVENT(SPOT_LIGHTS_ACCUM_VOLUMETRIC);
-
+		//		if (was_point_shadowed)		->	accum point shadowed
 		//		if (was_spot_shadowed)		->	accum spot shadowed
-		if (!L_spot_s.empty())
+		//	}
+		//	if (left_some_lights_that_doesn't cast shadows)
+		//		accumulate them
+		HOM.Disable();
+		Target->phase_accumulator();
+		for (auto L : LP.v_shadowed)
 		{
-			PIX_EVENT(ACCUM_SPOT);
-			PIX_EVENT(ACCUM_VOLUMETRIC);
-			for (u32 it = 0; it < L_spot_s.size(); it++)
-			{
-				Target->accum_spot(L_spot_s[it]);
-				render_indirect(L_spot_s[it]);
+			PIX_EVENT(SPOT_LIGHTS_ACCUM_VOLUMETRIC);
+			// TODO: This originally only ran under if (bNormal || bSpecial)
+			//    check if we need to strore this information on shadow map generation
+
+			//		if (was_spot_shadowed)		->	accum spot shadowed
+			Target->accum_spot(L);
+			render_indirect(L);
 
 				if (RImplementation.o.advancedpp && ps_r2_ls_flags.is(R2FLAG_VOLUMETRIC_LIGHTS))
 				{
@@ -253,51 +191,42 @@ void CRender::render_lights(light_Package& LP)
 					if (RImplementation.o.ssfx_volumetric)
 						Target->set_viewport_size(HW.pContext, w / 8, h / 8);
 
-					Target->accum_volumetric(L_spot_s[it]);
-
-					// Restore resolution
-					if (RImplementation.o.ssfx_volumetric)
-						Target->set_viewport_size(HW.pContext, w, h);
-				}
+				Target->accum_volumetric(L);
+				
+				// Restore resolution
+				if (RImplementation.o.ssfx_volumetric)
+					Target->set_viewport_size(HW.pContext, w, h);
 			}
-
-			L_spot_s.clear();
 		}
 	}
 
-	PIX_EVENT(POINT_LIGHTS_ACCUM);
-	// Point lighting (unshadowed, if left)
-	if (!LP.v_point.empty())
 	{
-		xr_vector<light*>& Lvec = LP.v_point;
-		for (u32 pid = 0; pid < Lvec.size(); pid++)
+		PIX_EVENT(POINT_LIGHTS_ACCUM);
+		// Point lighting (unshadowed, if left)
+		if (!LP.v_point.empty())
 		{
-			Lvec[pid]->vis_update();
-			if (Lvec[pid]->vis.visible)
+			xr_vector<light*>& Lvec = LP.v_point;
+			for (u32 pid = 0; pid < Lvec.size(); pid++)
 			{
 				render_indirect(Lvec[pid]);
 				Target->accum_point(Lvec[pid]);
 			}
 		}
-		Lvec.clear();
 	}
 
-	PIX_EVENT(SPOT_LIGHTS_ACCUM);
-	// Spot lighting (unshadowed, if left)
-	if (!LP.v_spot.empty())
 	{
-		xr_vector<light*>& Lvec = LP.v_spot;
-		for (u32 pid = 0; pid < Lvec.size(); pid++)
+		PIX_EVENT(SPOT_LIGHTS_ACCUM);
+		// Spot lighting (unshadowed, if left)
+		if (!LP.v_spot.empty())
 		{
-			Lvec[pid]->vis_update();
-			if (Lvec[pid]->vis.visible)
+			xr_vector<light*>& Lvec = LP.v_spot;
+			for (u32 pid = 0; pid < Lvec.size(); pid++)
 			{
 				LR.compute_xf_spot(Lvec[pid]);
 				render_indirect(Lvec[pid]);
 				Target->accum_spot(Lvec[pid]);
 			}
 		}
-		Lvec.clear();
 	}
 
 	// restore world projection if necessary

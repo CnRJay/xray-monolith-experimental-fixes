@@ -8,7 +8,7 @@
 
 #include "../../xrEngine/xr_efflensflare.h"
 
-static Fmatrix mSky_prev = Fidentity;
+static Fmatrix mSky_prev[2] = { Fidentity, Fidentity };
 
 //////////////////////////////////////////////////////////////////////////
 // half box def
@@ -315,8 +315,9 @@ void dxEnvironmentRender::RenderSky(CEnvironment& env, bool OnlyMV)
 
 	if (OnlyMV)
 	{
-		RCache.set_xform_world_prev(mSky_prev);
-		mSky_prev = mSky;
+		auto svp = Device.m_SecondViewport.IsSVPFrame();
+		RCache.set_xform_world_prev(mSky_prev[svp]);
+		mSky_prev[svp] = mSky;
 
 		RCache.set_Geometry(sh_2geom);
 		RCache.set_Shader(sh_2sky);

@@ -114,6 +114,8 @@ public:
 	DWORD dummy1; //	Padding to avoid warning	
 	DWORD dummy2; //	Padding to avoid warning	
 #endif
+	
+	void Invalidate();
 private:
 	// Render-targets
 	ID3DRenderTargetView* pRT[4];
@@ -143,6 +145,7 @@ private:
 	ID3D11HullShader* hs;
 	ID3D11DomainShader* ds;
 	ID3D11ComputeShader* cs;
+	xr_map<shared_str, ref_texture> textureOverrides;
 #	endif
 #endif	//	USE_DX10
 
@@ -194,7 +197,6 @@ private:
 	CMatrix*						matrices	[8	];	// matrices are supported only for FFP
 #endif
 
-	void Invalidate();
 public:
 	struct _stats
 	{
@@ -270,6 +272,10 @@ public:
 
 	IC void set_Constants(R_constant_table* C);
 	IC void set_Constants(ref_ctable& C) { set_Constants(&*C); }
+
+#if defined(USE_DX11)
+	void override_Texture(shared_str name, ref_texture texture);
+#endif
 
 	void set_Textures(STextureList* T);
 	IC void set_Textures(ref_texture_list& T) { set_Textures(&*T); }

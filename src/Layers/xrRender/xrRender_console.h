@@ -183,6 +183,14 @@ extern ECORE_API Fvector ps_r2_drops_control; // r2-only
 extern ECORE_API int ps_r2_nightvision;
 extern ECORE_API int scope_fake_enabled; //crookr
 extern ECORE_API int scope_3D_fake_enabled; // Redotix99: for 3D Shader Based Scopes
+extern ECORE_API int scope_svp_enabled;		// Second Viewport scopes
+
+// Offset of objective lens from eyepiece lens with w representing radius
+//   the units are based off the eyepiece dimensions from mesh bounding sphere
+//   which allows us to support scaling
+extern ECORE_API Fvector4 scope_objective_lens_offset;  
+
+extern ECORE_API int scope_debug;		    
 extern ECORE_API int ps_r2_heatvision;			//--DSR-- HeatVision
 extern ECORE_API int heat_vision_cooldown;		//--DSR-- HeatVision
 extern ECORE_API float heat_vision_cooldown_time;	//--DSR-- HeatVision
@@ -203,6 +211,8 @@ extern ECORE_API Fvector sil_glow_color;
 extern ECORE_API Fvector dsr_test;
 extern ECORE_API Fvector dsr_test1;
 extern ECORE_API Fvector dsr_test2;
+
+extern ECORE_API Fvector4 ps_shader_scope_params;
 
 extern ECORE_API float ps_r2_tnmp_a; // r2-only
 extern ECORE_API float ps_r2_tnmp_b; // r2-only
@@ -268,6 +278,7 @@ extern ECORE_API float ps_r2_img_saturation; // r2-only
 extern ECORE_API Fvector ps_r2_img_cg; // r2-only
 
 ////
+extern ECORE_API Fvector4 ps_dev_param_7;
 
 //	x - min (0), y - focus (1.4), z - max (100)
 extern ECORE_API Fvector3 ps_r2_dof;

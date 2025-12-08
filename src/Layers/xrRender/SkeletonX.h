@@ -111,6 +111,8 @@ protected:
 public:
 	BOOL has_visible_bones();
 
+	u32 get_RMS_boneid() { return RMS_boneid; }
+
 	//--DSR-- SilencerOverheat_start
 	BOOL has_bone_id(u16 bone_id)
 	{

@@ -102,10 +102,10 @@ void CStats::Show()
 {
 	static u32 dw_lastframe;
 
-	if (dw_lastframe == Device.dwTimeGlobal)
+	if (dw_lastframe == Device.dwFrame)
 		return;
 
-	dw_lastframe = Device.dwTimeGlobal;
+	dw_lastframe = Device.dwFrame;
 
 	// Stop timers
 	{

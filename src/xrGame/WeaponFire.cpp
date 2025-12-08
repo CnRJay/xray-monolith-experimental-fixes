@@ -173,7 +173,22 @@ void CWeapon::FireBullet(const Fvector& pos,
 	u16 weapon_id,
 	bool send_hit, int iShotNum)
 {
-	CShootingObject::FireBullet(pos, shot_dir, fire_disp, cartridge, parent_id, weapon_id, send_hit, iShotNum);
+	Fvector P = pos;
+	Fvector D = shot_dir;
+
+	Fmatrix camera;
+	if (Device.m_SecondViewport.IsSVPActive() && GetHUDmode() && GetSVPCameraMatrix(camera)) {
+		// Completely bypass the mess that is hud_fov & code that tries to correct it
+		P.set(0, 0, 0);
+		D.set(0, 0, 1);
+		
+		camera.transform(P);
+		camera.transform_dir(D);
+
+		D.normalize();
+	}
+
+	CShootingObject::FireBullet(P, D, fire_disp, cartridge, parent_id, weapon_id, send_hit, iShotNum);
 	
 	temperature += sil_glow_shot_temp;
 	if (temperature > sil_glow_max_temp)

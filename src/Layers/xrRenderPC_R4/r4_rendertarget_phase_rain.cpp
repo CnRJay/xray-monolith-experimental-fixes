@@ -2,16 +2,18 @@
 
 void CRenderTarget::phase_rain()
 {
+	PIX_EVENT(PHASE_RAIN);
 	if (!RImplementation.o.dx10_msaa)
-		u_setrt(rt_Color,NULL,NULL, HW.pBaseZB);
+		u_setrt(rt_Color,NULL,NULL, baseZB);
 	else
 		u_setrt(rt_Color,NULL,NULL, rt_MSAADepth->pZRT);
-	//u_setrt	(rt_Normal,NULL,NULL,HW.pBaseZB);
+	//u_setrt	(rt_Normal,NULL,NULL,baseZB);
 	RImplementation.rmNormal();
 }
 
 void CRenderTarget::phase_ssfx_rain()
 {
+	PIX_EVENT(PHASE_SSFX_RAIN);
 	//Constants
 	u32 Offset = 0;
 	u32 C = color_rgba(0, 0, 0, 255);

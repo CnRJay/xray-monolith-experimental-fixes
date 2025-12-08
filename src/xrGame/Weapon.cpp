@@ -502,6 +502,8 @@ void CWeapon::SetZoomType(u8 new_zoom_type)
     {
         funct(this->lua_game_object(), previous_zoom_type, m_zoomtype);
     }
+
+	UpdateSecondVP();
 }
 
 extern float g_ironsights_factor;
@@ -1394,7 +1396,10 @@ void CWeapon::EnableActorNVisnAfterZoom()
 
 bool CWeapon::need_renderable()
 {
-	return !Device.m_SecondViewport.IsSVPFrame() && !(IsZoomed() && ZoomTexture() && !IsRotatingToZoom());
+	bool svp_has_objective_lens = (scope_svp_enabled >= 2 && Device.m_SecondViewport.objective.radius > EPS);
+	bool not_in_scope = !Device.m_SecondViewport.IsSVPFrame() && !(IsZoomed() && ZoomTexture() && !IsRotatingToZoom());
+
+	return svp_has_objective_lens || not_in_scope;
 }
 
 void CWeapon::renderable_Render()
@@ -2086,6 +2091,8 @@ void CWeapon::OnZoomIn()
 	}
 
 	g_player_hud->updateMovementLayerState();
+
+	UpdateSecondVP();
 }
 
 void CWeapon::OnZoomOut()
@@ -3197,7 +3204,7 @@ void CWeapon::ZoomDec()
 
 	clamp(f, m_zoom_params.m_fScopeZoomFactor * power, min_zoom_factor);
 	SetZoomFactor(f / power);
-	
+
 	m_fRTZoomFactor = GetZoomFactor() * power;
 }
 
@@ -3227,21 +3234,40 @@ u32 CWeapon::Cost() const
 	return res;
 }
 
-float CWeapon::GetSecondVPFov() const
-{
-	if (m_zoom_params.m_bUseDynamicZoom && IsSecondVPZoomPresent())
-		return (m_fRTZoomFactor / 100.f) * g_fov;
-
-	return GetSecondVPZoomFactor() * g_fov;
-}
-
 void CWeapon::UpdateSecondVP()
 {
 	if (!(ParentIsActor() && (m_pInventory != NULL) && (m_pInventory->ActiveItem() == this)))
 		return;
 
 	CActor* pActor = smart_cast<CActor*>(H_Parent());
-	Device.m_SecondViewport.SetSVPActive(m_zoomtype == 0 && pActor->cam_Active() == pActor->cam_FirstEye() && IsSecondVPZoomPresent() && m_zoom_params.m_fZoomRotationFactor > 0.05f);
+	Device.m_SecondViewport.SetSVPActive((scope_debug && scope_svp_enabled && IsSecondVPZoomPresent())
+		|| (m_zoomtype == 0 && pActor->cam_Active() == pActor->cam_FirstEye() && IsSecondVPZoomPresent() && IsZoomed()));
+}
+
+bool CWeapon::GetSVPCameraMatrix(Fmatrix& camera)
+{
+	if (Device.m_SecondViewport.eyepiece.radius > EPS) {
+		// Many guns have had their mesh directly scaled, so the only reliable unit of
+		//    measurement is based off the only reliable mesh in the file. The lens.
+		Fvector4 o = Fvector4(scope_objective_lens_offset).mul(Device.m_SecondViewport.eyepiece.radius);
+
+		if (Device.m_SecondViewport.objective.radius < EPS) {
+			// Can't render weapon in scope, but we can place the camera on the eyepiece lens
+			camera.set(Device.m_SecondViewport.eyepiece.m_W);
+			return true;
+		}
+
+		// Move camera to where min magnification uses full objective lens
+		auto l = o.w / tan(deg2rad(GetMinScopeZoomFactor() * 0.75) / 2.0);
+		o.z -= l;
+
+		
+		
+		camera.mul(Device.m_SecondViewport.eyepiece.m_W, Fmatrix().translate({ o.x, o.y, o.z }));
+		return true;
+	}
+
+	return false;
 }
 
 Fmatrix CWeapon::RayTransform()

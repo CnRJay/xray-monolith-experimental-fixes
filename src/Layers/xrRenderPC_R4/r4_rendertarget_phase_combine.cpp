@@ -30,17 +30,57 @@ void CRenderTarget::DoAsyncScreenshot()
 		// TODO: this won't work in DX11 with HDR due to texture format incompat
 		HW.pContext->CopyResource(t_ss_async, pBuffer);
 
-
 		RImplementation.m_bMakeAsyncSS = false;
 	}
 }
 
 float hclip(float v, float dim) { return 2.f * v / dim - 1.f; }
 
+// This function only distorts the color buffer, and as a result corrupts the g-buffer.
+//   Potentially worth applying distortion to the full g-buffer, at cost of vram and bandwidth.
+//   Motion vectors should not be used after invoking this function.
+void CRenderTarget::phase_apply_distortion()
+{
+	if (bDistort) {
+		PIX_EVENT(PHASE_APPLY_DISTORTION);
+
+		RCache.set_CullMode(CULL_NONE);
+		RCache.set_Stencil(FALSE);
+
+		RCache.set_Element(s_distort->E[1]);
+	
+		// Draw fullscreen triangle.
+		u32 Offset = 0;
+		u32 C = color_rgba(0, 0, 0, 255);
+
+		float d_Z = EPS_S;
+		float d_W = 1.0f;
+		float w = float(Device.dwWidth);
+		float h = float(Device.dwHeight);
+
+		Fvector2 tc;
+		tc.set(1.0, 1.0);
+		FVF::TL* pv = (FVF::TL*)RCache.Vertex.Lock(3, g_combine->vb_stride, Offset);
+		pv->set(0, 0, d_Z, d_W, C, 0, 0); pv++;
+		pv->set(w * 2, 0, d_Z, d_W, C, tc.x * 2, 0); pv++;
+		pv->set(0, h * 2, d_Z, d_W, C, 0, tc.y * 2); pv++;
+		RCache.Vertex.Unlock(3, g_combine->vb_stride);
+		RCache.set_Geometry(g_combine);
+	
+		u_setrt(rt_Color, nullptr, nullptr, nullptr, RImplementation.Target->baseZB);
+		RCache.Render(D3DPT_TRIANGLELIST, Offset, 0, 3, 0, 1);
+
+		// Ensure the later combine pass does not apply distortion
+		bDistort = FALSE;
+
+		HW.pContext->CopyResource(rt_Generic_0->pSurface, rt_Color->pSurface);
+	}
+};
+
 void CRenderTarget::phase_combine()
 {
 	PIX_EVENT(phase_combine);
-	
+
 	bool ssfx_PrevPos_Requiered = false;
 
 	//	TODO: DX10: Remove half poxel offset
@@ -51,11 +91,6 @@ void CRenderTarget::phase_combine()
 
 	//*** exposure-pipeline
 	u32			gpu_id = Device.dwFrame % HW.Caps.iGPUNum;
-	if (Device.m_SecondViewport.IsSVPActive()) //--#SM+#-- +SecondVP+
-	{
-		// clang-format off
-		gpu_id = (Device.dwFrame - 1) % HW.Caps.iGPUNum;
-	}
 	{
 		t_LUM_src->surface_set(rt_LUM_pool[gpu_id * 2 + 0]->pSurface);
 		t_LUM_dest->surface_set(rt_LUM_pool[gpu_id * 2 + 1]->pSurface);
@@ -82,42 +117,34 @@ void CRenderTarget::phase_combine()
 	// Save previus and current matrices
 	Fvector2 m_blur_scale;
 	{
-		static Fmatrix m_saved_viewproj;
+		static Fmatrix m_saved_viewproj[2];
+		static Fvector3 saved_position[2];
+		GetPrevious()->Position_previous.set(saved_position[Device.m_SecondViewport.IsSVPFrame()]);
+		saved_position[Device.m_SecondViewport.IsSVPFrame()].set(Device.vCameraPosition);
 
-		if (!Device.m_SecondViewport.IsSVPFrame())
-		{
-			static Fvector3 saved_position;
-			Position_previous.set(saved_position);
-			saved_position.set(Device.vCameraPosition);
+		GetPrevious()->Matrix_previous.mul(m_saved_viewproj[Device.m_SecondViewport.IsSVPFrame()], Device.mInvView);
+		GetPrevious()->Matrix_current.set(Device.mProject);
+		m_saved_viewproj[Device.m_SecondViewport.IsSVPFrame()].set(Device.mFullTransform);
 
-			Matrix_previous.mul(m_saved_viewproj, Device.mInvView);
-			Matrix_current.set(Device.mProject);
-			m_saved_viewproj.set(Device.mFullTransform);
-		}
 		float scale = ps_r2_mblur / 2.f;
 		m_blur_scale.set(scale, -scale).div(12.f);
 	}
 
 	{
-		// Disable when rendering SecondViewport
-		if (!Device.m_SecondViewport.IsSVPFrame())
+		// Clear RT
+		FLOAT ColorRGBA[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
+		HW.pContext->ClearRenderTargetView(rt_ssfx_temp->pRT, ColorRGBA);
+		HW.pContext->ClearRenderTargetView(rt_ssfx_temp2->pRT, ColorRGBA);
+
+		if (RImplementation.o.ssfx_ao && ps_ssfx_ao.y > 0)
 		{
-			// Clear RT
-			FLOAT ColorRGBA[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
-			HW.pContext->ClearRenderTargetView(rt_ssfx_temp->pRT, ColorRGBA);
-			HW.pContext->ClearRenderTargetView(rt_ssfx_temp2->pRT, ColorRGBA);
-
-			if (RImplementation.o.ssfx_ao && ps_ssfx_ao.y > 0)
-			{
-				ssfx_PrevPos_Requiered = true;
-				phase_ssfx_ao(); // [SSFX] - New AO Phase
-			}
-
-			if (RImplementation.o.ssfx_il && ps_ssfx_il.y > 0)
-			{
-				ssfx_PrevPos_Requiered = true;
-				phase_ssfx_il(); // [SSFX] - New IL Phase
-			}
+			ssfx_PrevPos_Requiered = true;
+			phase_ssfx_ao(); // [SSFX] - New AO Phase
+		}
+		if (RImplementation.o.ssfx_il && ps_ssfx_il.y > 0)
+		{
+			ssfx_PrevPos_Requiered = true;
+			phase_ssfx_il(); // [SSFX] - New IL Phase
 		}
 	}
 
@@ -127,7 +154,7 @@ void CRenderTarget::phase_combine()
 	{
 		HW.pContext->ClearRenderTargetView(rt_Generic_0->pRT, ColorRGBA);
 		HW.pContext->ClearRenderTargetView(rt_Generic_1->pRT, ColorRGBA);
-		u_setrt(rt_Generic_0, rt_Generic_1, rt_Heat, HW.pBaseZB);	//--DSR-- HeatVision
+		u_setrt(rt_Generic_0, rt_Generic_1, rt_Heat, baseZB);	//--DSR-- HeatVision
 	}
 	else
 	{
@@ -328,15 +355,12 @@ void CRenderTarget::phase_combine()
 	else
 		HW.pContext->CopyResource(rt_Generic_temp->pTexture->surface_get(), rt_Generic_0_r->pTexture->surface_get());
 
-	if (RImplementation.o.ssfx_ssr && !Device.m_SecondViewport.IsSVPFrame())
+	if (RImplementation.o.ssfx_ssr)
 	{
 		ssfx_PrevPos_Requiered = true;
 		phase_ssfx_ssr(); // [SSFX] - New SSR Phase
-	}
 
-	// [SSFX] - Water SSR rendering
-	if (RImplementation.o.ssfx_water && !Device.m_SecondViewport.IsSVPFrame())
-	{
+		// [SSFX] - Water SSR rendering
 		FLOAT ColorRGBA[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
 		HW.pContext->ClearRenderTargetView(rt_ssfx_temp->pRT, ColorRGBA);
 		HW.pContext->ClearRenderTargetView(rt_ssfx_temp2->pRT, ColorRGBA);
@@ -370,7 +394,7 @@ void CRenderTarget::phase_combine()
 	}
 
 	if (!RImplementation.o.dx10_msaa)
-		u_setrt(rt_Generic_0, 0, 0, HW.pBaseZB);
+		u_setrt(rt_Generic_0, 0, 0, baseZB);
 	else
 		u_setrt(rt_Generic_0_r, 0, 0, rt_MSAADepth->pZRT);
 
@@ -384,7 +408,7 @@ void CRenderTarget::phase_combine()
 			phase_ssfx_rain(); // Render a small color buffer to do the refraction and more
 
 			if (!RImplementation.o.dx10_msaa)
-				u_setrt(rt_Generic_0, 0, rt_ssfx_motion_vectors, HW.pBaseZB);
+				u_setrt(rt_Generic_0, 0, rt_ssfx_motion_vectors, baseZB);
 			else
 				u_setrt(rt_Generic_0_r, 0, rt_ssfx_motion_vectors, rt_MSAADepth->pZRT);
 		}
@@ -410,7 +434,7 @@ void CRenderTarget::phase_combine()
 
 		//--DSR-- HeatVision_start
 		if (!RImplementation.o.dx10_msaa)
-			u_setrt(rt_Generic_0, rt_Heat, rt_ssfx_motion_vectors, HW.pBaseZB); // LDR RT
+			u_setrt(rt_Generic_0, rt_Heat, rt_ssfx_motion_vectors, baseZB); // LDR RT
 		else
 			u_setrt(rt_Generic_0_r, rt_Heat, rt_ssfx_motion_vectors, RImplementation.Target->rt_MSAADepth->pZRT); // LDR RT
 		//--DSR-- HeatVision_end
@@ -444,19 +468,20 @@ void CRenderTarget::phase_combine()
 	{
 		// we need to resolve rt_Generic_1 into rt_Generic_1_r
 		HW.pContext->ResolveSubresource(rt_Generic_1->pTexture->surface_get(), 0,
-		                                rt_Generic_1_r->pTexture->surface_get(), 0, DXGI_FORMAT_R8G8B8A8_UNORM);
+			rt_Generic_1_r->pTexture->surface_get(), 0, DXGI_FORMAT_R8G8B8A8_UNORM);
 		HW.pContext->ResolveSubresource(rt_Generic_0->pTexture->surface_get(), 0,
-		                                rt_Generic_0_r->pTexture->surface_get(), 0, DXGI_FORMAT_R8G8B8A8_UNORM);
+			rt_Generic_0_r->pTexture->surface_get(), 0, DXGI_FORMAT_R8G8B8A8_UNORM);
 	}
 
 	// for msaa we need a resolved color buffer - Holger
-	phase_bloom(); // HDR RT invalidated here
+	if (!Device.m_SecondViewport.IsSVPFrame())
+		phase_bloom(); // HDR RT invalidated here
 
 	//RImplementation.rmNormal();
 	//u_setrt(rt_Generic_1,0,0,HW.pBaseZB);
 
 	// Distortion filter
-	BOOL bDistort = RImplementation.o.distortion_enabled; // This can be modified
+	bDistort = RImplementation.o.distortion_enabled; // This can be modified
 	{
 		u32 count = RImplementation.mapDistort.size() + RImplementation.mapHUDDistort.size();
 		if ((count < 1 && !_menu_pp))
@@ -469,7 +494,7 @@ void CRenderTarget::phase_combine()
 			FLOAT ColorRGBA[4] = {127.0f / 255.0f, 127.0f / 255.0f, 0.0f, 127.0f / 255.0f};
 			if (!RImplementation.o.dx10_msaa)
 			{
-				u_setrt(rt_Generic_1, 0, 0, HW.pBaseZB); // Now RT is a distortion mask
+				u_setrt(rt_Generic_1, 0, 0, baseZB); // Now RT is a distortion mask
 				HW.pContext->ClearRenderTargetView(rt_Generic_1->pRT, ColorRGBA);
 			}
 			else
@@ -490,9 +515,9 @@ void CRenderTarget::phase_combine()
 	/*
 	   if( RImplementation.o.dx10_msaa )
 	   {
-	      // we need to resolve rt_Generic_1 into rt_Generic_1_r
-	      if( bDistort )
-	         HW.pDevice->ResolveSubresource( rt_Generic_1_r->pTexture->surface_get(), 0, rt_Generic_1->pTexture->surface_get(), 0, DXGI_FORMAT_R8G8B8A8_UNORM );
+		  // we need to resolve rt_Generic_1 into rt_Generic_1_r
+		  if( bDistort )
+			 HW.pDevice->ResolveSubresource( rt_Generic_1_r->pTexture->surface_get(), 0, rt_Generic_1->pTexture->surface_get(), 0, DXGI_FORMAT_R8G8B8A8_UNORM );
 	   }
 	   */
 	RCache.set_Stencil(FALSE);
@@ -511,39 +536,50 @@ void CRenderTarget::phase_combine()
 		phase_ssfx_fog_scattering();
 	}
 
+	// TAA needs to run before motion blur and scope, as both damage position/motionvector relation
+	if (RImplementation.o.ssfx_taa && ps_ssfx_taa.x > 0)
+	{
+		PIX_EVENT(PHASE_TAA);
+		phase_ssfx_taa();
+	}
+
 	if (RImplementation.o.ssfx_motionblur && ps_ssfx_motionblur.y > 0)
 	{
+		PIX_EVENT(PHASE_MOTION_BLUR);
 		phase_ssfx_motion_blur();
 	}
 
-	if (scope_3D_fake_enabled)
+	if (ssfx_PrevPos_Requiered)
+		HW.pContext->CopyResource(rt_ssfx_prevPos->pTexture->surface_get(), rt_Position->pTexture->surface_get());
+
+	phase_apply_distortion();
+
+	if (scope_3D_fake_enabled && !Device.m_SecondViewport.IsSVPFrame())
 	{
+		
 		phase_3DSSReticle(); // Redotix99: for 3D Shader Based Scopes
 	}
 
 	//Compute blur textures
-	if (!Device.m_SecondViewport.IsSVPFrame()) // Temp fix for blur buffer and SVP
-		phase_blur();
+	phase_blur();
 
-	//Compute bloom (new)
-	if (RImplementation.o.ssfx_bloom)
-	{
-		if (!Device.m_SecondViewport.IsSVPFrame())
+	if (!Device.m_SecondViewport.IsSVPFrame()) {
+		//Compute bloom (new)
+		if (RImplementation.o.ssfx_bloom)
+		{
 			phase_ssfx_bloom();
+		}
 		else
-			HW.pContext->ClearRenderTargetView(rt_ssfx_bloom1->pRT, ColorRGBA);
-	}
-	else
-	{
-		phase_pp_bloom();
-	}
-	
-	if (ps_r2_ls_flags.test(R2FLAG_DOF))
-	{	
-		phase_dof();
-	}
+		{
+			phase_pp_bloom();
+		}
 
-	phase_lut();	
+		if (ps_r2_ls_flags.test(R2FLAG_DOF))
+		{
+			phase_dof();
+		}
+
+		phase_lut();
 
 	if(ps_r2_mask_control.x > 0)
 	{
@@ -557,31 +593,32 @@ void CRenderTarget::phase_combine()
 	if(ps_r2_nightvision > 0)
 		phase_nightvision();
 
-	//--DSR-- HeatVision_start
-	if (ps_r2_heatvision > 0)
-		phase_heatvision();
-	//--DSR-- HeatVision_end
+		//--DSR-- HeatVision_start
+		if (ps_r2_heatvision > 0)
+			phase_heatvision();
+		//--DSR-- HeatVision_end
+	}
 
-	if (scope_fake_enabled)
+	if (scope_fake_enabled && !scope_svp_enabled)
 	{
 		phase_fakescope(); //crookr
 	}
 
-    //SMAA
+	//SMAA
 	if (ps_smaa_quality)
 	{
         //PIX_EVENT(SMAA);
         phase_smaa();
         RCache.set_Stencil(FALSE);
     }    
-	
-	if (RImplementation.o.ssfx_taa && ps_ssfx_taa.x > 0)
-	{
-		phase_ssfx_taa();
-	}
 
-	if (ssfx_PrevPos_Requiered)
-		HW.pContext->CopyResource(rt_ssfx_prevPos->pTexture->surface_get(), rt_Position->pTexture->surface_get());
+	if (Device.m_SecondViewport.IsSVPFrame()) {
+		phase_svp_capture();
+
+		// At this point, the scope view is done. 
+		//    we do not want to post process.
+		return;
+	}
 
 	// PP enabled ?
 	//	Render to RT texture to be able to copy RT even in windowed mode.
@@ -594,13 +631,13 @@ void CRenderTarget::phase_combine()
 	// Combine everything + perform AA
 	if (RImplementation.o.dx10_msaa)
 	{
-		if (PP_Complex) u_setrt(rt_Generic, 0, 0, HW.pBaseZB); // LDR RT
-		else u_setrt(Device.dwWidth, Device.dwHeight, HW.pBaseRT,NULL,NULL, HW.pBaseZB);
+		if (PP_Complex) u_setrt(rt_Generic, 0, 0, baseZB); // LDR RT
+		else u_setrt(Device.dwWidth, Device.dwHeight, baseRT,NULL,NULL, baseZB);
 	}
 	else
 	{
-		if (PP_Complex) u_setrt(rt_Color, 0, 0, HW.pBaseZB); // LDR RT
-		else u_setrt(Device.dwWidth, Device.dwHeight, HW.pBaseRT,NULL,NULL, HW.pBaseZB);
+		if (PP_Complex) u_setrt(rt_Color, 0, 0, baseZB); // LDR RT
+		else u_setrt(Device.dwWidth, Device.dwHeight, baseRT, NULL, NULL, baseZB);
 	}
 	//. u_setrt				( Device.dwWidth,Device.dwHeight,HW.pBaseRT,NULL,NULL,HW.pBaseZB);
 	RCache.set_CullMode(CULL_NONE);
@@ -677,20 +714,20 @@ void CRenderTarget::phase_combine()
 		if (!RImplementation.o.dx10_msaa)
 		{
 			if (ps_r2_ls_flags.test(R2FLAG_AA)) RCache.set_Element(s_combine->E[bDistort ? 3 : 1]);
-				// look at blender_combine.cpp
+			// look at blender_combine.cpp
 			else RCache.set_Element(s_combine->E[bDistort ? 4 : 2]); // look at blender_combine.cpp
 		}
 		else
 		{
 			if (ps_r2_ls_flags.test(R2FLAG_AA)) RCache.set_Element(s_combine_msaa[0]->E[bDistort ? 3 : 1]);
-				// look at blender_combine.cpp
+			// look at blender_combine.cpp
 			else RCache.set_Element(s_combine_msaa[0]->E[bDistort ? 4 : 2]); // look at blender_combine.cpp
 		}
 		RCache.set_c("e_barrier", ps_r2_aa_barier.x, ps_r2_aa_barier.y, ps_r2_aa_barier.z, 0);
 		RCache.set_c("e_weights", ps_r2_aa_weight.x, ps_r2_aa_weight.y, ps_r2_aa_weight.z, 0);
 		RCache.set_c("e_kernel", ps_r2_aa_kernel, ps_r2_aa_kernel, ps_r2_aa_kernel, 0);
-		RCache.set_c("m_current", Matrix_current);
-		RCache.set_c("m_previous", Matrix_previous);
+		RCache.set_c("m_current", GetPrevious()->Matrix_current);
+		RCache.set_c("m_previous", GetPrevious()->Matrix_previous);
 		RCache.set_c("m_blur", m_blur_scale.x, m_blur_scale.y, 0, 0);
 		/////lvutner		
 		RCache.set_c("mask_control", ps_r2_mask_control.x, ps_r2_mask_control.y, ps_r2_mask_control.z, ps_r2_mask_control.w);
@@ -747,6 +784,7 @@ void CRenderTarget::phase_combine()
 		t_LUM_src->surface_set(NULL);
 		t_LUM_dest->surface_set(NULL);
 	}
+
 
 #ifdef DEBUG
 	RCache.set_CullMode	( CULL_CCW );
@@ -853,13 +891,48 @@ void CRenderTarget::phase_combine()
 #endif
 }
 
+void CRenderTarget::phase_scope_debug() 
+{
+	//Constants
+	if (scope_debug && !Device.m_SecondViewport.IsSVPFrame()) {
+		u32 Offset = 0;
+		u32 C = color_rgba(0, 0, 0, 255);
+
+		float d_Z = EPS_S;
+		float d_W = 1.0f;
+		float w = float(Device.dwWidth);
+		float h = float(Device.dwHeight);
+
+		Fvector2 p0, p1;
+		p0.set(0.0f, 0.0f);
+		p1.set(1.0f, 1.0f);
+
+		RCache.set_CullMode(CULL_NONE);
+		RCache.set_Stencil(FALSE);
+
+		// Triangle for fullscreen shader
+		int triangles = 1;
+		FVF::TL* pv = (FVF::TL*)RCache.Vertex.Lock(triangles * 3, g_combine->vb_stride, Offset);
+		pv->set(0, float(h * 2), d_Z, d_W, C, p0.x, p1.y * 2); pv++;
+		pv->set(0, 0, d_Z, d_W, C, p0.x, p0.y); pv++;
+		pv->set(float(w * 2), 0, d_Z, d_W, C, p1.x * 2, p0.y); pv++;
+		RCache.Vertex.Unlock(triangles * 3, g_combine->vb_stride);
+
+		RCache.set_Geometry(g_combine);
+
+		RCache.set_Element(s_scope_debug->E[1]);
+
+		RCache.Render(D3DPT_TRIANGLELIST, Offset, 0, triangles * 3, 0, triangles);
+	}
+}
+
 void CRenderTarget::phase_wallmarks()
 {
 	// Targets
 	RCache.set_RT(NULL, 2);
 	RCache.set_RT(NULL, 1);
 	if (!RImplementation.o.dx10_msaa)
-		u_setrt(rt_Color,NULL,NULL, HW.pBaseZB);
+		u_setrt(rt_Color,NULL,NULL, baseZB);
 	else
 		u_setrt(rt_Color,NULL,NULL, rt_MSAADepth->pZRT);
 	// Stencil	- draw only where stencil >= 0x1
@@ -878,7 +951,7 @@ void CRenderTarget::phase_combine_volumetric()
 
 	//u_setrt(rt_Generic_0,0,0,HW.pBaseZB );			// LDR RT
 	if (!RImplementation.o.dx10_msaa)
-		u_setrt(rt_Generic_0, rt_Generic_1, 0, HW.pBaseZB);
+		u_setrt(rt_Generic_0, rt_Generic_1, 0, baseZB);
 	else
 		u_setrt(rt_Generic_0_r, rt_Generic_1_r, 0, RImplementation.Target->rt_MSAADepth->pZRT);
 	//	Sets limits to both render targets

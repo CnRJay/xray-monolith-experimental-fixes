@@ -100,10 +100,7 @@ void CRenderTarget::accum_point(light* L)
 		RCache.set_c("Ldynamic_color", L_clr.x, L_clr.y, L_clr.z, L_spec);
 		RCache.set_c("m_texgen", m_Texgen);
 
-		if (!Device.m_SecondViewport.IsSVPFrame())
-			RCache.set_c("sss_id", L->sss_id);
-		else
-			RCache.set_c("sss_id", -1);
+		RCache.set_c("sss_id", L->sss_id);
 
 		// Fetch4 : enable
 		//		if (RImplementation.o.HW_smap_FETCH4)	{
@@ -160,7 +157,7 @@ void CRenderTarget::accum_point(light* L)
 	if (!RImplementation.o.fp16_blend)
 	{
 		if (! RImplementation.o.dx10_msaa)
-			u_setrt(rt_Accumulator,NULL,NULL, HW.pBaseZB);
+			u_setrt(rt_Accumulator,NULL,NULL, baseZB);
 		else
 			u_setrt(rt_Accumulator,NULL,NULL, rt_MSAADepth->pZRT);
 		RCache.set_Element(s_accum_mask->E[SE_MASK_ACCUM_VOL]);

@@ -94,6 +94,51 @@ void R_occlusion::occq_end(u32& ID)
 	CHK_DX(EndQuery(used[ID].Q));
 }
 
+void R_occlusion::occq_close(u32& ID) {
+	if (ID == iInvalidHandle || ID >= used.size())
+		return;
+
+	// insert into pool (sorting in decreasing order)
+	_Q& Q = used[ID];
+
+	// On device reset, it's possible ID refers to an invalid query
+	if (nullptr == Q.Q)
+		return;
+
+	if (pool.empty()) pool.push_back(Q);
+	else
+	{
+		int it = int(pool.size()) - 1;
+		while ((it >= 0) && (pool[it].order < Q.order)) it--;
+		pool.insert(pool.begin() + it + 1, Q);
+	}
+
+	// remove from used and shrink as nesessary
+	used[ID].Q = 0;
+	fids.push_back(ID);
+	ID = 0;
+}
+
+// Non blocking alternative to occq_get
+R_occlusion::occq_try_result R_occlusion::occq_try_get(u32 ID)
+{
+	occq_result fragments = 0;
+
+	if (enabled && ID != iInvalidHandle) {
+		auto status = GetData(used[ID].Q, &fragments, sizeof(fragments));
+
+		if (status == S_FALSE) {
+			return { false, fragments };
+		}
+
+		if (status == S_OK) {
+			if (0 == fragments) RImplementation.stats.o_culled++;
+		}
+	}
+	occq_close(ID);
+	return  { true, fragments };
+}
+
 R_occlusion::occq_result R_occlusion::occq_get(u32& ID)
 {
 	if (!enabled) return 0xffffffff;
@@ -126,19 +171,6 @@ R_occlusion::occq_result R_occlusion::occq_get(u32& ID)
 
 	if (0 == fragments) RImplementation.stats.o_culled ++;
 
-	// insert into pool (sorting in decreasing order)
-	_Q& Q = used[ID];
-	if (pool.empty()) pool.push_back(Q);
-	else
-	{
-		int it = int(pool.size()) - 1;
-		while ((it >= 0) && (pool[it].order < Q.order)) it--;
-		pool.insert(pool.begin() + it + 1, Q);
-	}
-
-	// remove from used and shrink as nesessary
-	used[ID].Q = 0;
-	fids.push_back(ID);
-	ID = 0;
+	occq_close(ID);
 	return fragments;
 }

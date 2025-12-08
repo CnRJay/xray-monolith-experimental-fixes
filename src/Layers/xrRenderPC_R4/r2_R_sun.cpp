@@ -793,7 +793,7 @@ void CRender::render_sun()
 		bool bSpecial = mapNormalPasses[1][0].size() || mapMatrixPasses[1][0].size() || mapSorted.size();
 		if (bNormal || bSpecial)
 		{
-			Target->phase_smap_direct(fuckingsun, SE_SUN_FAR);
+			Target->phase_smap_direct(fuckingsun, Target->rt_smap_depth, SE_SUN_FAR);
 			RCache.set_xform_world(Fidentity);
 			RCache.set_xform_view(Fidentity);
 			RCache.set_xform_project(fuckingsun->X.D.combine);
@@ -1035,7 +1035,7 @@ void CRender::render_sun_near()
 		bool bSpecial = mapNormalPasses[1][0].size() || mapMatrixPasses[1][0].size() || mapSorted.size();
 		if (bNormal || bSpecial)
 		{
-			Target->phase_smap_direct(fuckingsun, SE_SUN_NEAR);
+			Target->phase_smap_direct(fuckingsun, Target->rt_smap_depth, SE_SUN_NEAR);
 			RCache.set_xform_world(Fidentity);
 			RCache.set_xform_view(Fidentity);
 			RCache.set_xform_project(fuckingsun->X.D.combine);
@@ -1110,22 +1110,50 @@ void CRender::init_cacades()
 	/// 	m_sun_cascades[m_sun_cascades.size()-1].size = 80;
 }
 
+void CRender::shadowmap_sun_cascades() 
+{
+	PIX_EVENT(SHADOWMAP_SUN_CASCADES);
+	
+	// FIXME: Shader does not respect light atlas bounds, which prevents usage of a combined light atlas
+}
+
 void CRender::render_sun_cascades()
 {
+	PIX_EVENT(RENDER_SUN_CASCADES);
+
 	bool b_need_to_render_sunshafts = RImplementation.Target->need_to_render_sunshafts();
 	bool last_cascade_chain_mode = m_sun_cascades.back().reset_chain;
 	if (b_need_to_render_sunshafts)
 		m_sun_cascades[m_sun_cascades.size() - 1].reset_chain = true;
 
-	for (u32 i = 0; i < m_sun_cascades.size(); ++i)
+	for (u32 i = 0; i < m_sun_cascades.size(); ++i) {
+		TargetMain->SetActive();
+		shadowmap_sun_cascade(i);
+		
+		if (Device.m_SecondViewport.IsSVPActive()) {
+			TargetSVP->SetActive();
+			render_sun_cascade(i);
+		}
+		TargetMain->SetActive();
 		render_sun_cascade(i);
-
+	}
+	
 	if (b_need_to_render_sunshafts)
 		m_sun_cascades[m_sun_cascades.size() - 1].reset_chain = last_cascade_chain_mode;
+
+	if (Device.m_SecondViewport.IsSVPActive()) {
+		TargetSVP->SetActive();
+		TargetSVP->accum_direct_blend();
+	}
+	TargetMain->SetActive();
+	TargetMain->accum_direct_blend();
 }
 
-void CRender::render_sun_cascade(u32 cascade_ind)
+void CRender::shadowmap_sun_cascade(u32 cascade_ind)
 {
+	PIX_EVENT(SHADOWMAP_SUN_CASCADE);
+
+	Lights.sun_adapted = Lights.sun_cascades[cascade_ind];
 	light* fuckingsun = (light*)Lights.sun_adapted._get();
 
 	// calculate view-frustum bounds in world space
@@ -1148,7 +1176,7 @@ void CRender::render_sun_cascade(u32 cascade_ind)
 		// Lets begin from base frustum
 		Fmatrix fullxform_inv = ex_full_inverse;
 #ifdef	_DEBUG
-        typedef		DumbConvexVolume<true>	t_volume;
+		typedef		DumbConvexVolume<true>	t_volume;
 #else
 		typedef DumbConvexVolume<false> t_volume;
 #endif
@@ -1189,7 +1217,7 @@ void CRender::render_sun_cascade(u32 cascade_ind)
 
 		//////////////////////////////////////////////////////////////////////////
 #ifdef	_DEBUG
-        typedef		FixedConvexVolume<true>		t_cuboid;
+		typedef		FixedConvexVolume<true>		t_cuboid;
 #else
 		typedef FixedConvexVolume<false> t_cuboid;
 #endif
@@ -1231,7 +1259,7 @@ void CRender::render_sun_cascade(u32 cascade_ind)
 
 		float map_size = m_sun_cascades[cascade_ind].size;
 		D3DXMatrixOrthoOffCenterLH((D3DXMATRIX*)&mdir_Project, -map_size * 0.5f, map_size * 0.5f, -map_size * 0.5f,
-		                           map_size * 0.5f, 0.1, dist + map_size);
+			map_size * 0.5f, 0.1, dist + map_size);
 
 		//////////////////////////////////////////////////////////////////////////
 
@@ -1273,7 +1301,7 @@ void CRender::render_sun_cascade(u32 cascade_ind)
 
 		Fvector lightXZshift;
 		light_cuboid.compute_caster_model_fixed(cull_planes, lightXZshift, m_sun_cascades[cascade_ind].size,
-		                                        m_sun_cascades[cascade_ind].reset_chain);
+			m_sun_cascades[cascade_ind].reset_chain);
 		Fvector proj_view = Device.vCameraDirection;
 		proj_view.y = 0;
 		proj_view.normalize();
@@ -1311,8 +1339,8 @@ void CRender::render_sun_cascade(u32 cascade_ind)
 			Fvector cam_proj = Device.vCameraPosition;
 			const float align_aim_step_coef = 4.f;
 			cam_proj.set(floorf(cam_proj.x / align_aim_step_coef) + align_aim_step_coef / 2,
-			             floorf(cam_proj.y / align_aim_step_coef) + align_aim_step_coef / 2,
-			             floorf(cam_proj.z / align_aim_step_coef) + align_aim_step_coef / 2);
+				floorf(cam_proj.y / align_aim_step_coef) + align_aim_step_coef / 2,
+				floorf(cam_proj.z / align_aim_step_coef) + align_aim_step_coef / 2);
 			cam_proj.mul(align_aim_step_coef);
 			Fvector cam_pixel = wform(cull_xform, cam_proj);
 			cam_pixel = wform(m_viewport, cam_pixel);
@@ -1355,6 +1383,10 @@ void CRender::render_sun_cascade(u32 cascade_ind)
 		FPU::m24r();
 	}
 
+	auto smap = Target->rt_smap_depth;
+
+	Target->phase_smap_spot_clear(smap);
+
 	// Begin SMAP-render
 	{
 		bool bSpecialFull = mapNormalPasses[1][0].size() || mapMatrixPasses[1][0].size() || mapSorted.size();
@@ -1379,7 +1411,7 @@ void CRender::render_sun_cascade(u32 cascade_ind)
 		bool bSpecial = mapNormalPasses[1][0].size() || mapMatrixPasses[1][0].size() || mapSorted.size();
 		if (bNormal || bSpecial)
 		{
-			Target->phase_smap_direct(fuckingsun, SE_SUN_FAR);
+			Target->phase_smap_direct(fuckingsun, smap, SE_SUN_FAR);
 			RCache.set_xform_world(Fidentity);
 			RCache.set_xform_view(Fidentity);
 			RCache.set_xform_project(fuckingsun->X.D.combine);
@@ -1406,26 +1438,46 @@ void CRender::render_sun_cascade(u32 cascade_ind)
 		r_pmask(true, false);
 	}
 
-	// Accumulate
-	Target->phase_accumulator();
-
 	if (Target->use_minmax_sm_this_frame())
 	{
 		PIX_EVENT(SE_SUN_NEAR_MINMAX_GENERATE);
 		Target->create_minmax_SM();
 	}
 
-	PIX_EVENT(SE_SUN_NEAR);
+	// Restore XForms
+	RCache.set_xform_world(Fidentity);
+	RCache.set_xform_view(Device.mView);
+	RCache.set_xform_project(Device.mProject);
+}
 
-	if (cascade_ind == 0)
-		Target->accum_direct_cascade(SE_SUN_NEAR, m_sun_cascades[cascade_ind].xform, m_sun_cascades[cascade_ind].xform,
-		                             m_sun_cascades[cascade_ind].bias);
-	else if (cascade_ind < m_sun_cascades.size() - 1)
-		Target->accum_direct_cascade(SE_SUN_MIDDLE, m_sun_cascades[cascade_ind].xform,
-		                             m_sun_cascades[cascade_ind - 1].xform, m_sun_cascades[cascade_ind].bias);
-	else
-		Target->accum_direct_cascade(SE_SUN_FAR, m_sun_cascades[cascade_ind].xform,
-		                             m_sun_cascades[cascade_ind - 1].xform, m_sun_cascades[cascade_ind].bias);
+void CRender::render_sun_cascade(u32 cascade_ind)
+{
+	PIX_EVENT(RENDER_SUN_CASCADE);
+
+	Lights.sun_adapted = Lights.sun_cascades[cascade_ind];
+	light* fuckingsun = (light*)Lights.sun_adapted._get();
+
+	RCache.set_xform_world(Fidentity);
+	RCache.set_xform_view(Fidentity);
+	RCache.set_xform_project(fuckingsun->X.D.combine);
+
+	// Accumulate
+	{
+		PIX_EVENT(SE_SUN_ACCUMULATE);
+		Target->phase_accumulator();
+
+		PIX_EVENT(SE_SUN_NEAR);
+
+		if (cascade_ind == 0)
+			Target->accum_direct_cascade(SE_SUN_NEAR, m_sun_cascades[cascade_ind].xform, m_sun_cascades[cascade_ind].xform,
+										 m_sun_cascades[cascade_ind].bias);
+		else if (cascade_ind < m_sun_cascades.size() - 1)
+			Target->accum_direct_cascade(SE_SUN_MIDDLE, m_sun_cascades[cascade_ind].xform,
+										 m_sun_cascades[cascade_ind - 1].xform, m_sun_cascades[cascade_ind].bias);
+		else
+			Target->accum_direct_cascade(SE_SUN_FAR, m_sun_cascades[cascade_ind].xform,
+										 m_sun_cascades[cascade_ind - 1].xform, m_sun_cascades[cascade_ind].bias);
+	}
 
 	// Restore XForms
 	RCache.set_xform_world(Fidentity);

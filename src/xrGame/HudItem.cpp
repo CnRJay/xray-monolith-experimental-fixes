@@ -990,7 +990,8 @@ void CHudItem::ApplyAimModifiers(Fmatrix& matrix)
 	const CActor* pActor = Actor();
 
 	// Fetch HUD pick
-	const SPickParam& hud_pick = HUD().GetPick();
+	SPickParam& hud_pick = HUD().GetPick();
+
 
 	// If firepos is disabled, use the eye position
 	bool firepos = HUD().FireposActive();

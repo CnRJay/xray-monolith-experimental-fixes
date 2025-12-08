@@ -2,6 +2,7 @@
 
 void CRenderTarget::draw_rain(light& RainSetup)
 {
+	PIX_EVENT(DRAW_RAIN);
 	float fRainFactor = g_pGamePersistent->Environment().CurrentEnv->rain_density;
 
 	// Common calc for quad-rendering
@@ -244,7 +245,7 @@ void CRenderTarget::draw_rain(light& RainSetup)
 		//	Use for intermediate results
 		//	Patch normal
 		if (!RImplementation.o.dx10_msaa)
-			u_setrt(rt_Accumulator,NULL,NULL, HW.pBaseZB);
+			u_setrt(rt_Accumulator,NULL,NULL, baseZB);
 		else
 			u_setrt(rt_Accumulator,NULL,NULL, rt_MSAADepth->pZRT);
 
@@ -311,7 +312,7 @@ void CRenderTarget::draw_rain(light& RainSetup)
 			//	Do this in blender!
 			//StateManager.SetColorWriteEnable( D3Dxx_COLOR_WRITE_ENABLE_RED | D3Dxx_COLOR_WRITE_ENABLE_GREEN | D3Dxx_COLOR_WRITE_ENABLE_BLUE );
 			if( ! RImplementation.o.dx10_msaa )
-				u_setrt	(rt_Position,NULL,NULL,HW.pBaseZB); 
+				u_setrt	(rt_Position,NULL,NULL, baseZB);
 			else
 				u_setrt	(rt_Position,NULL,NULL,rt_MSAADepth->pZRT); 
 
@@ -359,7 +360,7 @@ void CRenderTarget::draw_rain(light& RainSetup)
 		//	It is restored automatically by a set_Element call
 		//StateManager.SetColorWriteEnable( D3Dxx_COLOR_WRITE_ENABLE_ALL );
 		if (! RImplementation.o.dx10_msaa)
-			u_setrt(rt_Color,NULL,NULL, HW.pBaseZB);
+			u_setrt(rt_Color,NULL,NULL, baseZB);
 		else
 			u_setrt(rt_Color,NULL,NULL, rt_MSAADepth->pZRT);
 

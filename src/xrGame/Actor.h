@@ -348,6 +348,7 @@ public:
 	IC CCameraBase* cam_FirstEye() { return cameras[eacFirstEye]; }
 	//Swartz: actor shadow
 	IC EActorCameras active_cam() { return cam_active; } //KD: need to know which cam active outside actor methods
+	bool scopeCameraMatrix(Fmatrix& camera);
 	virtual void cam_Set(EActorCameras style); //Alundaio: made public
 	//-Swartz
 
@@ -367,7 +368,7 @@ protected:
 	void cam_SetFreelook();
 	void cam_UnsetFreelook();
 	bool CanUseFreelook();
-	float currentFOV();
+	float currentFOV(bool wantSVPFov);
 
 	// Cameras
 	CCameraBase* cameras[eacMaxCam];

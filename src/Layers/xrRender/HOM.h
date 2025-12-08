@@ -17,6 +17,8 @@ private:
 	CDB::MODEL* m_pModel;
 	occTri* m_pTris;
 	BOOL bEnabled;
+	Fmatrix fullTransform;
+	Fvector cameraPosition;
 	Fmatrix m_xform;
 	Fmatrix m_xform_01;
 #ifdef DEBUG

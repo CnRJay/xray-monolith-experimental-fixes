@@ -109,8 +109,8 @@ public:
 		float time[16];
 		float fade[16];
 		float speed[16];
-		Fvector4 prev_pos[16];
-		Fvector4 prev_dir[16];
+		Fvector4 prev_pos[2][16];
+		Fvector4 prev_dir[2][16];
 	} grass_shader_data;
 
 public:

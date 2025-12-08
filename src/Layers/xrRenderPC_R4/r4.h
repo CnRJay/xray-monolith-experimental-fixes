@@ -169,7 +169,9 @@ public:
   CModelPool *Models;
   CWallmarksEngine *Wallmarks;
 
-  CRenderTarget *Target; // Render-target
+	CRenderTarget* Target; // Active Render-target
+	CRenderTarget* TargetMain;
+	CRenderTarget* TargetSVP;
 
   CLight_DB Lights;
   CLight_Compute_XFORM_and_VIS LR;
@@ -211,22 +213,28 @@ private:
       dxRender_Visual *pVisual); // if detected node's full visibility
 
 public:
-  IRender_Sector *rimp_detectSector(Fvector &P, Fvector &D);
-  void render_main(Fmatrix &mCombined, bool _fportals);
-  void render_forward();
-  void render_Reticle();
-  void render_smap_direct(Fmatrix &mCombined);
-  void render_indirect(light *L);
-  void render_lights(light_Package &LP);
-  void render_sun();
-  void render_sun_near();
-  void render_sun_filtered();
-  void render_menu();
-  void render_rain();
+	IRender_Sector* rimp_detectSector(Fvector& P, Fvector& D);
+	void render_main(Fmatrix& mCombined, bool _fportals);
+	void render_forward();
+	void render_smap_direct(Fmatrix& mCombined);
+	void render_indirect(light* L);
+	void render_lights_shadowmaps(light_Package& LP);
+	void render_lights(light_Package& LP);
+	void render_sun();
+	void render_sun_near();
+	void render_sun_filtered();
+	void render_menu();
+	bool is_raining();
+	void shadowmap_rain();
+	void render_rain();
 
-  void render_sun_cascade(u32 cascade_ind);
-  void init_cacades();
-  void render_sun_cascades();
+	void render_sun_cascade(u32 cascade_ind);
+	void init_cacades();
+	void shadowmap_sun_cascades();
+	void render_sun_cascades();
+
+	void shadowmap_sun_cascade(u32 cascade_ind);
+	void shadowmap_sun_cascades(u32 cascade_ind);
 
 public:
   ShaderElement *rimp_select_sh_static(dxRender_Visual *pVisual,
@@ -243,10 +251,11 @@ public:
   IRender_Sector *detectSector(const Fvector &P, Fvector &D);
   int translateSector(IRender_Sector *pSector);
 
-  // HW-occlusion culling
-  IC u32 occq_begin(u32 &ID) { return HWOCC.occq_begin(ID); }
-  IC void occq_end(u32 &ID) { HWOCC.occq_end(ID); }
-  IC R_occlusion::occq_result occq_get(u32 &ID) { return HWOCC.occq_get(ID); }
+	// HW-occlusion culling
+	IC u32 occq_begin(u32& ID) { return HWOCC.occq_begin(ID); }
+	IC void occq_end(u32& ID) { HWOCC.occq_end(ID); }
+	IC R_occlusion::occq_try_result occq_try_get(u32 ID) { return HWOCC.occq_try_get(ID); }
+	IC R_occlusion::occq_result occq_get(u32& ID) { return HWOCC.occq_get(ID); }
 
   ICF void apply_object(IRenderable *O) {
     if (0 == O)
@@ -308,11 +317,13 @@ public:
     return HW.FeatureLevel >= D3D_FEATURE_LEVEL_10_1 ? 0x000A0001 : 0x000A0000;
   }
 
-  // Loading / Unloading
-  virtual void create();
-  virtual void destroy();
-  virtual void reset_begin();
-  virtual void reset_end();
+	// Loading / Unloading
+	virtual void create();
+	virtual void destroy();
+	void initializeTargets();
+	void deleteTargets();
+	virtual void reset_begin();
+	virtual void reset_end();
 
   virtual void level_Load(IReader *);
   virtual void level_Unload();
@@ -428,14 +439,20 @@ public:
   virtual BOOL occ_visible(Fbox &B);
   virtual BOOL occ_visible(sPoly &P);
 
-  // Main
-  virtual void Calculate();
-  virtual void Render();
-  virtual void Screenshot(ScreenshotMode mode = SM_NORMAL, LPCSTR name = 0);
-  virtual void Screenshot(ScreenshotMode mode, CMemoryWriter &memory_writer);
-  virtual void ScreenshotAsyncBegin();
-  virtual void ScreenshotAsyncEnd(CMemoryWriter &memory_writer);
-  virtual void _BCL OnFrame();
+	// Main
+	void SetMatrices(Fmatrix view, Fmatrix projection, Fmatrix projection_hud);
+	virtual void Calculate();
+	void renderGBuffer();
+	void combineLightingAndBloom();
+	void renderSun();
+	void renderShadowmaps();
+	void combineGBuffer();
+	virtual void Render();
+	virtual void Screenshot(ScreenshotMode mode = SM_NORMAL, LPCSTR name = 0);
+	virtual void Screenshot(ScreenshotMode mode, CMemoryWriter& memory_writer);
+	virtual void ScreenshotAsyncBegin();
+	virtual void ScreenshotAsyncEnd(CMemoryWriter& memory_writer);
+	virtual void _BCL OnFrame();
 
   // Particles
   virtual void ExportParticles();

@@ -590,8 +590,11 @@ void CTexture::Unload()
 #ifdef DEBUG
 	_SHOW_REF		(msg_buff, pSurface);
 #endif // DEBUG
-	_RELEASE(pSurface);
-	_RELEASE(m_pSRView);
+
+	if (!unsafe_set) {
+		_RELEASE(pSurface);
+		_RELEASE(m_pSRView);
+	}
 
 	xr_delete(pAVI);
 	xr_delete(pTheora);
