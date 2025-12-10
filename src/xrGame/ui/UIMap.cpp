@@ -458,15 +458,18 @@ void CUILevelMap::UpdateSpots()
 
 	if (FALSE == MapWnd()->ActiveMapRect().intersected(_r)) return;
 
-	Locations& ls = Level().MapManager().Locations();
-	Locations_it it = ls.begin();
-	Locations_it it_e = ls.end();
+	const xr_vector<u16>& cached_objects = Level().MapManager().GetCachedSpotObjects();
+	xr_vector<CMapLocation*> spots;
 
-	for (u32 idx = 0; it != it_e; ++it, ++idx)
+	for (u16 id : cached_objects)
 	{
-		if ((*it).actual && MapName() == (*it).location->GetLevelName())
+		Level().MapManager().GetMapLocationsForObject(id, spots);
+		for (CMapLocation* spot : spots)
 		{
-			(*it).location->UpdateLevelMap(this);
+			if (MapName() == spot->GetLevelName())
+			{
+				spot->UpdateLevelMap(this);
+			}
 		}
 	}
 }
@@ -585,9 +588,14 @@ void CUIMiniMap::Init_internal(const shared_str& name, CInifile& pLtx, const sha
 void CUIMiniMap::UpdateSpots()
 {
 	DetachAll();
-	Locations& ls = Level().MapManager().Locations();
-	for (Locations_it it = ls.begin(); it != ls.end(); ++it)
-		(*it).location->UpdateMiniMap(this);
+	const xr_vector<u16>& cached_objects = Level().MapManager().GetCachedSpotObjects();
+	xr_vector<CMapLocation*> spots;
+	for (u16 id : cached_objects)
+	{
+		Level().MapManager().GetMapLocationsForObject(id, spots);
+		for (CMapLocation* spot : spots)
+			spot->UpdateMiniMap(this);
+	}
 }
 
 void CUIMiniMap::Draw()

@@ -20,9 +20,11 @@ struct SLocationKey : public IPureSerializeObject<IReader, IWriter>, public IPur
 
 	bool operator <(const SLocationKey& key) const
 	{
-		if (actual == key.actual)
-			return location < key.location;
-		else
+		if (actual == key.actual) {
+			if (object_id == key.object_id)
+				return location < key.location;
+			return object_id < key.object_id;
+		} else
 			return actual > key.actual;
 	} //move non-actual to tail
 

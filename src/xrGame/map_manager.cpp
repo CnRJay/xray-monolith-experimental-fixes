@@ -107,6 +107,34 @@ void CMapLocationRegistry::save(IWriter& stream)
 }
 
 
+void CMapManager::AddToCache(u16 id)
+{
+	if (std::find(m_cached_spot_objects.begin(), m_cached_spot_objects.end(), id) == m_cached_spot_objects.end())
+		m_cached_spot_objects.push_back(id);
+}
+
+void CMapManager::RemoveFromCache(u16 id)
+{
+	bool bFound = false;
+	Locations_it it = Locations().begin();
+	Locations_it it_e = Locations().end();
+	for (; it != it_e; ++it)
+	{
+		if ((*it).actual && (*it).object_id == id)
+		{
+			bFound = true;
+			break;
+		}
+	}
+
+	if (!bFound)
+	{
+		xr_vector<u16>::iterator it_c = std::find(m_cached_spot_objects.begin(), m_cached_spot_objects.end(), id);
+		if (it_c != m_cached_spot_objects.end())
+			m_cached_spot_objects.erase(it_c);
+	}
+}
+
 CMapManager::CMapManager()
 {
 	m_locations_wrapper = xr_new<CMapLocationWrapper>();
@@ -128,6 +156,10 @@ CMapLocation* CMapManager::AddMapLocation(const shared_str& spot_type, u16 id)
 	if (IsGameTypeSingle() && g_actor)
 		Actor()->callback(GameObject::eMapLocationAdded)(spot_type.c_str(), id);
 
+	AddToCache(id);
+	
+	std::sort(Locations().begin(), Locations().end());
+
 	return l;
 }
 
@@ -148,6 +180,8 @@ CMapLocation* CMapManager::AddRelationLocation(CInventoryOwner* pInvOwner)
 	CMapLocation* l = xr_new<CRelationMapLocation>(sname, pInvOwner->object_id(), pActor->object_id());
 	Locations().push_back(SLocationKey(sname, pInvOwner->object_id()));
 	Locations().back().location = l;
+	AddToCache(pInvOwner->object_id());
+	std::sort(Locations().begin(), Locations().end());
 	return l;
 }
 
@@ -167,6 +201,7 @@ void CMapManager::RemoveMapLocation(const shared_str& spot_type, u16 id)
 
 		Destroy((*it).location);
 		Locations().erase(it);
+		RemoveFromCache(key.object_id);
 	}
 }
 
@@ -183,6 +218,7 @@ void CMapManager::RemoveAllMapLocationsById(u16 id)
 			it++;
 		}
 	}
+	RemoveFromCache(id);
 }
 
 void CMapManager::RemoveMapLocationByObjectID(u16 id) //call on destroy object
@@ -199,6 +235,7 @@ void CMapManager::RemoveMapLocationByObjectID(u16 id) //call on destroy object
 
 		it = std::find_if(Locations().begin(), Locations().end(), key);
 	}
+	RemoveFromCache(id);
 }
 
 void CMapManager::RemoveMapLocation(CMapLocation* ml)
@@ -208,24 +245,35 @@ void CMapManager::RemoveMapLocation(CMapLocation* ml)
 	Locations_it it = std::find_if(Locations().begin(), Locations().end(), key);
 	if (it != Locations().end())
 	{
+		u16 id = (*it).object_id;
 		if (IsGameTypeSingle())
 			Level().GameTaskManager().MapLocationRelcase((*it).location);
 
 		Destroy((*it).location);
 		Locations().erase(it);
+		RemoveFromCache(id);
 	}
 }
 
 bool CMapManager::GetMapLocationsForObject(u16 id, xr_vector<CMapLocation*>& res)
 {
 	res.clear_not_free();
-	Locations_it it = Locations().begin();
+	
+	SLocationKey key;
+	key.object_id = id;
+	key.actual = true;
+
+	Locations_it it = std::lower_bound(Locations().begin(), Locations().end(), key);
 	Locations_it it_e = Locations().end();
+
 	for (; it != it_e; ++it)
 	{
-		if ((*it).actual && (*it).object_id == id)
-			res.push_back((*it).location);
+		if (!(*it).actual || (*it).object_id != id)
+			break;
+
+		res.push_back((*it).location);
 	}
+
 	return (res.size() != 0);
 }
 
@@ -289,11 +337,13 @@ void CMapManager::Update()
 
 	while ((!Locations().empty()) && (!Locations().back().actual))
 	{
+		u16 id = Locations().back().object_id;
 		if (IsGameTypeSingle())
 			Level().GameTaskManager().MapLocationRelcase(Locations().back().location);
 
 		Destroy(Locations().back().location);
 		Locations().pop_back();
+		RemoveFromCache(id);
 	}
 }
 
