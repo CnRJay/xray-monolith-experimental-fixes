@@ -1,4 +1,5 @@
 #include "pch_script.h"
+#include "../xrCore/profiler.h"
 #include "map_manager.h"
 #include "alife_registry_wrappers.h"
 #include "inventoryowner.h"
@@ -320,6 +321,7 @@ void CMapManager::GetMapLocations(u16 id, xr_vector<CMapLocation*>& res)
 
 void CMapManager::Update()
 {
+	PROF_EVENT("CMapManager::Update");
 	delete_data(m_deffered_destroy_queue); //from prev frame
 
 	Locations_it it = Locations().begin();

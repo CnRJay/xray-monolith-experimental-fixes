@@ -7,6 +7,7 @@
 ////////////////////////////////////////////////////////////////////////////
 
 #include "pch_script.h"
+#include "../xrCore/profiler.h"
 #include "script_engine.h"
 #include "script_process.h"
 #include "script_thread.h"
@@ -60,6 +61,7 @@ void CScriptProcess::run_scripts()
 //		changed log-output to stack-based buffer (avoid persistent 4K storage)
 void CScriptProcess::update()
 {
+	PROF_EVENT("CScriptProcess::update");
 #ifdef DBG_DISABLE_SCRIPTS
 	m_scripts_to_run.clear();
 	return;

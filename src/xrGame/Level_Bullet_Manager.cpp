@@ -4,6 +4,7 @@
 //////////////////////////////////////////////////////////////////////
 
 #include "stdafx.h"
+#include "../xrCore/profiler.h"
 #include "Level_Bullet_Manager.h"
 #include "Actor.h"
 #include "Level.h"
@@ -300,6 +301,7 @@ void CBulletManager::AddBullet(
 }
 
 void CBulletManager::UpdateWorkload() {
+  PROF_EVENT("CBulletManager::UpdateWorkload");
   //	VERIFY						( m_thread_id ==
   // GetCurrentThreadId() );
 
@@ -1115,8 +1117,9 @@ void CBulletManager::CommitRenderSet() // @ the end of frame
 
 void CBulletManager::CommitEvents() // @ the start of frame
 {
-  if (m_Events.size() > 1000)
-    Msg("! too many bullets during single frame: %d", m_Events.size());
+	PROF_EVENT("CBulletManager::CommitEvents");
+	if (m_Events.size() > 1000)
+		Msg("! too many bullets during single frame: %d", m_Events.size());
 
   for (u32 _it = 0; _it < m_Events.size(); _it++) {
     _event &E = m_Events[_it];

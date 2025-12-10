@@ -1,4 +1,5 @@
 #include "pch_script.h"
+#include "../xrCore/profiler.h"
 #include "GameTaskManager.h"
 #include "alife_registry_wrappers.h"
 #include "ui/xrUIXmlParser.h"
@@ -160,7 +161,9 @@ void CGameTaskManager::SetTaskState(const shared_str& id, ETaskState state)
 
 void CGameTaskManager::UpdateTasks()
 {
-	if (Device.Paused()) return;
+	PROF_EVENT("CGameTaskManager::UpdateTasks");
+	if (Device.Paused())
+		return;
 
 	Level().MapManager().DisableAllPointers();
 

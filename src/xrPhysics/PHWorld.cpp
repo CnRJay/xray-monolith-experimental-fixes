@@ -1,4 +1,5 @@
 #include "stdafx.h"
+#include "../xrCore/profiler.h"
 
 #include "PHWorld.h"
 #include "tri-colliderknoopc/dTriList.h"
@@ -279,6 +280,7 @@ void CPHWorld::SetGravity(float g)
 
 void CPHWorld::OnFrame()
 {
+	PROF_EVENT("CPHWorld::OnFrame");
 	// Msg									("------------- physics: %d / %d",u32(Device.dwFrame),u32(m_steps_num));
 	//просчитать полет пуль
 	/*
@@ -305,6 +307,7 @@ static u32 start_time = 0;
 
 void CPHWorld::Step()
 {
+	PROF_EVENT("CPHWorld::Step");
 #ifdef DEBUG
 	debug_output().dbg_reused_queries_per_step()	=0			;
 	debug_output().dbg_new_queries_per_step()		=0			;
@@ -505,6 +508,7 @@ u32 CPHWorld::CalcNumSteps(u32 dTime)
 
 void CPHWorld::FrameStep(dReal step)
 {
+	PROF_EVENT("CPHWorld::FrameStep");
 	if (IsFreezed()) return;
 
 	VERIFY(_valid(step)) ;

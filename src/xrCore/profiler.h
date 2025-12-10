@@ -6,8 +6,8 @@
 
 // Set active profiler backend
 #if !defined(XRCORE_PROFILER)
-#define XRCORE_PROFILER PROFILER_NONE
-//  #define XRCORE_PROFILER PROFILER_OPTICK
+// #define XRCORE_PROFILER PROFILER_NONE
+#define XRCORE_PROFILER PROFILER_OPTICK
 #endif
 
 // Implement profiler macro interface
@@ -19,6 +19,7 @@
 #define PROF_SAVE_CAPTURE(Name) OPTICK_SAVE_CAPTURE(Name)
 #define PROF_FRAME(Name) OPTICK_FRAME(Name)
 #define PROF_EVENT(...) OPTICK_EVENT(__VA_ARGS__)
+#define PROF_EVENT_DYNAMIC(NAME) OPTICK_EVENT_DYNAMIC(NAME)
 #define START_PROFILE(a)                                                       \
   {                                                                            \
     PROF_EVENT(a)

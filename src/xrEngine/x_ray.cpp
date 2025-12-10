@@ -162,6 +162,7 @@ struct _SoundProcessor : public pureFrame
 {
 	virtual void _BCL OnFrame()
 	{
+		PROF_EVENT("SoundProcessor::OnFrame");
 		//Msg ("------------- sound: %d [%3.2f,%3.2f,%3.2f]",u32(Device.dwFrame),VPUSH(Device.vCameraPosition));
 		Device.Statistic->Sound.Begin();
 

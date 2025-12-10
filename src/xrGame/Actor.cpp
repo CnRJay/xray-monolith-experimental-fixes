@@ -1,4 +1,5 @@
 #include "pch_script.h"
+#include "../xrCore/profiler.h"
 #include "Actor_Flags.h"
 #include "hudmanager.h"
 #ifdef DEBUG
@@ -1135,6 +1136,7 @@ bool CActor::scopeCameraMatrix(Fmatrix& camera)
 
 void CActor::UpdateCL()
 {
+	PROF_EVENT("CActor::UpdateCL");
 	if (g_Alive() && Level().CurrentViewEntity() == this)
 	{
 		if (CurrentGameUI() && (!CurrentGameUI()->TopInputReceiver() || (CurrentGameUI()->TopInputReceiver() && !CurrentGameUI()->TopInputReceiver()->StopAnyMove())) && !m_holder)
@@ -1771,6 +1773,7 @@ void CActor::set_state_box(u32 mstate)
 
 void CActor::shedule_Update(u32 DT)
 {
+	PROF_EVENT("CActor::shedule_Update");
 	setSVU(OnServer());
 	//.	UpdateInventoryOwner			(DT);
 

@@ -1,4 +1,5 @@
 #include "stdafx.h"
+#include "../xrCore/profiler.h"
 #include "UIDialogHolder.h"
 #include "ui/UIDialogWnd.h"
 #include "UIGameCustom.h"
@@ -242,6 +243,7 @@ void CDialogHolder::StopDialog(CUIDialogWnd* pDialog)
 
 void CDialogHolder::OnFrame()
 {
+	PROF_EVENT("CDialogHolder::OnFrame");
 	m_b_in_update = true;
 	CUIDialogWnd* wnd = TopInputReceiver();
 	if (wnd && wnd->IsEnabled())

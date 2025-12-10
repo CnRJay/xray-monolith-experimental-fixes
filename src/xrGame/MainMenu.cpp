@@ -1,4 +1,5 @@
 #include "stdafx.h"
+#include "../xrCore/profiler.h"
 #include "MainMenu.h"
 #include "../xrCore/os_clipboard.h"
 #include "../xrEngine/CameraManager.h"
@@ -469,6 +470,7 @@ void CMainMenu::StartStopMenu(CUIDialogWnd* pDialog, bool bDoHideIndicators)
 
 // pureFrame
 void CMainMenu::OnFrame() {
+  PROF_EVENT("CMainMenu::OnFrame");
   if (m_Flags.test(flNeedChangeCapture)) {
     m_Flags.set(flNeedChangeCapture, FALSE);
     if (m_Flags.test(flActive))

@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "xrSheduler.h"
 #include "xr_object.h"
+#include "../xrCore/profiler.h"
 
 //#define DEBUG_SCHEDULER
 
@@ -314,6 +315,7 @@ void CSheduler::Pop()
 
 void CSheduler::ProcessStep()
 {
+	PROF_EVENT("CSheduler::ProcessStep");
 	// Normal priority
 	u32 dwTime = Device.dwTimeGlobal;
 	CTimer eTimer;
@@ -441,6 +443,7 @@ SwitchToFiber (fiber_main);
 */
 void CSheduler::Update()
 {
+	PROF_EVENT("CSheduler::Update");
 	R_ASSERT(Device.Statistic);
 	// Initialize
 	Device.Statistic->Sheduler.Begin();

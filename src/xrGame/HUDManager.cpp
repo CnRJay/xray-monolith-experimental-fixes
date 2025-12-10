@@ -1,4 +1,5 @@
 #include "stdafx.h"
+#include "../xrCore/profiler.h"
 #include "HUDManager.h"
 #include "hudtarget.h"
 #include "actor.h"
@@ -154,6 +155,7 @@ CHUDManager::~CHUDManager()
 //--------------------------------------------------------------------
 void CHUDManager::OnFrame()
 {
+	PROF_EVENT("CHUDManager::OnFrame");
 	if (!psHUD_Flags.is(HUD_DRAW_RT2))
 		return;
 
