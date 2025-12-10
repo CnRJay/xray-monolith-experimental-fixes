@@ -5169,18 +5169,6 @@
     <ClInclude Include="script_callback_ex.h">
       <Filter>AI\AScript\ScriptClasses\ScriptCallbackEx</Filter>
     </ClInclude>
-    <ClInclude Include="script_callback_ex_generators.h">
-      <Filter>AI\AScript\ScriptClasses\ScriptCallbackEx</Filter>
-    </ClInclude>
-    <ClInclude Include="script_callback_ex_inline.h">
-      <Filter>AI\AScript\ScriptClasses\ScriptCallbackEx</Filter>
-    </ClInclude>
-    <ClInclude Include="script_callback_ex_nonvoid.h">
-      <Filter>AI\AScript\ScriptClasses\ScriptCallbackEx</Filter>
-    </ClInclude>
-    <ClInclude Include="script_callback_ex_void.h">
-      <Filter>AI\AScript\ScriptClasses\ScriptCallbackEx</Filter>
-    </ClInclude>
     <ClInclude Include="script_lanim.h">
       <Filter>AI\AScript\ScriptClasses\ScriptLAnim</Filter>
     </ClInclude>

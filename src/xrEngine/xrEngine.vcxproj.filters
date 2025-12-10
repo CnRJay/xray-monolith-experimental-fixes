@@ -489,6 +489,7 @@
     <ClInclude Include="imgui_helper.h">
       <Filter>Interfaces\ImGui</Filter>
     </ClInclude>
+    <ClInclude Include="xrSkinning.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="defines.cpp">
@@ -797,6 +798,7 @@
     <ClCompile Include="imgui_helper.cpp">
       <Filter>Interfaces\ImGui</Filter>
     </ClCompile>
+    <ClCompile Include="xrSkinning.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="splash_xrcs_en.bmp">

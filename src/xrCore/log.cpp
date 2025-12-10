@@ -13,6 +13,12 @@
 #include <iomanip>
 #include <sstream>
 #include <string>
+#include <thread>
+#include <mutex>
+#include <condition_variable>
+#include <deque>
+#include <atomic>
+#include <tbb/concurrent_queue.h>
 
 #include "profiler.h"
 
@@ -28,6 +34,109 @@ static xrCriticalSection logCS;
 xr_vector<xr_string> LogFile;
 static LogCallback LogCB = 0;
 
+// Async Logging Globals
+static tbb::concurrent_queue<std::string> logQueue;
+static std::atomic<bool> m_bLogThreadActive(false);
+static std::atomic<bool> m_bLogFileReady(false);
+static std::thread logWorkerThread;
+static std::mutex logFileMtx; // Protects file access between Worker and FlushLog
+static FILE* pLogFile = nullptr;
+
+static void ProcessLogMessage(const std::string& msg)
+{
+    // Duplicate folding logic
+    static shared_str last_str;
+    static int items_count = 0;
+
+    auto temp = shared_str(msg.c_str());
+
+    // Lock LogFile access
+    logCS.Enter();
+
+    if (last_str.equal(temp))
+    {
+        xr_string tmp = temp.c_str();
+
+        if (items_count == 0)
+            items_count = 2;
+        else
+            items_count++;
+
+        tmp += " [";
+        tmp += std::to_string(items_count).c_str();
+        tmp += "]";
+
+        if (!LogFile.empty())
+             LogFile.erase(LogFile.end()-1);
+        LogFile.push_back(xr_string(tmp.c_str()));
+    }
+    else
+    {
+        LogFile.push_back(xr_string(temp.c_str()));
+        last_str = temp;
+        items_count = 0;
+    }
+    
+    logCS.Leave();
+
+    // Write to file
+    if (pLogFile) {
+        fprintf(pLogFile, "%s\n", msg.c_str());
+    }
+}
+
+void LogThreadLoop()
+{
+    std::vector<std::string> localBuffer;
+    localBuffer.reserve(1024);
+
+    while (m_bLogThreadActive)
+    {
+        if (!m_bLogFileReady) {
+             std::this_thread::sleep_for(std::chrono::milliseconds(10));
+             continue;
+        }
+
+        // Pop messages into local buffer
+        localBuffer.clear();
+        
+        std::string msg;
+        int count = 0;
+        // Limit batch size to keep responsiveness and avoid holding file lock too long
+        while (count < 1000 && logQueue.try_pop(msg)) {
+            localBuffer.push_back(std::move(msg));
+            count++;
+        }
+
+        if (localBuffer.empty()) {
+             std::this_thread::sleep_for(std::chrono::milliseconds(10));
+             continue;
+        }
+
+        // Process batch
+        {
+            std::lock_guard<std::mutex> fileLock(logFileMtx);
+            if (!pLogFile) {
+                pLogFile = fopen(logFName, "a");
+            }
+            
+            if (pLogFile) {
+                for (const auto& m : localBuffer) {
+                    ProcessLogMessage(m);
+                }
+                fflush(pLogFile);
+            }
+        }
+    }
+    
+    // Cleanup on exit
+    std::lock_guard<std::mutex> fileLock(logFileMtx);
+    if (pLogFile) {
+        fclose(pLogFile);
+        pLogFile = nullptr;
+    }
+}
+
 void FlushLog()
 {
 	PROF_EVENT();
@@ -35,18 +144,27 @@ void FlushLog()
 	if (!no_log)
 	{
 		PROF_EVENT("Flushing");
-		logCS.Enter();
-		IWriter* f = FS.w_open(logFName);
-		if (f)
-		{
-			for (const auto& i : LogFile)
-			{
-				LPCSTR s = i.c_str();
-				f->w_string(s ? s : "");
-			}
-			FS.w_close(f);
-		}
-		logCS.Leave();
+        
+        // Manual drain for crash safety
+        std::vector<std::string> localBuffer;
+        std::string msg;
+        while (logQueue.try_pop(msg)) {
+            localBuffer.push_back(std::move(msg));
+        }
+
+        std::lock_guard<std::mutex> fileLock(logFileMtx);
+        // Ensure file is open
+        if (!pLogFile && m_bLogFileReady) {
+             pLogFile = fopen(logFName, "a");
+        }
+        
+        if (pLogFile) {
+             // Write pending
+             for (const auto& m : localBuffer) {
+                 ProcessLogMessage(m);
+             }
+             fflush(pLogFile);
+        }
 	}
 }
 
@@ -90,9 +208,6 @@ extern bool is_console_mark(Console_mark type);
 
 void AddOne(const char* split)
 {
-
-	logCS.Enter();
-
 #ifdef DEBUG
     OutputDebugString(split);
     OutputDebugString("\n");
@@ -101,49 +216,40 @@ void AddOne(const char* split)
 	// DUMP_PHASE;
 	{
 		// demonized: add timestamps to log
-		std::string t = split;
+        // Optimized string construction
+        std::string t;
+        t.reserve(xr_strlen(split) + 32);
+
 		if (logTimestamps) {
-			std::string c = "";
-			if (t.length() > 0 && is_console_mark((Console_mark)t[0])) {
-				c = t[0];
-				c += " ";
-				t.erase(0, 1);
-			}
-			t = c + "[" + timeInHMSMMM() + "] " + t;
-		}
-		auto temp = shared_str(t.c_str());
-		static shared_str last_str;
-		static int items_count;
+			if (split[0] != 0 && is_console_mark((Console_mark)split[0])) {
+                t += split[0];
+                t += " [";
+                t += timeInHMSMMM();
+                t += "] ";
+                t += (split + 1); // Skip the mark
+			} else {
+                t += "[";
+                t += timeInHMSMMM();
+                t += "] ";
+                t += split;
+            }
+		} else {
+            t = split;
+        }
 
-		if (last_str.equal(temp))
-		{
-			xr_string tmp = temp.c_str();
-
-			if (items_count == 0)
-				items_count = 2;
-			else
-				items_count++;
-
-			tmp += " [";
-			tmp += std::to_string(items_count).c_str();
-			tmp += "]";
-
-			LogFile.erase(LogFile.end()-1);
-			LogFile.push_back(xr_string(tmp.c_str()));
-		}
-		else
-		{
-			// DUMP_PHASE;
-			LogFile.push_back(xr_string(temp.c_str()));
-			last_str = temp;
-			items_count = 0;
-		}
+        // Push to Async Queue
+        {
+            logQueue.push(std::move(t));
+        }
+        // logQueueCV.notify_one(); // Removed as we use polling in worker
 	}
 
 	//exec CallBack
-	if (LogExecCB && LogCB)LogCB(split);
-
-	logCS.Leave();
+	if (LogExecCB && LogCB) {
+        logCS.Enter();
+        LogCB(split);
+        logCS.Leave();
+    }
 }
 
 void Log(const char* s)
@@ -276,6 +382,10 @@ LPCSTR log_name()
 void InitLog()
 {
 	LogFile.reserve(10000);
+
+    // Start Worker Thread
+    m_bLogThreadActive = true;
+    logWorkerThread = std::thread(LogThreadLoop);
 }
 
 void CreateLog(BOOL nl)
@@ -297,12 +407,22 @@ void CreateLog(BOOL nl)
 			abort();
 		}
 		FS.w_close(f);
+
+        // Signal File Ready
+        m_bLogFileReady = true;
 	}
 }
 
 void CloseLog(void)
 {
 	FlushLog();
+
+    // Stop Worker Thread
+    m_bLogThreadActive = false;
+    if (logWorkerThread.joinable()) {
+        logWorkerThread.join();
+    }
+
 	LogFile.clear();
 }
 
