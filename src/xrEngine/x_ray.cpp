@@ -26,6 +26,9 @@
 #include <locale.h>
 #include <process.h>
 #include <thread>
+#include <mutex>
+#include <chrono>
+#include <condition_variable>
 
 #include "../xrCore/profiler.h"
 #include <discord\discord.h>
@@ -63,6 +66,31 @@ bool use_discord = true;
 rpc_info discord_gameinfo;
 rpc_strings discord_strings;
 float discord_update_rate = .5f;
+std::recursive_mutex discord_info_mutex;
+bool discord_thread_running = true;
+std::condition_variable discord_cv;
+std::mutex discord_cv_mutex;
+std::thread discord_thread;
+
+void Discord_Lock() {
+    discord_info_mutex.lock();
+}
+
+void Discord_Unlock() {
+    discord_info_mutex.unlock();
+}
+
+void DiscordThreadFunc() {
+    while (discord_thread_running) {
+        if (use_discord && discord_core && psDeviceFlags2.test(rsDiscord)) {
+            discord_core->RunCallbacks();
+            updateDiscordPresence();
+        }
+        std::unique_lock<std::mutex> lock(discord_cv_mutex);
+        discord_cv.wait_for(lock, std::chrono::seconds(2));
+    }
+}
+
 
 // UTF-8 (ICU)
 #pragma comment(lib, "icuuc.lib")
@@ -364,11 +392,26 @@ void updateDiscordPresence() {
   if (!use_discord)
     return;
 
+  rpc_info local_info;
+  {
+      std::lock_guard<std::recursive_mutex> lock(discord_info_mutex);
+      local_info = discord_gameinfo;
+  }
+
+  static rpc_info last_info;
+  static bool first_run = true;
+  
+  if (!first_run && local_info == last_info)
+      return;
+  
+  last_info = local_info;
+  first_run = false;
+
   static char details_buffer[128];
   static char state_buffer[128];
 
   // Main Menu
-  if (discord_gameinfo.mainmenu) {
+  if (local_info.mainmenu) {
     snprintf(state_buffer, 128, discord_strings.mainmenu);
     discordPresence.GetAssets().SetLargeImage("gamelogo");
     discordPresence.GetAssets().SetLargeText("");
@@ -376,101 +419,106 @@ void updateDiscordPresence() {
     discordPresence.GetAssets().SetSmallText("");
 
     // Pause Menu
-    if (discord_gameinfo.ingame)
+    if (local_info.ingame)
       snprintf(state_buffer, 128, discord_strings.paused);
     else
       discordPresence.SetDetails("");
   }
 
   // Loading
-  else if (discord_gameinfo.loadscreen) {
+  else if (local_info.loadscreen) {
     snprintf(state_buffer, 128, discord_strings.loading);
     discordPresence.SetDetails("");
     discordPresence.GetAssets().SetLargeImage("gamelogo");
     discordPresence.GetAssets().SetLargeText("");
     discordPresence.GetAssets().SetSmallImage("");
     discordPresence.GetAssets().SetSmallText("");
-    discord_gameinfo.ex_update = true;
+    {
+        std::lock_guard<std::recursive_mutex> lock(discord_info_mutex);
+        discord_gameinfo.ex_update = true;
+    }
   }
 
   // In Game
-  else if (discord_gameinfo.ingame) {
+  else if (local_info.ingame) {
     // Time + Level Name
     char levelname_time[128];
-    if (discord_gameinfo.level_name && discord_gameinfo.currenttime) {
-      snprintf(levelname_time, 128, "%s | %s", discord_gameinfo.level_name,
-               discord_gameinfo.currenttime);
+    if (local_info.level_name[0] && local_info.currenttime[0]) {
+      snprintf(levelname_time, 128, "%s | %s", local_info.level_name,
+               local_info.currenttime);
       discordPresence.GetAssets().SetLargeText(levelname_time);
-    } else if (discord_gameinfo.level_name) {
-      snprintf(levelname_time, 128, discord_gameinfo.level_name);
+    } else if (local_info.level_name[0]) {
+      snprintf(levelname_time, 128, local_info.level_name);
       discordPresence.GetAssets().SetLargeText(levelname_time);
-    } else
+    } else {
+      std::lock_guard<std::recursive_mutex> lock(discord_info_mutex);
       discord_gameinfo.ex_update = true;
+    }
 
     // Faction, Rank, Rep
-    if (discord_gameinfo.faction && discord_gameinfo.faction_name) {
-      discordPresence.GetAssets().SetSmallImage(discord_gameinfo.faction);
+    if (local_info.faction[0] && local_info.faction_name[0]) {
+      discordPresence.GetAssets().SetSmallImage(local_info.faction);
       char rank_faction_rep[128];
-      if (discord_gameinfo.rank_name && discord_gameinfo.reputation)
-        snprintf(rank_faction_rep, 128, "%s | %s", discord_gameinfo.rank_name,
-                 discord_gameinfo.reputation);
+      if (local_info.rank_name[0] && local_info.reputation[0])
+        snprintf(rank_faction_rep, 128, "%s | %s", local_info.rank_name,
+                 local_info.reputation);
       else
-        snprintf(rank_faction_rep, 128, discord_gameinfo.faction_name);
+        snprintf(rank_faction_rep, 128, local_info.faction_name);
       discordPresence.GetAssets().SetSmallText(rank_faction_rep);
     }
 
     // GameMode + Active Task
-    if (discord_gameinfo.gamemode) {
-      if (discord_gameinfo.task_name &&
-          0 != xr_strcmp(discord_gameinfo.task_name, ""))
-        snprintf(details_buffer, 128, "%s | %s", discord_gameinfo.gamemode,
-                 discord_gameinfo.task_name);
+    if (local_info.gamemode[0]) {
+      if (local_info.task_name[0] &&
+          0 != xr_strcmp(local_info.task_name, ""))
+        snprintf(details_buffer, 128, "%s | %s", local_info.gamemode,
+                 local_info.task_name);
       else
-        snprintf(details_buffer, 128, discord_gameinfo.gamemode);
+        snprintf(details_buffer, 128, local_info.gamemode);
       discordPresence.SetDetails(details_buffer);
     }
 
     // God Mode
-    if (discord_gameinfo.godmode)
+    if (local_info.godmode)
       snprintf(state_buffer, 128, discord_strings.godmode);
 
     // Health
-    else if (discord_gameinfo.health) {
+    else if (local_info.health) {
       // Iron Man
-      if (discord_gameinfo.ironman && discord_gameinfo.lives_left) {
-        if (discord_gameinfo.lives_left == 0 || discord_gameinfo.lives_left > 1)
+      if (local_info.ironman && local_info.lives_left) {
+        if (local_info.lives_left == 0 || local_info.lives_left > 1)
           snprintf(state_buffer, 128, "%s: %i | %i %s", discord_strings.health,
-                   discord_gameinfo.health, discord_gameinfo.lives_left,
+                   local_info.health, local_info.lives_left,
                    discord_strings.livesleft);
         else
           snprintf(state_buffer, 128, "%s: %i | %i %s", discord_strings.health,
-                   discord_gameinfo.health, discord_gameinfo.lives_left,
+                   local_info.health, local_info.lives_left,
                    discord_strings.livesleftsingle);
       }
 
       // Azazel
-      else if (discord_gameinfo.possessed_lives) {
-        if (discord_gameinfo.possessed_lives == 0 ||
-            discord_gameinfo.possessed_lives > 1)
+      else if (local_info.possessed_lives) {
+        if (local_info.possessed_lives == 0 ||
+            local_info.possessed_lives > 1)
           snprintf(state_buffer, 128, "%s: %i | %i %s", discord_strings.health,
-                   discord_gameinfo.health, discord_gameinfo.possessed_lives,
+                   local_info.health, local_info.possessed_lives,
                    discord_strings.livespossessed);
         else
           snprintf(state_buffer, 128, "%s: %i | %i %s", discord_strings.health,
-                   discord_gameinfo.health, discord_gameinfo.possessed_lives,
+                   local_info.health, local_info.possessed_lives,
                    discord_strings.livespossessedsingle);
       }
 
       // No Iron Man or Azazel
       else
         snprintf(state_buffer, 128, "%s: %i", discord_strings.health,
-                 discord_gameinfo.health);
+                 local_info.health);
 
       discordPresence.SetState(state_buffer);
     } else {
       // Iron Man
-      if (discord_gameinfo.ironman && discord_gameinfo.lives_left) {
-        int real_lives = discord_gameinfo.lives_left - 1;
+      if (local_info.ironman && local_info.lives_left) {
+        int real_lives = local_info.lives_left - 1;
         if (real_lives == 0 || real_lives > 1)
           snprintf(state_buffer, 128, "%s | %i %s", discord_strings.dead,
                    real_lives, discord_strings.livesleft);
@@ -480,15 +528,15 @@ void updateDiscordPresence() {
       }
 
       // Azazel
-      else if (discord_gameinfo.possessed_lives) {
-        if (discord_gameinfo.possessed_lives == 0 ||
-            discord_gameinfo.possessed_lives > 1)
+      else if (local_info.possessed_lives) {
+        if (local_info.possessed_lives == 0 ||
+            local_info.possessed_lives > 1)
           snprintf(state_buffer, 128, "%s | %i %s", discord_strings.dead,
-                   discord_gameinfo.possessed_lives,
+                   local_info.possessed_lives,
                    discord_strings.livespossessed);
         else
           snprintf(state_buffer, 128, "%s | %i %s", discord_strings.dead,
-                   discord_gameinfo.possessed_lives,
+                   local_info.possessed_lives,
                    discord_strings.livespossessedsingle);
       }
 
@@ -500,10 +548,10 @@ void updateDiscordPresence() {
     }
 
     // Level Icon
-    if (discord_gameinfo.level && discord_gameinfo.level_icon_index) {
+    if (local_info.level[0] && local_info.level_icon_index) {
       char icon_buffer[32];
-      snprintf(icon_buffer, 32, "%s_%i", discord_gameinfo.level,
-               discord_gameinfo.level_icon_index);
+      snprintf(icon_buffer, 32, "%s_%i", local_info.level,
+               local_info.level_icon_index);
       discordPresence.GetAssets().SetLargeImage(icon_buffer);
     }
   }
@@ -533,6 +581,8 @@ void Init_Discord() {
   discordPresence.GetAssets().SetLargeImage("gamelogo");
   discord_core->ActivityManager().UpdateActivity(discordPresence,
                                                  [](discord::Result result) {});
+  
+  discord_thread = std::thread(DiscordThreadFunc);
 }
 
 void clearDiscordPresence() {
@@ -590,6 +640,10 @@ void Startup() {
   Device.Run();
 
   // Discord
+  discord_thread_running = false;
+  discord_cv.notify_one();
+  if (discord_thread.joinable())
+      discord_thread.join();
   clearDiscordPresence();
 
   // Reshade

@@ -542,31 +542,7 @@ void CRenderDevice::message_loop()
 	}
 }
 
-void mt_DiscordThread(void*)
-{
-	while (true)
-	{
-		if (!pApp)
-		{
-			Msg("[Discord] pApp destroyed, killing thread");
-			return;
-		}
 
-		//Discord
-		if (use_discord && psDeviceFlags2.test(rsDiscord))
-		{
-			START_PROFILE("Discord");
-			discord_core->RunCallbacks();
-			updateDiscordPresence();
-			STOP_PROFILE;
-			Sleep(int(discord_update_rate * 1000));
-		}
-		else
-		{
-			Sleep(1000); // Sleep for 1 second if Discord is not used or disabled
-		}
-	}
-}
 
 void CRenderDevice::Run()
 {
@@ -591,7 +567,6 @@ void CRenderDevice::Run()
 	mt_bMustExit = FALSE;
 	thread_spawn(mt_FreezeThread, "Freeze detecting thread", 0, 0);
 	thread_spawn(mt_Thread, "X-RAY Secondary thread", 0, this);
-	thread_spawn(mt_DiscordThread, "X-RAY Discord thread", 0, 0);
 	// Message cycle
 	seqAppStart.Process(rp_AppStart);
 

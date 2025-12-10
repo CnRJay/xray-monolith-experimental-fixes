@@ -1885,7 +1885,9 @@ public:
 		if (EQ(args, "on") || EQ(args, "1"))
 		{
 			value->set(mask, TRUE);
+			Discord_Lock();
 			discord_gameinfo.ex_update = true;
+			Discord_Unlock();
 		}
 		else if (EQ(args, "off") || EQ(args, "0"))
 		{
