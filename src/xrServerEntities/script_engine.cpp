@@ -228,7 +228,8 @@ void CScriptEngine::lua_error(lua_State* L)
 	LPCSTR error_msg = error_str.c_str();
 
 #if !XRAY_EXCEPTIONS
-	Debug.fatal(DEBUG_INFO, error_msg);
+	Msg("! [LUA ERROR] %s", error_msg);
+	// Debug.fatal(DEBUG_INFO, error_msg);
 #else
     throw					lua_tostring(L,-1);
 #endif
@@ -259,7 +260,8 @@ int CScriptEngine::lua_pcall_failed(lua_State* L)
 	LPCSTR error_msg = error_str.c_str();
 
 #if !XRAY_EXCEPTIONS
-	Debug.fatal(DEBUG_INFO, error_msg);
+	Msg("! [LUA ERROR] %s", error_msg);
+	// Debug.fatal(DEBUG_INFO, error_msg);
 #endif
 	if (lua_isstring(L, -1))
 		lua_pop(L, 1);

@@ -10,9 +10,9 @@ ScriptWallmarksArray::ScriptWallmarksArray(LPCSTR section)
 	m_wallmarks = xr_new<FactoryPtr<IWallMarkArray>>();
 	m_section = section;
 
-	R_ASSERT2(pSettings->section_exist(section), make_string("[ScriptWallmarksManager] Can't find section '%s'", m_section));
+	R_ASSERT2(pSettings->section_exist(section), make_string("[ScriptWallmarksManager] Can't find section '%s'", m_section.c_str()));
 	LPCSTR wallmarks_string = READ_IF_EXISTS(pSettings, r_string, m_section, "wallmarks", nullptr);
-	R_ASSERT2(wallmarks_string, make_string("[ScriptWallmarksManager] Can't find 'wallmarks' in section '%s'", m_section));
+	R_ASSERT2(wallmarks_string, make_string("[ScriptWallmarksManager] Can't find 'wallmarks' in section '%s'", m_section.c_str()));
 
 	string256 tmp;
 	int cnt = _GetItemCount(wallmarks_string);
