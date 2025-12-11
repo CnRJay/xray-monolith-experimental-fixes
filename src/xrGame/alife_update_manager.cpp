@@ -84,7 +84,14 @@ void CALifeUpdateManager::update_switch() {
   init_ef_storage();
 
   START_PROFILE("ALife/switch");
+
+  // 2ms budget to stretch it over multiple frames to eliminate stutter
+  graph().set_process_time(2.0f);
+
   graph().level().update(CSwitchPredicate(this), Device.dwPrecacheFrame > 0);
+
+  set_process_time((int)m_max_process_time);
+
   STOP_PROFILE
 }
 
