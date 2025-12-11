@@ -865,6 +865,9 @@ public:
 private:
 	ignored_touched_objects_type m_ignored_touched_objects;
 
+private:
+	u32 m_dwLastThinkTime;
+
 #ifdef HOLDERCUSTOM_NEW
 private:
 	CHolderCustom* m_holder = nullptr;

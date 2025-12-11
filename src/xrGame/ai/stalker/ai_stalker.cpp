@@ -8,6 +8,7 @@
 
 #include "pch_script.h"
 #include "ai_stalker.h"
+#include "../../hit_memory_manager.h"
 #include "../ai_monsters_misc.h"
 #include "../../weapon.h"
 #include "../../hit.h"
@@ -80,6 +81,7 @@ CAI_Stalker::CAI_Stalker() :
 	m_take_items_enabled(true),
 	m_death_sound_enabled(true)
 {
+	m_dwLastThinkTime = 0;
 	m_pPhysics_support = NULL;
 	m_animation_manager = NULL;
 	m_brain = NULL;
@@ -1070,6 +1072,7 @@ void CAI_Stalker::UpdateCL()
 			{
 				START_PROFILE("stalker/client_update/sight_manager")
 					VERIFY(!m_pPhysicsShell);
+#if XRAY_EXCEPTIONS
 					try
 					{
 						sight().update();
@@ -1079,6 +1082,9 @@ void CAI_Stalker::UpdateCL()
 						sight().setup(CSightAction(SightManager::eSightTypeCurrentDirection));
 						sight().update();
 					}
+#else
+					sight().update();
+#endif
 
 					Exec_Look(client_update_fdelta());
 				STOP_PROFILE
@@ -1260,6 +1266,28 @@ void CAI_Stalker::shedule_Update(u32 DT)
 			STOP_PROFILE
 		STOP_PROFILE
 	STOP_PROFILE
+
+	// Online AI frequency scaling
+	// makes sure distant stalkers use minimal cpu cycles when farther away
+	if (g_Alive())
+	{
+		u32 delay = 100;
+		float dist = 0.0f;
+		if (Level().CurrentEntity())
+			dist = Position().distance_to(Level().CurrentEntity()->Position());
+
+		if (dist > 50.0f) delay = 333;
+		if (dist > 100.0f) delay = 1000;
+
+		bool in_combat = (memory().enemy().selected() != 0);
+		bool taking_damage = (Device.dwTimeGlobal - memory().hit().last_hit_time() < 2000);
+
+		if (in_combat || taking_damage)
+			delay = 100;
+
+		shedule.t_min = delay;
+		shedule.t_max = delay;
+	}
 }
 
 float CAI_Stalker::Radius() const
@@ -1278,6 +1306,31 @@ void CAI_Stalker::spawn_supplies()
 
 void CAI_Stalker::Think()
 {
+	// Staggered frequency scaling
+	if (memory().enemy().selected() || conditions().GetHealth() < 1.0f)
+	{
+		// Execute immediately
+	}
+	else
+	{
+		// Calculate lod
+		float dist = 0.0f;
+		if (Level().CurrentEntity())
+			dist = Position().distance_to(Level().CurrentEntity()->Position());
+
+		u32 interval = 100;
+		if (dist > 50.0f) interval = 500;
+		if (dist > 150.0f) interval = 1000;
+
+		// Load balancing
+		u32 offset = (ID() % 10) * 20;
+
+		if (Device.dwTimeGlobal < m_dwLastThinkTime + interval + offset)
+			return;
+	}
+
+	m_dwLastThinkTime = Device.dwTimeGlobal;
+
 	START_PROFILE("stalker/schedule_update/think")
 		u32 update_delta = Device.dwTimeGlobal - m_dwLastUpdateTime;
 

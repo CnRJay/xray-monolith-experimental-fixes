@@ -17,6 +17,7 @@
 #include "../Include/xrRender/Kinematics.h"
 #include "detail_path_manager.h"
 #include "memory_manager.h"
+#include "hit_memory_manager.h"
 #include "visual_memory_manager.h"
 #include "sound_memory_manager.h"
 #include "enemy_manager.h"
@@ -412,6 +413,28 @@ void CCustomMonster::shedule_Update(u32 DT)
 			uNext.fHealth = GetfHealth();
 			NET.push_back(uNext);
 		}
+	}
+
+	// Online AI frequency scaling
+	// makes sure distant monsters use minimal cpu cycles when farther away
+	if (g_Alive())
+	{
+		u32 delay = 100;
+		float dist = 0.0f;
+		if (Level().CurrentEntity())
+			dist = Position().distance_to(Level().CurrentEntity()->Position());
+
+		if (dist > 50.0f) delay = 333;
+		if (dist > 100.0f) delay = 1000;
+
+		bool in_combat = (memory().enemy().selected() != 0);
+		bool taking_damage = (Device.dwTimeGlobal - memory().hit().last_hit_time() < 2000);
+
+		if (in_combat || taking_damage)
+			delay = 100;
+
+		shedule.t_min = delay;
+		shedule.t_max = delay;
 	}
 }
 
