@@ -15,6 +15,7 @@
 #include "script_engine.h"
 #include "script_game_object.h"
 #include "xrServer_Objects_ALife.h"
+#include "profiler.h"
 
 // comment next string when commiting
 // #define DBG_DISABLE_SCRIPTS
@@ -184,6 +185,7 @@ void CScriptBinder::set_object(CScriptBinderObject *object) {
 }
 
 void CScriptBinder::shedule_Update(u32 time_delta) {
+  PROF_EVENT("Script:Binder");
   if (m_object) {
     try {
       if (m_functor_update_initialized)

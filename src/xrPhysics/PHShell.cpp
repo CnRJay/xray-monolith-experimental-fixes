@@ -13,6 +13,7 @@
 #include "../Include/xrRender/Kinematics.h"
 #include "PHCollideValidator.h"
 #include "../xrengine/bone.h"
+#include "../xrCore/profiler.h"
 //#include "game_object_space.h"
 //#pragma warning(disable:4995)
 //#pragma warning(disable:4267)
@@ -266,6 +267,7 @@ void CPHShell::PhTune(dReal step)
 
 void CPHShell::Update()
 {
+	PROF_EVENT("Physics:Shell");
 	if (!isActive()) return;
 	if (m_flags.test(flActivating)) m_flags.set(flActivating,FALSE);
 	ELEMENT_I i;

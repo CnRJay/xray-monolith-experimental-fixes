@@ -1306,6 +1306,7 @@ void CAI_Stalker::spawn_supplies()
 
 void CAI_Stalker::Think()
 {
+	PROF_EVENT("AI:Think");
 	// Staggered frequency scaling
 	if (memory().enemy().selected() || conditions().GetHealth() < 1.0f)
 	{
@@ -1397,6 +1398,7 @@ void CAI_Stalker::Think()
 
 void CAI_Stalker::SelectAnimation(const Fvector& view, const Fvector& move, float speed)
 {
+	PROF_EVENT("AI:AnimSelect");
 	if (!Device.Paused())
 		animation().update();
 }

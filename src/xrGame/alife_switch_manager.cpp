@@ -16,6 +16,7 @@
 #include "xrserver.h"
 #include "ai_space.h"
 #include "level_graph.h"
+#include "profiler.h"
 
 #ifdef DEBUG
 #	include "level.h"
@@ -93,18 +94,24 @@ void CALifeSwitchManager::remove_online(CSE_ALifeDynamicObject* object, bool upd
 			);
 		}
 
-		server().Perform_destroy(object, net_flags(TRUE,TRUE));
-		VERIFY(object->children.empty());
+		{
+			PROF_EVENT("Switch:Destroy");
+			server().Perform_destroy(object, net_flags(TRUE,TRUE));
+			VERIFY(object->children.empty());
 
-		_OBJECT_ID object_id = object->ID;
-		object->ID = server().PerformIDgen(object_id);
+			_OBJECT_ID object_id = object->ID;
+			object->ID = server().PerformIDgen(object_id);
+		}
 
 #ifdef DEBUG
 	if (psAI_Flags.test(aiALife))
 		Msg						("[LSS] Destroying object [%s][%s][%d]",object->name_replace(),*object->s_name,object->ID);
 #endif
 
-		object->add_offline(m_saved_chidren, update_registries);
+		{
+			PROF_EVENT("Switch:ServerSave");
+			object->add_offline(m_saved_chidren, update_registries);
+		}
 	STOP_PROFILE
 }
 

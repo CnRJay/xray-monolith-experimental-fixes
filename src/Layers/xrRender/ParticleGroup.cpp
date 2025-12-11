@@ -15,6 +15,7 @@
 #include "ParticleGroup.h"
 #include <tbb/blocked_range.h>
 #include <tbb/parallel_reduce.h>
+#include "../../xrCore/profiler.h"
 
 
 using namespace PS;
@@ -554,6 +555,7 @@ CParticleGroup::~CParticleGroup() {
 }
 
 void CParticleGroup::OnFrame(u32 u_dt) {
+  PROF_EVENT("Particles:GroupUpdate");
   if (m_Def && m_RT_Flags.is(flRT_Playing)) {
     float ct = m_CurrentTime;
     float f_dt = float(u_dt) / 1000.f;

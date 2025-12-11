@@ -155,7 +155,7 @@ CHUDManager::~CHUDManager()
 //--------------------------------------------------------------------
 void CHUDManager::OnFrame()
 {
-	PROF_EVENT("CHUDManager::OnFrame");
+	PROF_EVENT("HUD:OnFrame");
 	if (!psHUD_Flags.is(HUD_DRAW_RT2))
 		return;
 
