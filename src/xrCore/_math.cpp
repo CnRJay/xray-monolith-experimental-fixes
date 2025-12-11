@@ -25,13 +25,13 @@ namespace FPU
 {
 	XRCORE_API void m24(void)
 	{
-		_control87(_PC_24, MCW_PC);
+		_control87(_PC_64, MCW_PC);
 		_control87(_RC_CHOP, MCW_RC);
 	}
 
 	XRCORE_API void m24r(void)
 	{
-		_control87(_PC_24, MCW_PC);
+		_control87(_PC_64, MCW_PC);
 		_control87(_RC_NEAR, MCW_RC);
 	}
 
@@ -115,7 +115,7 @@ void initialize()
 {
     _clear87();
 
-    _control87(_PC_24, MCW_PC);
+    _control87(_PC_64, MCW_PC);
     _control87(_RC_CHOP, MCW_RC);
     _24 = getFPUsw(); // 24, chop
     _control87(_RC_NEAR, MCW_RC);
@@ -312,7 +312,7 @@ void _initialize_cpu_thread()
 	debug_on_thread_spawn();
 #ifndef XRCORE_STATIC
 	// fpu & sse
-	FPU::m24r();
+	FPU::m64r(); // set 64 bit mode
 #endif // XRCORE_STATIC
 	if (CPU::ID.feature & _CPU_FEATURE_SSE)
 	{
