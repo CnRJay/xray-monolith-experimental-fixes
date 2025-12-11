@@ -192,6 +192,16 @@ namespace Feel
 				continue;
 			}
 
+			// Skip expensive raytrace for distant objects on some frames
+			// Distance check squared > 50*50 = 2500
+			if (I->O->Position().distance_to_sqr(P) > 2500.0f)
+			{
+				// Stagger updates based on object ID and frame number
+				// Only update every 10th frame
+				if ((Device.dwFrame + I->O->ID()) % 10 != 0)
+					continue;
+			}
+
 			// verify relation
 			// if (positive(I->fuzzy) && I->O->Position().similar(I->cp_LR_dst,lr_granularity) && P.similar(I->cp_LR_src,lr_granularity))
 			// continue;

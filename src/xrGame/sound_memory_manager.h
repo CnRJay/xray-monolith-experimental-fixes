@@ -67,6 +67,10 @@ private:
 	float m_anomaly_factor;
 	float m_world_factor;
 
+	// Optimization: Sound processing limits
+	u32 m_processed_sound_count;
+	u32 m_last_processed_frame;
+
 private:
 #ifdef USE_SELECTED_SOUND
 	CSoundObject* m_selected_sound;

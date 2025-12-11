@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////
 //	Module 		: sound_memory_manager.cpp
 //	Created 	: 02.10.2001
-//  Modified 	: 19.11.2003
+//ï¿½ Modified 	: 19.11.2003
 //	Author		: Dmitriy Iassenev
 //	Description : Sound memory manager
 ////////////////////////////////////////////////////////////////////////////
@@ -58,6 +58,10 @@ void CSoundMemoryManager::reinit()
 	m_priorities.clear();
 	m_last_sound_time = 0;
 	m_sound_threshold = m_min_sound_threshold;
+	
+	m_processed_sound_count = 0;
+	m_last_processed_frame = 0;
+
 	VERIFY(_valid(m_sound_threshold));
 #ifdef USE_SELECTED_SOUND
 	xr_delete(m_selected_sound);
@@ -179,6 +183,23 @@ void CSoundMemoryManager::feel_sound_new(CObject* object, int sound_type, CSound
 	VERIFY(_valid(sound_power));
 	if (sound_power >= m_sound_threshold)
 	{
+		// max_dist = Power * Sensitivity
+		float dist_sq = m_object->Position().distance_to_sqr(position);
+		float max_dist = sound_power * 50.0f; 
+		if (dist_sq > max_dist * max_dist)
+			return;
+
+		// Stop if we have processed > 20 sounds this frame
+		if (Device.dwFrame != m_last_processed_frame) {
+			m_last_processed_frame = Device.dwFrame;
+			m_processed_sound_count = 0;
+		}
+		
+		if (m_processed_sound_count > 20)
+			return;
+
+		m_processed_sound_count++;
+
 		if (is_sound_type(sound_type, SOUND_TYPE_WEAPON_SHOOTING))
 		{
 			// this is fake!

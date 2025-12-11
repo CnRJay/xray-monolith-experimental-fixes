@@ -15,6 +15,9 @@
 #include "../../stalker_movement_manager_smart_cover.h"
 #include "../../stalker_animation_manager.h"
 #include "CustomZone.h"
+#include "../../stalker_decision_space.h"
+#include "../../ai_monster_space.h"
+#include "../../stalker_planner.h"
 
 #ifdef DEBUG
 #	include "../../ai_debug.h"
@@ -25,10 +28,59 @@ bool CAI_Stalker::feel_vision_isRelevant(CObject* O)
 {
 	if (!g_Alive())
 		return false;
-	CEntityAlive* E = smart_cast<CEntityAlive*>(O);
-	CInventoryItem* I = smart_cast<CInventoryItem*>(O);
+
+	// Distance Check
+	float dist_sq = Position().distance_to_sqr(O->Position());
+	if (dist_sq > eye_range * eye_range)
+		return false;
+
+	// If the object is too far above or below then ignore it
+	if (_abs(O->Position().y - Position().y) > 50.0f)
+		return false;
+
+	// If dot < 0 AND dist > 5.0f then return false
+	if (dist_sq > 25.0f) {
+		Fvector dir_to_target;
+		dir_to_target.sub(O->Position(), Position());
+		if (Direction().dotproduct(dir_to_target) < 0.0f)
+			return false;
+	}
+
+	CGameObject* GO = smart_cast<CGameObject*>(O);
+	if (!GO)
+		return false;
+
+	CEntityAlive* E = GO->cast_entity_alive();
+	CInventoryItem* I = GO->cast_inventory_item();
+
+	if (I) {
+		// Limit item checks to about 3 times per second
+		if ((Device.dwTimeGlobal + GO->ID() * 33) % 333 > 33)
+			return false;
+	}
+	
+	// If in combat
+	bool bCombat = (brain().current_action_id() == StalkerDecisionSpace::eWorldOperatorCombatPlanner);
+	if (!bCombat) 
+		bCombat = (movement().mental_state() == MonsterSpace::eMentalStateDanger);
+
+	if (bCombat) {
+		if (I) return false; // Ignore items in combat
+		if (E && !E->g_Alive()) return false; // Ignore corpses in combat
+	}
+
 	if (!E && !I) return (false);
-	//	if (E && (E->g_Team() == g_Team()))			return false;
+	if (E && !is_relation_enemy(E)) 
+		return false; // Only look at enemies
+
+	if (O->Visual()) {
+		// 1.0 = fully transparent
+		// 0.0 = opaque 
+		float fTransparency = memory().visual().feel_vision_mtl_transp(O, 0);
+		if (fTransparency > 0.95f)
+			return false;
+	}
+
 	return (true);
 }
 
