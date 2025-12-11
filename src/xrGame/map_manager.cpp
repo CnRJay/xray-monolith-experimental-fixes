@@ -375,6 +375,13 @@ Locations& CMapManager::Locations()
 #ifdef DEBUG
 		Msg("m_locations size=%d",m_locations->size());
 #endif // #ifdef DEBUG
+		// Initial cache population from loaded data
+		for (Locations_it it = m_locations->begin(); it != m_locations->end(); ++it)
+		{
+			if ((*it).actual)
+				AddToCache((*it).object_id);
+		}
+		std::sort(m_locations->begin(), m_locations->end());
 	}
 	return *m_locations;
 }
