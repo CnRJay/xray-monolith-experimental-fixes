@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////
 //	Module 		: visual_memory_manager.cpp
 //	Created 	: 02.10.2001
-//  Modified 	: 19.11.2003
+//ï¿½ Modified 	: 19.11.2003
 //	Author		: Dmitriy Iassenev
 //	Description : Visual memory manager
 ////////////////////////////////////////////////////////////////////////////
@@ -355,9 +355,15 @@ float CVisualMemoryManager::get_visible_value(const CGameObject* game_object, fl
 	//Alundaio: hijack not_yet_visible_object to lua
 	::luabind::functor<float> funct;
 	if (ai().script_engine().functor("visual_memory_manager.get_visible_value", funct))
-		return (funct(m_object ? m_object->lua_game_object() : 0, game_object ? game_object->lua_game_object() : 0,
-			time_delta, current_state().m_time_quant, luminocity, current_state().m_velocity_factor,
-			object_velocity, distance, object_distance, always_visible_distance));
+	{
+		CScriptGameObject* script_obj = m_object ? m_object->lua_game_object() : 0;
+		CScriptGameObject* script_game_obj = game_object ? game_object->lua_game_object() : 0;
+
+		if (script_obj && script_game_obj)
+			return (funct(script_obj, script_game_obj,
+				time_delta, current_state().m_time_quant, luminocity, current_state().m_velocity_factor,
+				object_velocity, distance, object_distance, always_visible_distance));
+	}
 	//-Alundaio
 
 	return (
