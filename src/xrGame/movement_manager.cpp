@@ -157,6 +157,11 @@ void CMovementManager::update_path()
 		if (!enabled() || wait_for_distributed_computation())
 			return;
 
+		if (!ai().level_graph().valid_vertex_id(object().ai_location().level_vertex_id()))
+		{
+			return;
+		}
+
 		if (!game_path().evaluator())
 			game_path().set_evaluator(base_game_params());
 
