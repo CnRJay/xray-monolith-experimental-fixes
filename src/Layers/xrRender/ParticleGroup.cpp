@@ -15,6 +15,7 @@
 #include "ParticleGroup.h"
 #include <tbb/blocked_range.h>
 #include <tbb/parallel_reduce.h>
+#include <tbb/parallel_for.h>
 #include "../../xrCore/profiler.h"
 
 
@@ -326,10 +327,30 @@ void OnGroupParticleBirth(void *owner, u32 param, PAPI::Particle &m, u32 idx) {
   const CPGDef *PGD = PG->GetDefinition();
   VERIFY(PGD);
   const CPGDef::SEffect *eff = PGD->m_Effects[param];
-  if (eff->m_Flags.is(CPGDef::SEffect::flOnBirthChild))
-    PG->items[param].StartFreeChild(PE, *eff->m_OnBirthChildName, m);
-  if (eff->m_Flags.is(CPGDef::SEffect::flOnPlayChild))
-    PG->items[param].StartRelatedChild(PE, *eff->m_OnPlayChildName, m);
+  
+  if (eff->m_Flags.is(CPGDef::SEffect::flOnBirthChild) || eff->m_Flags.is(CPGDef::SEffect::flOnPlayChild)) {
+      if (param < PG->m_ItemEvents.size()) {
+        auto& EventData = PG->m_ItemEvents[param];
+        tbb::spin_mutex::scoped_lock lock(EventData.m_EventMutex);
+        
+        if (eff->m_Flags.is(CPGDef::SEffect::flOnBirthChild)) {
+            CParticleGroup::SParticleEvent E;
+            E.type = CParticleGroup::SParticleEvent::eStartFree;
+            E.emitter = PE;
+            E.eff_name = *eff->m_OnBirthChildName;
+            E.m = m;
+            EventData.m_Events.push_back(E);
+        }
+        if (eff->m_Flags.is(CPGDef::SEffect::flOnPlayChild)) {
+            CParticleGroup::SParticleEvent E;
+            E.type = CParticleGroup::SParticleEvent::eStartRelated;
+            E.emitter = PE;
+            E.eff_name = *eff->m_OnPlayChildName;
+            E.m = m;
+            EventData.m_Events.push_back(E);
+        }
+      }
+  }
 }
 
 void OnGroupParticleDead(void *owner, u32 param, PAPI::Particle &m, u32 idx) {
@@ -342,10 +363,28 @@ void OnGroupParticleDead(void *owner, u32 param, PAPI::Particle &m, u32 idx) {
   const CPGDef *PGD = PG->GetDefinition();
   VERIFY(PGD);
   const CPGDef::SEffect *eff = PGD->m_Effects[param];
-  if (eff->m_Flags.is(CPGDef::SEffect::flOnPlayChild))
-    PG->items[param].StopRelatedChild(idx);
-  if (eff->m_Flags.is(CPGDef::SEffect::flOnDeadChild))
-    PG->items[param].StartFreeChild(PE, *eff->m_OnDeadChildName, m);
+
+  if (eff->m_Flags.is(CPGDef::SEffect::flOnPlayChild) || eff->m_Flags.is(CPGDef::SEffect::flOnDeadChild)) {
+      if (param < PG->m_ItemEvents.size()) {
+        auto& EventData = PG->m_ItemEvents[param];
+        tbb::spin_mutex::scoped_lock lock(EventData.m_EventMutex);
+
+        if (eff->m_Flags.is(CPGDef::SEffect::flOnPlayChild)) {
+            CParticleGroup::SParticleEvent E;
+            E.type = CParticleGroup::SParticleEvent::eStopRelated;
+            E.idx = idx;
+            EventData.m_Events.push_back(E);
+        }
+        if (eff->m_Flags.is(CPGDef::SEffect::flOnDeadChild)) {
+            CParticleGroup::SParticleEvent E;
+            E.type = CParticleGroup::SParticleEvent::eStartFree;
+            E.emitter = PE;
+            E.eff_name = *eff->m_OnDeadChildName;
+            E.m = m;
+            EventData.m_Events.push_back(E);
+        }
+      }
+  }
 }
 
 //------------------------------------------------------------------------------
@@ -369,17 +408,38 @@ void CParticleGroup::SItem::OnFrame(u32 u_dt, const CPGDef::SEffect &def,
         PAPI::ParticleManager()->GetParticles(E->GetHandleEffect(), particles,
                                               p_cnt);
         VERIFY(p_cnt == _children_related.size());
-        if (p_cnt) {
-          for (u32 i = 0; i < p_cnt; i++) {
-            PAPI::Particle &m = particles[i];
-            CParticleEffect *C =
-                static_cast<CParticleEffect *>(_children_related[i]);
-            Fmatrix M;
-            M.translate(m.pos);
-            Fvector vel;
-            vel.sub(m.pos, m.posB);
-            vel.div(C->m_Def->GetFStep());
-            C->UpdateParent(M, vel, FALSE);
+        u32 update_cnt = std::min(p_cnt, (u32)_children_related.size());
+        if (update_cnt) {
+          // Use sequential loop if count is small to avoid overhead
+          if (update_cnt < 64) {
+             for (u32 i = 0; i < update_cnt; i++) {
+                PAPI::Particle &m = particles[i];
+                CParticleEffect *C =
+                    static_cast<CParticleEffect *>(_children_related[i]);
+                if (!C) continue; // Safety check
+                Fmatrix M;
+                M.translate(m.pos);
+                Fvector vel;
+                vel.sub(m.pos, m.posB);
+                vel.div(C->m_Def->GetFStep());
+                C->UpdateParent(M, vel, FALSE);
+             }
+          } else {
+             tbb::parallel_for(tbb::blocked_range<int>(0, update_cnt),
+                  [&](const tbb::blocked_range<int>& range) {
+                  for (int i = range.begin(); i != range.end(); ++i) {
+                    PAPI::Particle &m = particles[i];
+                    CParticleEffect *C =
+                        static_cast<CParticleEffect *>(_children_related[i]);
+                    if (!C) continue; // Safety check
+                    Fmatrix M;
+                    M.translate(m.pos);
+                    Fvector vel;
+                    vel.sub(m.pos, m.posB);
+                    vel.div(C->m_Def->GetFStep());
+                    C->UpdateParent(M, vel, FALSE);
+                  }
+              });
           }
         }
       }
@@ -513,6 +573,7 @@ void CParticleGroup::SItem::OnFrame(u32 u_dt, const CPGDef::SEffect &def,
       _children_free.erase(new_end, _children_free.end());
     }
   }
+  
   //	Msg("C: %d CS: %d",_children.size(),_children_stopped.size());
 }
 
@@ -589,6 +650,30 @@ void CParticleGroup::OnFrame(u32 u_dt) {
     if (m_RT_Flags.is(flRT_DefferedStop) && !bPlaying) {
       m_RT_Flags.set(flRT_Playing | flRT_DefferedStop, FALSE);
     }
+    
+    // Process deferred events
+    for (u32 i = 0; i < items.size(); ++i) {
+        if (i < m_ItemEvents.size()) {
+            auto& EventData = m_ItemEvents[i];
+            if (!EventData.m_Events.empty()) {
+                SItem& I = items[i];
+                for (auto& E : EventData.m_Events) {
+                    switch(E.type) {
+                        case SParticleEvent::eStartFree:
+                            I.StartFreeChild(E.emitter, *E.eff_name, E.m);
+                            break;
+                        case SParticleEvent::eStartRelated:
+                            I.StartRelatedChild(E.emitter, *E.eff_name, E.m);
+                            break;
+                        case SParticleEvent::eStopRelated:
+                            I.StopRelatedChild(E.idx); 
+                            break;
+                    }
+                }
+                EventData.m_Events.clear();
+            }
+        }
+    }
     if (box.is_valid()) {
       vis.box.set(box);
       vis.box.getsphere(vis.sphere.P, vis.sphere.R);
@@ -603,8 +688,10 @@ void CParticleGroup::OnFrame(u32 u_dt) {
 void CParticleGroup::UpdateParent(const Fmatrix &m, const Fvector &velocity,
                                   BOOL bXFORM) {
   m_InitialPosition = m.c;
-  for (SItemVecIt i_it = items.begin(); i_it != items.end(); i_it++)
-    i_it->UpdateParent(m, velocity, bXFORM);
+  for (SItemVecIt i_it = items.begin(); i_it != items.end(); i_it++) {
+      if (i_it->_effect) // Check if effect is valid
+          i_it->UpdateParent(m, velocity, bXFORM);
+  }
 }
 
 BOOL CParticleGroup::Compile(CPGDef *def) {
@@ -613,9 +700,11 @@ BOOL CParticleGroup::Compile(CPGDef *def) {
   for (SItemVecIt i_it = items.begin(); i_it != items.end(); i_it++)
     i_it->Clear();
   items.clear();
+  m_ItemEvents.clear();
   // create new
   if (m_Def) {
     items.resize(m_Def->m_Effects.size());
+    m_ItemEvents.resize(m_Def->m_Effects.size());
     for (CPGDef::EffectVec::const_iterator e_it = m_Def->m_Effects.begin();
          e_it != m_Def->m_Effects.end(); e_it++) {
       CParticleEffect *eff = (CParticleEffect *)RImplementation.model_CreatePE(

@@ -3,6 +3,8 @@
 #define ParticleGroupH
 
 #include "../xrRender/dxParticleCustom.h"
+#include <tbb/spin_mutex.h>
+#include <vector>
 
 namespace PS
 {
@@ -119,6 +121,37 @@ namespace PS
 
 		DEFINE_VECTOR(SItem, SItemVec, SItemVecIt)
 		SItemVec items;
+
+	public:
+		struct SParticleEvent {
+			enum EType {
+				eStartFree,
+				eStartRelated,
+				eStopRelated
+			} type;
+			CParticleEffect* emitter;
+			shared_str eff_name;
+			PAPI::Particle m;
+			u32 idx; // for StopRelated
+		};
+		struct SItemEventData {
+			std::vector<SParticleEvent> m_Events;
+			tbb::spin_mutex m_EventMutex;
+			
+			SItemEventData() {}
+			// copy constructor for vector resize
+			SItemEventData(const SItemEventData& other) {
+				m_Events = other.m_Events;
+			}
+			SItemEventData& operator=(const SItemEventData& other) {
+				if (this != &other) {
+					m_Events = other.m_Events;
+				}
+				return *this;
+			}
+		};
+		std::vector<SItemEventData> m_ItemEvents;
+
 	public:
 		enum
 		{
