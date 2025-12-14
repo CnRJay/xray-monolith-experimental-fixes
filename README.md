@@ -147,3 +147,4 @@ Contents of this repository are licensed under a custom GSC Game World proprieta
 - **OpenXRay Team**: [OpenXRay](https://github.com/openxray)
 - **Intel**: TBB Library
 - **LuaJIT**: Scripting engine
+- **True PIP**: [m22specner](https://github.com/m22spencer/xray-monolith)
