@@ -88,7 +88,7 @@ The latest release of the engine can be downloaded on the [releases page](https:
 
 ## Building
 
-The project is configured for a "One-Click Build" workflow in Visual Studio 2022.
+The project is configured for a "One-Click Build" workflow in Visual Studio 2026.
 
 ### Option 1: Visual Studio IDE
 1.  Open `engine-vs2022.sln` in Visual Studio 2026.
