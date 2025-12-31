@@ -1,5 +1,4 @@
-#ifndef PLAYER_STATE_MAD_INCLUDED
-#define PLAYER_STATE_MAD_INCLUDED
+#pragma once
 
 #include "player_state_param.h"
 #include "accumulative_states.h"
@@ -33,9 +32,4 @@ namespace award_system
 		void clear_old_kills();
 	}; //class player_state_mad
 
-	ADD_ACCUMULATIVE_STATE(acpv_mad, player_state_mad);
-#undef ACCUMULATIVE_STATE_LIST
-#define ACCUMULATIVE_STATE_LIST SAVE_TYPE_LIST(acpv_mad, player_state_mad)
-} //namespace award_system
-
-#endif //#ifndef PLAYER_STATE_MAD_INCLUDED
+}

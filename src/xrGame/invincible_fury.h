@@ -1,5 +1,4 @@
-#ifndef INVINCIBLE_FURY_INCLUDED
-#define INVINCIBLE_FURY_INCLUDED
+#pragma once
 
 #include "obsolete_queue.h"
 #include "player_state_param.h"
@@ -31,9 +30,4 @@ namespace award_system
 		u32 m_last_kills;
 	}; //class player_state_invincible_fury
 
-	ADD_ACCUMULATIVE_STATE(acpv_invincible_fury, player_state_invincible_fury);
-#undef ACCUMULATIVE_STATE_LIST
-#define ACCUMULATIVE_STATE_LIST SAVE_TYPE_LIST(acpv_invincible_fury, player_state_invincible_fury)
-} //namespace award_system
-
-#endif //#ifndef INVINCIBLE_FURY_INCLUDED
+}

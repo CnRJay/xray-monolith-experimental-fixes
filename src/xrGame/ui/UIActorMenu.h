@@ -381,6 +381,3 @@ public:
 	void DonateCurrentItem(CUICellItem* cell_item); //Alundaio: Donate item via context menu while in trade menu
 DECLARE_SCRIPT_REGISTER_FUNCTION
 }; // class CUIActorMenu
-add_to_type_list(CUIActorMenu)
-#undef script_type_list
-#define script_type_list save_type_list(CUIActorMenu)

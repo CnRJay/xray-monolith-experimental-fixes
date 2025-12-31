@@ -3560,6 +3560,8 @@
       <PrecompiledHeaderOutputFile>$(IntDir)$(ProjectName)_script.pch</PrecompiledHeaderOutputFile>
     </ClCompile>
     <ClCompile Include="..\searchlight.cpp" />
+    <ClCompile Include="..\searchlight_script.cpp" />
+    <ClCompile Include="..\searchlight_struct.cpp" />
     <ClCompile Include="..\secure_messaging.cpp" />
     <ClCompile Include="..\seniority_hierarchy_holder.cpp" />
     <ClCompile Include="..\server_entity_wrapper.cpp" />

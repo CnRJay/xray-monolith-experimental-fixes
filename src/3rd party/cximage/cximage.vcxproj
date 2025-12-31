@@ -214,13 +214,14 @@
       <PreprocessorDefinitions>USE_VERIFY_IN_RELEASE;WIN32;NDEBUG;_LIB;JAS_WIN_MSVC_BUILD;CXIMAGE_BUILD;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <EnableEnhancedInstructionSet>NotSet</EnableEnhancedInstructionSet>
       <DisableSpecificWarnings>4995;4100;4702;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <WholeProgramOptimization>false</WholeProgramOptimization>
       <WarningLevel>Level4</WarningLevel>
       <OmitFramePointers>false</OmitFramePointers>
       <InlineFunctionExpansion>Disabled</InlineFunctionExpansion>
       <ExceptionHandling>false</ExceptionHandling>
       <LanguageStandard>stdcpp17</LanguageStandard>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -254,13 +255,14 @@
       <PreprocessorDefinitions>USE_VERIFY_IN_RELEASE;WIN32;NDEBUG;_LIB;JAS_WIN_MSVC_BUILD;CXIMAGE_BUILD;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <EnableEnhancedInstructionSet>NotSet</EnableEnhancedInstructionSet>
       <DisableSpecificWarnings>4995;4100;4702;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <WholeProgramOptimization>false</WholeProgramOptimization>
       <WarningLevel>Level4</WarningLevel>
       <OmitFramePointers>false</OmitFramePointers>
       <InlineFunctionExpansion>Disabled</InlineFunctionExpansion>
       <ExceptionHandling>false</ExceptionHandling>
       <LanguageStandard>stdcpp17</LanguageStandard>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>

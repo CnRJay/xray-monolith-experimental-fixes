@@ -212,6 +212,7 @@ void CSightManager::Exec_Look(float time_delta)
 			return;
 
 #ifdef HOLDERCUSTOM_NEW
+		/* Don't update m_object->XFORM() here. Holder will update. */
 		if (m_object->cast_stalker() && m_object->cast_stalker()->Holder())
 			return;
 #endif

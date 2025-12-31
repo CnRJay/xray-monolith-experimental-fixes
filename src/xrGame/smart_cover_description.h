@@ -32,7 +32,7 @@ namespace smart_cover
 		typedef smart_cover::transitions::action Action;
 		typedef xr_vector<Action*> ActionsList;
 		typedef CGraphAbstract<
-			Loki::EmptyType,
+			xr_empty,
 			float,
 			shared_str,
 			ActionsList

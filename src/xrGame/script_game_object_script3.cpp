@@ -368,6 +368,9 @@ class_<CScriptGameObject> script_register_game_object2(class_<CScriptGameObject>
 #ifdef STATIONARYMGUN_NEW
 		.def("get_stmgun", &CScriptGameObject::get_stmgun)
 #endif
+#ifdef PROJECTOR_NEW
+		.def("get_projector", &CScriptGameObject::get_projector)
+#endif
 		.def("get_hanging_lamp", &CScriptGameObject::get_hanging_lamp)
 		.def("get_physics_shell", &CScriptGameObject::get_physics_shell)
 		.def("get_holder_class", &CScriptGameObject::get_custom_holder)

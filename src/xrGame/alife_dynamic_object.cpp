@@ -16,6 +16,8 @@
 #include "game_level_cross_table.h"
 #include "game_graph.h"
 #include "xrServer.h"
+#include "level.h"
+#include "map_manager.h"
 
 void CSE_ALifeDynamicObject::on_spawn()
 {
@@ -40,9 +42,6 @@ void CSE_ALifeDynamicObject::on_register()
 void CSE_ALifeDynamicObject::on_before_register()
 {
 }
-
-#include "level.h"
-#include "map_manager.h"
 
 void CSE_ALifeDynamicObject::on_unregister()
 {

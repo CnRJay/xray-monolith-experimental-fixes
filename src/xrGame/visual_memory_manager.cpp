@@ -271,6 +271,12 @@ float CVisualMemoryManager::object_visible_distance(const CGameObject* game_obje
 		if (m_stalker)
 		{
 			eye_direction.setHP(-m_stalker->movement().m_head.current.yaw, -m_stalker->movement().m_head.current.pitch);
+#ifdef HOLDERCUSTOM_NEW
+			if (m_stalker->Holder())
+			{
+				eye_direction.set(m_stalker->Direction());
+			}
+#endif
 		}
 		else
 		{

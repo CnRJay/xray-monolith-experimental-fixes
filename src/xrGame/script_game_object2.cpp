@@ -41,6 +41,10 @@
 #include "InventoryOwner.h"
 #include "CharacterPhysicsSupport.h"
 
+#ifdef PROJECTOR_NEW
+#include "searchlight.h"
+#endif
+
 void CScriptGameObject::explode(u32 level_time)
 {
 	CExplosive* explosive = smart_cast<CExplosive*>(&object());
@@ -594,6 +598,13 @@ CWeaponStatMgun *CScriptGameObject::get_stmgun()
 		NODEFAULT;
 	}
 	return stm;
+}
+#endif
+
+#ifdef PROJECTOR_NEW
+CProjector *CScriptGameObject::get_projector()
+{
+	return smart_cast<CProjector *>(&object());
 }
 #endif
 

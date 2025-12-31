@@ -20,6 +20,8 @@ typedef double f64;
 typedef char* pstr;
 typedef const char* pcstr;
 
+struct xr_empty {};
+
 // windoze stuff
 #ifndef _WINDOWS_
 typedef int BOOL;

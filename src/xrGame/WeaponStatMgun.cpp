@@ -440,12 +440,9 @@ void CWeaponStatMgun::net_Destroy()
 
 #ifdef HOLDERCUSTOM_NEW
 #ifdef STATIONARYMGUN_NEW
-	if (Owner())
+	if (Owner() && Owner()->cast_stalker())
 	{
-		if (Owner()->cast_stalker() && !Owner()->cast_stalker()->g_Alive())
-		{
-			Owner()->cast_stalker()->detach_Holder();
-		}
+		Owner()->cast_stalker()->detach_Holder();
 	}
 #endif
 #endif
@@ -744,10 +741,8 @@ void CWeaponStatMgun::cam_Update(float dt, float fov)
 		}
 		Fmatrix xfm = Visual()->dcast_PKinematics()->LL_GetTransform(bone_id);
 		XFORM().transform_tiny(P, xfm.c);
-		if (OwnerActor())
-			OwnerActor()->Orientation().yaw = -cam->yaw;
-		if (OwnerActor())
-			OwnerActor()->Orientation().pitch = -cam->pitch;
+		OwnerActor()->Orientation().yaw = -cam->yaw;
+		OwnerActor()->Orientation().pitch = -cam->pitch;
 	}
 	break;
 	case eCamChase:
@@ -1142,9 +1137,6 @@ void CWeaponStatMgun::UpdateCamera()
 	OwnerActor()->Cameras().UpdateFromCamera(Camera());
 	OwnerActor()->Cameras().ApplyDevice(R_VIEWPORT_NEAR);
 
-	OwnerActor()->Orientation().yaw = 0;
-	OwnerActor()->Orientation().pitch = 0;
-
 	if (IsCameraZoom())
 	{
 		SetParam(eWpnDesiredDir, Camera()->Direction());
@@ -1237,7 +1229,7 @@ void CWeaponStatMgun::UpdateAnimation()
 			}
 		}
 
-		if (anim_body && strlen(anim_legs))
+		if (anim_legs && strlen(anim_legs))
 		{
 			MotionID mid_legs = A->ID_Cycle(anim_legs);
 			if (mid_legs.idx != OwnerActor()->m_current_legs.idx)
@@ -1269,7 +1261,7 @@ void CWeaponStatMgun::UpdateAnimation()
 				stalker->CStepManager::on_animation_start(MotionID(), nullptr);
 			}
 		}
-		if (anim_body && strlen(anim_legs))
+		if (anim_legs && strlen(anim_legs))
 		{
 			MotionID mid_legs = A->ID_Cycle(anim_legs);
 			if (mid_legs.idx != stalker->animation().legs().animation().idx)
@@ -1281,12 +1273,14 @@ void CWeaponStatMgun::UpdateAnimation()
 			}
 		}
 		stalker->movement().set_desired_direction(0);
+#if 0
 		SBoneRotation &body = stalker->movement().m_body;
 		SBoneRotation &head = stalker->movement().m_head;
 		body.target.yaw = 0.0F;
 		body.target.pitch = 0.0F;
 		head.target.yaw = 0.0F;
 		head.target.pitch = 0.0F;
+#endif
 	}
 }
 

@@ -9596,6 +9596,12 @@
     <ClCompile Include="..\searchlight.cpp">
       <Filter>Core\Client\Objects\searchlight</Filter>
     </ClCompile>
+    <ClCompile Include="..\searchlight_script.cpp">
+      <Filter>Core\Client\Objects\searchlight_script</Filter>
+    </ClCompile>
+    <ClCompile Include="..\searchlight_struct.cpp">
+      <Filter>Core\Client\Objects\searchlight_struct</Filter>
+    </ClCompile>
     <ClCompile Include="..\trade.cpp">
       <Filter>Core\Client\Objects\searchlight\Trade</Filter>
     </ClCompile>

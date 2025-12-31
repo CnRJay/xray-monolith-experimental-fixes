@@ -1,5 +1,4 @@
-#ifndef SPRINTER_STOPPER_INCLUDED
-#define SPRINTER_STOPPER_INCLUDED
+#pragma once
 
 #include "player_state_param.h"
 #include "accumulative_states.h"
@@ -28,9 +27,4 @@ namespace award_system
 		float m_sprinter_victim_velocity;
 	}; //class spritnter_stopper
 
-	ADD_ACCUMULATIVE_STATE(acpv_sprinter_victim_velocity, spritnter_stopper);
-#undef ACCUMULATIVE_STATE_LIST
-#define ACCUMULATIVE_STATE_LIST SAVE_TYPE_LIST(acpv_sprinter_victim_velocity, spritnter_stopper)
-} //namespace award_system
-
-#endif //#ifndef SPRINTER_STOPPER_INCLUDED
+}

@@ -5,8 +5,6 @@
 //	Description : UI Hint (for UIHintWindow) window class
 ////////////////////////////////////////////////////////////////////////////
 #pragma once
-#ifndef	UI_HINT_H_INCLUDED
-#define UI_HINT_H_INCLUDED
 
 #include "UIWindow.h"
 #include "../../xrServerEntities/script_export_space.h"
@@ -91,9 +89,3 @@ private:
 	bool m_enable;
 DECLARE_SCRIPT_REGISTER_FUNCTION
 };
-
-add_to_type_list(UIHintWindow)
-#undef script_type_list
-#define script_type_list save_type_list(UIHintWindow)
-
-#endif // UI_HINT_H_INCLUDED

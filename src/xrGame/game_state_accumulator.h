@@ -1,5 +1,4 @@
-#ifndef GAME_STATE_ACCUMULATOR_INCLUDED
-#define GAME_STATE_ACCUMULATOR_INCLUDED
+#pragma once
 
 #include "game_cl_base_weapon_usage_statistic.h"
 #include "state_arguments_functions.h"
@@ -15,9 +14,6 @@ class CWeapon;
 
 namespace award_system
 {
-#ifdef DEBUG
-extern char* player_values_strtable[];
-#endif //#ifdef DEBUG
 
 	class game_state_accumulator : public game_events_handler
 	{
@@ -95,14 +91,6 @@ extern char* player_values_strtable[];
 		void init_accumulative_values();
 		void init_player_accum_values(game_PlayerState* new_local_player);
 
-		template <typename TypeListElement>
-		void init_acpv_list();
-
-		template <>
-		void init_acpv_list<Loki::NullType>()
-		{
-		};
-
 		void update_average_values();
 		void update_accumulative_values();
 
@@ -113,7 +101,4 @@ extern char* player_values_strtable[];
 		bone_group m_bone_groups;
 	}; //class game_state_accumulator
 
-#include "game_state_accumulator_inline.h"
-} //namespace award_system
-
-#endif //#ifndef GAME_STATE_ACCUMULATOR_INCLUDED
+}
