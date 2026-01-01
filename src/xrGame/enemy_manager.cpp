@@ -79,7 +79,27 @@ bool CEnemyManager::useful(const CEntityAlive* entity_alive) const
 	)
 		return (false);
 
-	return (m_useful_callback ? m_useful_callback(m_object->lua_game_object(), entity_alive->lua_game_object()) : true);
+	if (!m_useful_callback)
+		return true;
+
+	u32 target_id = entity_alive->ID();
+	u32 current_time = Device.dwTimeGlobal;
+
+	auto it = m_useful_map_cache.find(target_id);
+
+	// Force refresh cache every ~100ms (= 200ms - rand() % 200)
+	if (it != m_useful_map_cache.end() && (current_time < it->second.last_update_time + 200))
+	{
+		return it->second.result;
+	}
+
+	bool result = m_useful_callback(m_object->lua_game_object(), entity_alive->lua_game_object());
+
+	// Update the cache for this specific target
+	u32 jitter = (rand() % 200);
+	m_useful_map_cache[target_id] = { result, current_time + jitter };
+
+	return result;
 }
 
 float CEnemyManager::do_evaluate(const CEntityAlive* object) const

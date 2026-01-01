@@ -34,6 +34,12 @@ private:
 	bool m_enable_enemy_change;
 	CEntityAlive const* m_smart_cover_enemy;
 
+	struct UsefulTargetResult {
+		bool result;
+		u32  last_update_time;
+	};
+	mutable std::unordered_map<u32, UsefulTargetResult> m_useful_map_cache;
+
 private:
 	u32 m_last_enemy_change;
 

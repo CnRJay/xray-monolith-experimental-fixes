@@ -266,6 +266,10 @@ namespace Feel
 						// Log("query");
 					}
 				}
+
+				// If static world already blocks the view, skip dynamic objects
+				if (feel_params.vis >= feel_params.vis_threshold)
+				{
 				// Log("Vis",feel_params.vis);
 				r_spatial.clear_not_free();
 				g_SpatialSpace->q_ray(r_spatial, 0, STYPE_VISIBLEFORAI, P, D, f);
@@ -316,6 +320,7 @@ namespace Feel
 					// VISIBLE
 					I->fuzzy += fuzzy_update_vis * dt;
 					clamp(I->fuzzy, -.5f, 1.f);
+				}
 				}
 			}
 			else

@@ -214,8 +214,14 @@ void CWeapon::UpdateXForm()
 	if ((HandDependence() == hd1Hand) || (GetState() == eReload) || (!E->g_Alive()))
 		boneL = boneR2;
 
-	V->CalculateBones_Invalidate();
-	V->CalculateBones(TRUE);
+	// Only recalculate bones for close objects
+	float dist_sq = E->Position().distance_to_sqr(Device.vCameraPosition);
+	if (dist_sq < 2500.f)
+	{
+		// Invalidating here would prevent any of the precise optimizations inside CalculateBones from happening
+		//V->CalculateBones_Invalidate();
+		V->CalculateBones(TRUE);
+	}
 
 	Fmatrix& mL = V->LL_GetTransform(u16(boneL));
 	Fmatrix& mR = V->LL_GetTransform(u16(boneR));
