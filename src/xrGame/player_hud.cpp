@@ -380,6 +380,13 @@ void hud_item_measures::load(const shared_str& sect_name, IKinematics* K)
 		bone_name = READ_IF_EXISTS(pSettings, r_string, sect_name, "fire_bone", "wpn_body");
 		//bone_name = pSettings->r_string(sect_name, "fire_bone");
 		m_fire_bone = K->LL_BoneID(bone_name);
+
+		// Print warning if bone doesn't exist
+		if (m_fire_bone == BI_NONE)
+		{
+			Msg("![%s] Invalid or not found fire_bone %s", sect_name.c_str(), bone_name.c_str());
+		}
+
 		m_fire_point_offset = pSettings->r_fvector3(sect_name, "fire_point");
 		m_fire_direction = READ_IF_EXISTS(pSettings, r_fvector3, sect_name, "fire_direction",
 		                                  Fvector().set(0.f, 0.f, 1.0f));
@@ -393,6 +400,13 @@ void hud_item_measures::load(const shared_str& sect_name, IKinematics* K)
 		bone_name = READ_IF_EXISTS(pSettings, r_string, sect_name, "fire_bone2", "wpn_body");
 		//bone_name = pSettings->r_string(sect_name, "fire_bone2");
 		m_fire_bone2 = K->LL_BoneID(bone_name);
+
+		// Print warning if bone doesn't exist
+		if (m_fire_bone2 == BI_NONE)
+		{
+			Msg("![%s] Invalid or not found fire_bone2 %s", sect_name.c_str(), bone_name.c_str());
+		}
+
 		m_fire_point2_offset = pSettings->r_fvector3(sect_name, "fire_point2");
 	}
 	else
@@ -410,6 +424,13 @@ void hud_item_measures::load(const shared_str& sect_name, IKinematics* K)
 		bone_name = READ_IF_EXISTS(pSettings, r_string, sect_name, "shell_bone", "wpn_body");
 		//bone_name = pSettings->r_string(sect_name, "shell_bone");
 		m_shell_bone = K->LL_BoneID(bone_name);
+
+		// Print warning if bone doesn't exist
+		if (m_shell_bone == BI_NONE)
+		{
+			Msg("![%s] Invalid or not found shell_bone %s", sect_name.c_str(), bone_name.c_str());
+		}
+
 		m_shell_point_offset = pSettings->r_fvector3(sect_name, "shell_point");
 	}
 	else
@@ -1013,24 +1034,24 @@ u32 player_hud::motion_length(const MotionID& M, const CMotionDef*& md, float sp
 	return 0;
 }
 
-const Fvector& player_hud::attach_rot(u8 part) const
+const Fvector player_hud::attach_rot(u8 part) const
 {
 	if (m_attached_items[part])
 		return m_attached_items[part]->hands_attach_rot();
 	else if (m_attached_items[!part])
 		return m_attached_items[!part]->hands_attach_rot();
 
-	return Fvector().set(0.f, 0.f, 0.f);
+	return { 0.f, 0.f, 0.f };
 }
 
-const Fvector& player_hud::attach_pos(u8 part) const
+const Fvector player_hud::attach_pos(u8 part) const
 {
 	if (m_attached_items[part])
 		return m_attached_items[part]->hands_attach_pos();
 	else if (m_attached_items[!part])
 		return m_attached_items[!part]->hands_attach_pos();
 
-	return Fvector().set(0.f, 0.f, 0.f);
+	return { 0.f, 0.f, 0.f };
 }
 
 #include "Inventory.h"

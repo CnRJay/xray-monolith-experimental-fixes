@@ -29,8 +29,4 @@ public:
 DECLARE_SCRIPT_REGISTER_FUNCTION
 };
 
-add_to_type_list(CPropertyStorage)
-#undef script_type_list
-#define script_type_list save_type_list(CPropertyStorage)
-
 #include "property_storage_inline.h"

@@ -1,5 +1,4 @@
-#ifndef PLAYER_STATE_BLITZKRIEG_INCLUDED
-#define PLAYER_STATE_BLITZKRIEG_INCLUDED
+#pragma once
 
 #include "player_state_param.h"
 #include "accumulative_states.h"
@@ -32,9 +31,4 @@ namespace award_system
 		u32 m_art_drop_count;
 	}; //class player_blitzkrieg
 
-	ADD_ACCUMULATIVE_STATE(acpv_blitzkrieg_time, player_blitzkrieg);
-#undef ACCUMULATIVE_STATE_LIST
-#define ACCUMULATIVE_STATE_LIST SAVE_TYPE_LIST(acpv_blitzkrieg_time, player_blitzkrieg)
-} //namespace award_system
-
-#endif //#ifndef PLAYER_STATE_BLITZKRIEG_INCLUDED
+}

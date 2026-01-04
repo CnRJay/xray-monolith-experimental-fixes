@@ -180,7 +180,3 @@ DECLARE_SCRIPT_REGISTER_FUNCTION
 };
 
 bool actor_is_reloading_weapon();
-
-add_to_type_list(CBurer)
-#undef script_type_list
-#define script_type_list save_type_list(CBurer)

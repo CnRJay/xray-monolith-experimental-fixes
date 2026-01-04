@@ -1,5 +1,4 @@
-#ifndef DOUBLE_SHOT_DOUBLE_KILL_INCLUDED
-#define DOUBLE_SHOT_DOUBLE_KILL_INCLUDED
+#pragma once
 
 #include "player_state_param.h"
 #include "obsolete_queue.h"
@@ -40,9 +39,4 @@ namespace award_system
 		u32 m_shot_count;
 	}; //class double_shot_double_kill
 
-	ADD_ACCUMULATIVE_STATE(acpv_double_shot_double_kill_time, double_shot_double_kill);
-#undef ACCUMULATIVE_STATE_LIST
-#define ACCUMULATIVE_STATE_LIST SAVE_TYPE_LIST(acpv_double_shot_double_kill_time, double_shot_double_kill)
-} //namespace award_system
-
-#endif //#ifndef DOUBLE_SHOT_DOUBLE_KILL_INCLUDED
+}

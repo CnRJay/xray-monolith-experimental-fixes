@@ -1,5 +1,3 @@
-#ifndef PhysicsShellH
-#define PhysicsShellH
 #pragma once
 
 #include "PHDefs.h"
@@ -208,10 +206,6 @@ public:
 	//	DECLARE_SCRIPT_REGISTER_FUNCTION
 };
 
-//add_to_type_list(CPhysicsElement)
-//#undef script_type_list
-//#define script_type_list save_type_list(CPhysicsElement)
-
 
 XRPHYSICS_API float NonElasticCollisionEnergy(CPhysicsElement* e1, CPhysicsElement* e2, const Fvector& norm);
 
@@ -314,9 +308,6 @@ public:
 	//	DECLARE_SCRIPT_REGISTER_FUNCTION
 };
 
-//add_to_type_list(CPhysicsJoint)
-//#undef script_type_list
-//#define script_type_list save_type_list(CPhysicsJoint)
 // ABSTRACT: 
 class CPHIsland;
 class CPhysicsShellAnimator;
@@ -447,10 +438,6 @@ public:
 	//	DECLARE_SCRIPT_REGISTER_FUNCTION
 };
 
-//add_to_type_list(CPhysicsShell)
-//#undef script_type_list
-//#define script_type_list save_type_list(CPhysicsShell)
-
 struct dContact;
 struct SGameMtl;
 XRPHYSICS_API void StaticEnvironmentCB(bool& do_colide, bool bo1, dContact& c, SGameMtl* material_1,
@@ -490,4 +477,3 @@ XRPHYSICS_API void phys_shell_verify_object_model(IPhysicsShellHolder& O);
 
 
 void phys_shell_verify_model(IKinematics& K);
-#endif // PhysicsShellH

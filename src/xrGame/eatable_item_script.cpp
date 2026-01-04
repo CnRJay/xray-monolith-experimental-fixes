@@ -9,7 +9,7 @@ void CEatableItem::script_register(lua_State *L)
 {
 	module(L)
 		[
-			class_<CEatableItem, CInventoryItem>("CEatableItem")
+			class_<CEatableItem>("CEatableItem")
 			//.def(constructor<>())
 			.def("Empty", &CEatableItem::Empty)
 			.def("CanDelete", &CEatableItem::CanDelete)

@@ -1,5 +1,4 @@
-#ifndef PLAYER_STATE_CHERUB_INCLUDED
-#define PLAYER_STATE_CHERUB_INCLUDED
+#pragma once
 
 #include "player_state_param.h"
 #include "accumulative_states.h"
@@ -37,9 +36,4 @@ namespace award_system
 		shared_str m_bearer_name;
 	}; //class player_state_cherub
 
-	ADD_ACCUMULATIVE_STATE(acpv_cherub_ready, player_state_cherub);
-#undef ACCUMULATIVE_STATE_LIST
-#define ACCUMULATIVE_STATE_LIST SAVE_TYPE_LIST(acpv_cherub_ready, player_state_cherub)
 }
-
-#endif //#ifndef PLAYER_STATE_CHERUB_INCLUDED

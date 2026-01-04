@@ -6,12 +6,23 @@
 #include "../Include/xrRender/Kinematics.h"
 #include "game_object_space.h"
 
+#ifdef PROJECTOR_NEW
+#include "../xrphysics/PhysicsShell.h"
+
+#endif
+
 //////////////////////////////////////////////////////////////////////
 // Construction/Destruction
 //////////////////////////////////////////////////////////////////////
 
 CProjector::CProjector()
 {
+#ifdef PROJECTOR_NEW
+	m_active = false;
+
+	m_lights.clear();
+	m_controls.clear();
+#else
 	light_render = ::Render->light_create();
 	light_render->set_type(IRender_Light::SPOT);
 	light_render->set_shadow(true);
@@ -19,12 +30,18 @@ CProjector::CProjector()
 	lanim = 0;
 	bone_x.id = BI_NONE;
 	bone_y.id = BI_NONE;
+#endif
 }
 
 CProjector::~CProjector()
 {
+#ifdef PROJECTOR_NEW
+	m_lights.clear();
+	m_controls.clear();
+#else
 	light_render.destroy();
 	glow_render.destroy();
+#endif
 }
 
 void CProjector::Load(LPCSTR section)
@@ -33,6 +50,9 @@ void CProjector::Load(LPCSTR section)
 }
 
 
+#ifdef PROJECTOR_NEW
+	/* Remove. */
+#else
 void CProjector::BoneCallbackX(CBoneInstance* B)
 {
 	CProjector* P = static_cast<CProjector*>(B->callback_param());
@@ -53,6 +73,7 @@ void CProjector::BoneCallbackY(CBoneInstance* B)
 	M.setHPB(-delta_yaw, 0.0, 0.0f);
 	B->mTransform.mulB_43(M);
 }
+#endif
 
 BOOL CProjector::net_Spawn(CSE_Abstract* DC)
 {
@@ -65,6 +86,53 @@ BOOL CProjector::net_Spawn(CSE_Abstract* DC)
 
 	R_ASSERT(Visual() && smart_cast<IKinematics*>(Visual()));
 
+#ifdef PROJECTOR_NEW
+	CPHSkeleton::Spawn(DC);
+
+	IKinematics *K = Visual()->dcast_PKinematics();
+	CInifile *ini = K->LL_UserData();
+	const LPCSTR def = "projector_definition";
+	{
+		LPCSTR str = READ_IF_EXISTS(ini, r_string, def, "lights", def);
+		if (str && strlen(str))
+		{
+			int num = _GetItemCount(str);
+			for (int idx = 0; idx < num; idx++)
+			{
+				string64 sec;
+				_GetItem(str, idx, sec);
+				if (sec && strlen(sec))
+				{
+					m_lights.push_back(SProjectorLight(this, sec));
+					SProjectorLight &I = m_lights.back();
+					I.Load(ini, ini->section_exist(sec) ? sec : def);
+					continue;
+				}
+				break;
+			}
+		}
+	}
+	{
+		LPCSTR str = READ_IF_EXISTS(ini, r_string, def, "controls", def);
+		if (str && strlen(str))
+		{
+			int num = _GetItemCount(str);
+			for (int idx = 0; idx < num; idx++)
+			{
+				string64 sec;
+				_GetItem(str, idx, sec);
+				if (sec && strlen(sec) && ini->section_exist(sec))
+				{
+					m_controls.push_back(SProjectorControl(this, sec));
+					SProjectorControl &I = m_controls.back();
+					I.Load(ini, sec);
+					continue;
+				}
+				break;
+			}
+		}
+	}
+#else
 	IKinematics* K = smart_cast<IKinematics*>(Visual());
 	CInifile* pUserData = K->LL_UserData();
 	R_ASSERT3(pUserData, "Empty Projector user data!", slight->get_visual());
@@ -85,10 +153,30 @@ BOOL CProjector::net_Spawn(CSE_Abstract* DC)
 	glow_render->set_texture(pUserData->r_string("projector_definition", "glow_texture"));
 	glow_render->set_color(clr);
 	glow_render->set_radius(pUserData->r_float("projector_definition", "glow_radius"));
+#endif
 
 	setVisible(TRUE);
 	setEnabled(TRUE);
 
+#ifdef PROJECTOR_NEW
+	processing_activate();
+
+	PPhysicsShell()->Enable();
+	if (PPhysicsShell() && m_ignore_collision_flag)
+	{
+		CPhysicsShellHolder::active_ignore_collision();
+	}
+
+	{
+		/* Hack. net_spawn() of CScriptBinderObjectWrapper runs first. This allows overriding configs read in engine net_Spawn(). */
+		LPCSTR str = READ_IF_EXISTS(pSettings, r_string, cNameSect_str(), "net_spawn_after", nullptr);
+		::luabind::functor<void> lua_function;
+		if (str && ai().script_engine().functor(str, lua_function))
+		{
+			lua_function(lua_game_object());
+		}
+	}
+#else
 	TurnOn();
 
 	//////////////////////////////////////////////////////////////////////////
@@ -102,6 +190,7 @@ BOOL CProjector::net_Spawn(CSE_Abstract* DC)
 	_start = _target = _current;
 
 	//////////////////////////////////////////////////////////////////////////
+#endif
 
 	return TRUE;
 }
@@ -109,8 +198,14 @@ BOOL CProjector::net_Spawn(CSE_Abstract* DC)
 void CProjector::shedule_Update(u32 dt)
 {
 	inherited::shedule_Update(dt);
+#ifdef PROJECTOR_NEW
+	CPHSkeleton::Update(dt);
+#endif
 }
 
+#ifdef PROJECTOR_NEW
+	/* Remove. */
+#else
 void CProjector::TurnOn()
 {
 	if (light_render->get_active()) return;
@@ -134,11 +229,32 @@ void CProjector::TurnOff()
 
 	smart_cast<IKinematics*>(Visual())->LL_SetBoneVisible(guid_bone, FALSE, TRUE);
 }
+#endif
 
 void CProjector::UpdateCL()
 {
 	inherited::UpdateCL();
 
+#ifdef PROJECTOR_NEW
+	if (PPhysicsShell())
+	{
+		PPhysicsShell()->InterpolateGlobalTransform(&XFORM());
+		Visual()->dcast_PKinematics()->CalculateBones();
+	}
+
+	if (IsActive())
+	{
+		for (auto &I : m_controls)
+		{
+			I.UpdateCL();
+		}
+	}
+
+	for (auto &I : m_lights)
+	{
+		I.UpdateCL();
+	}
+#else
 	// update light source
 	if (light_render->get_active())
 	{
@@ -170,6 +286,7 @@ void CProjector::UpdateCL()
 	// Update searchlight 
 	angle_lerp(_current.yaw, _target.yaw, bone_x.velocity, Device.fTimeDelta);
 	angle_lerp(_current.pitch, _target.pitch, bone_y.velocity, Device.fTimeDelta);
+#endif
 }
 
 
@@ -183,6 +300,9 @@ BOOL CProjector::UsedAI_Locations()
 	return (FALSE);
 }
 
+#ifdef PROJECTOR_NEW
+	/* Remove. */
+#else
 bool CProjector::bfAssignWatch(CScriptEntityAction* tpEntityAction)
 {
 	if (!inherited::bfAssignWatch(tpEntityAction))
@@ -233,8 +353,123 @@ void CProjector::SetTarget(const Fvector& target_pos)
 	clamp(tp, -PI_DIV_2, PI_DIV_2);
 	_target.pitch = tp;
 }
+#endif
 
 Fvector CProjector::GetCurrentDirection()
 {
+#ifdef PROJECTOR_NEW
+	return Fvector().set(0.0F, 0.0F, 0.0F);
+#else
 	return (Fvector().setHP(_current.yaw, _current.pitch));
+#endif
 }
+
+#ifdef PROJECTOR_NEW
+void CProjector::net_Destroy()
+{
+	inherited::net_Destroy();
+	CPHUpdateObject::Deactivate();
+	CPHSkeleton::RespawnInit();
+	processing_deactivate();
+}
+
+void CProjector::SpawnInitPhysics(CSE_Abstract *D)
+{
+	CSE_PHSkeleton *so = smart_cast<CSE_PHSkeleton *>(D);
+	R_ASSERT(so);
+	IKinematics *K = Visual()->dcast_PKinematics();
+	CreateSkeleton(D);
+	K->CalculateBones_Invalidate();
+	K->CalculateBones(TRUE);
+	CPHUpdateObject::Activate();
+	PPhysicsShell()->applyImpulse(Fvector().set(0.0F, -1.0F, 0.0F), 0.1F);
+}
+
+void CProjector::CreateSkeleton(CSE_Abstract *P)
+{
+	if (!Visual())
+		return;
+	IKinematics *K = Visual()->dcast_PKinematics();
+	phys_shell_verify_object_model(*this);
+	U16Vec fixed_bones;
+	fixed_bones.push_back(K->LL_GetBoneRoot());
+	m_pPhysicsShell = P_build_Shell(this, false, fixed_bones);
+	m_pPhysicsShell->SetPrefereExactIntegration();
+	ApplySpawnIniToPhysicShell(&P->spawn_ini(), m_pPhysicsShell, fixed_bones.size() > 0);
+	ApplySpawnIniToPhysicShell(K->LL_UserData(), m_pPhysicsShell, fixed_bones.size() > 0);
+}
+
+void CProjector::net_Save(NET_Packet &P)
+{
+	inherited::net_Save(P);
+	CPHSkeleton::SaveNetState(P);
+	P.w_vec3(Position());
+	Fvector ang;
+	XFORM().getXYZ(ang);
+	P.w_vec3(ang);
+}
+
+BOOL CProjector::net_SaveRelevant()
+{
+	return TRUE;
+}
+
+BOOL CProjector::AlwaysTheCrow()
+{
+	return TRUE;
+}
+
+bool CProjector::is_ai_obstacle() const
+{
+	return true;
+}
+
+void CProjector::Action(int id, u32 flags, LPCSTR sec)
+{
+	switch (id)
+	{
+	case eActive:
+	{
+		if (flags == 1 && m_active != true)
+		{
+			m_active = true;
+			for (auto &I : m_controls)
+			{
+				I.SetBoneCallbacks(true);
+			}
+		}
+		if (flags != 1 && m_active == true)
+		{
+			m_active = false;
+			for (auto &I : m_controls)
+			{
+				I.SetBoneCallbacks(false);
+			}
+		}
+		break;
+	}
+	case eSwitch:
+	{
+		for (auto &I : m_lights)
+		{
+			if (sec == nullptr || strlen(sec) == 0 || I.IsSection(sec))
+			{
+				I.Switch((flags == 1) ? true : false);
+			}
+		}
+		break;
+	}
+	}
+}
+
+void CProjector::SetParam(int id, Fvector val, LPCSTR sec)
+{
+	for (auto &I : m_controls)
+	{
+		if (sec == nullptr || strlen(sec) == 0 || I.IsSection(sec))
+		{
+			I.SetParam(id, val);
+		}
+	}
+}
+#endif

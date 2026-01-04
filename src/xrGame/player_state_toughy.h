@@ -1,5 +1,4 @@
-#ifndef PLAYER_STATE_TOUGHY_INCLUDED
-#define PLAYER_STATE_TOUGHY_INCLUDED
+#pragma once
 
 #include "player_state_param.h"
 #include "accumulative_states.h"
@@ -30,9 +29,4 @@ namespace award_system
 		u32 m_kills_count;
 	}; //class player_state_toughy
 
-	ADD_ACCUMULATIVE_STATE(acpv_toughy, player_state_toughy);
-#undef ACCUMULATIVE_STATE_LIST
-#define ACCUMULATIVE_STATE_LIST SAVE_TYPE_LIST(acpv_toughy, player_state_toughy)
-} //namespace award_system
-
-#endif //#ifndef PLAYER_STATE_TOUGHY_INCLUDED
+}

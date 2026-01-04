@@ -50,8 +50,5 @@ DECLARE_SCRIPT_REGISTER_FUNCTION
 };
 
 typedef CPropertyEvaluator<CScriptGameObject> CScriptPropertyEvaluator;
-add_to_type_list(CScriptPropertyEvaluator)
-#undef script_type_list
-#define script_type_list save_type_list(CScriptPropertyEvaluator)
 
 #include "property_evaluator_inline.h"

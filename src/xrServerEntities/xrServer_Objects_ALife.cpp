@@ -1626,6 +1626,9 @@ bool CSE_ALifeObjectHangingLamp::match_configuration() const
 ////////////////////////////////////////////////////////////////////////////
 
 CSE_ALifeObjectProjector::CSE_ALifeObjectProjector(LPCSTR caSection) : CSE_ALifeDynamicObjectVisual(caSection)
+#ifdef PROJECTOR_NEW
+, CSE_PHSkeleton(caSection)
+#endif
 {
 	m_flags.set(flUseSwitches,FALSE);
 	m_flags.set(flSwitchOffline,FALSE);
@@ -1637,28 +1640,53 @@ CSE_ALifeObjectProjector::~CSE_ALifeObjectProjector()
 
 void CSE_ALifeObjectProjector::STATE_Read(NET_Packet& tNetPacket, u16 size)
 {
+#ifdef PROJECTOR_NEW
+	inherited1::STATE_Read(tNetPacket, size);
+	inherited1::STATE_Read(tNetPacket, size);
+#else
 	inherited::STATE_Read(tNetPacket, size);
+#endif
 }
 
 void CSE_ALifeObjectProjector::STATE_Write(NET_Packet& tNetPacket)
 {
+#ifdef PROJECTOR_NEW
+	inherited1::STATE_Write(tNetPacket);
+	inherited1::STATE_Write(tNetPacket);
+#else
 	inherited::STATE_Write(tNetPacket);
+#endif
 }
 
 void CSE_ALifeObjectProjector::UPDATE_Read(NET_Packet& tNetPacket)
 {
+#ifdef PROJECTOR_NEW
+	inherited1::UPDATE_Read(tNetPacket);
+	inherited1::UPDATE_Read(tNetPacket);
+#else
 	inherited::UPDATE_Read(tNetPacket);
+#endif
 }
 
 void CSE_ALifeObjectProjector::UPDATE_Write(NET_Packet& tNetPacket)
 {
+#ifdef PROJECTOR_NEW
+	inherited1::UPDATE_Write(tNetPacket);
+	inherited2::UPDATE_Write(tNetPacket);
+#else
 	inherited::UPDATE_Write(tNetPacket);
+#endif
 }
 
 #ifndef XRGAME_EXPORTS
 void CSE_ALifeObjectProjector::FillProps			(LPCSTR pref, PropItemVec& values)
 {
+#ifdef PROJECTOR_NEW
+	inherited1::FillProps(pref, values);
+	inherited2::FillProps(pref, values);
+#else
 	inherited::FillProps			(pref,	 values);
+#endif
 }
 #endif // #ifndef XRGAME_EXPORTS
 
@@ -1666,6 +1694,33 @@ bool CSE_ALifeObjectProjector::used_ai_locations() const
 {
 	return (false);
 }
+
+#ifdef PROJECTOR_NEW
+bool CSE_ALifeObjectProjector::can_save() const
+{
+	return CSE_PHSkeleton::need_save();
+}
+
+void CSE_ALifeObjectProjector::load(NET_Packet &tNetPacket)
+{
+	inherited1::load(tNetPacket);
+	inherited2::load(tNetPacket);
+}
+
+void CSE_ALifeObjectProjector::data_load(NET_Packet &tNetPacket)
+{
+	inherited2::data_load(tNetPacket);
+	tNetPacket.r_vec3(o_Position);
+	tNetPacket.r_vec3(o_Angle);
+}
+
+void CSE_ALifeObjectProjector::data_save(NET_Packet &tNetPacket)
+{
+	inherited2::data_save(tNetPacket);
+	tNetPacket.w_vec3(o_Position);
+	tNetPacket.w_vec3(o_Angle);
+}
+#endif
 
 ////////////////////////////////////////////////////////////////////////////
 // CSE_ALifeSchedulable
