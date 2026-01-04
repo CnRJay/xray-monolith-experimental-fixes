@@ -470,5 +470,7 @@ void CObjectFactory::register_classes()
 
 	// demonized: Custom classes
 	ADD(CWeaponSSRS, CSE_ALifeItemWeaponMagazined, TEXT2CLSID("_WP_SSRS"), "wpn_ssrs_s");
+	ADD(CProjector, CSE_ALifeObjectProjector, TEXT2CLSID("_S_SEARC"), "projector_s");
+	ADD(CWeaponStatMgun, CSE_ALifeStationaryMgun, TEXT2CLSID("_S_STMGU"), "stmgun_s");
 #endif // NO_XR_GAME
 }

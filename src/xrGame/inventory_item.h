@@ -365,7 +365,3 @@ public:
 }; // class CInventoryItem
 
 #include "inventory_item_inline.h"
-
-add_to_type_list(CInventoryItem)
-#undef script_type_list
-#define script_type_list save_type_list(CInventoryItem)

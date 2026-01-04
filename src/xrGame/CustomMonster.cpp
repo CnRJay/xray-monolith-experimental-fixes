@@ -59,6 +59,10 @@
 #   include "animation_movement_controller.h"
 #endif // DEBUG
 
+#ifdef HOLDERCUSTOM_NEW
+#include "ai/stalker/ai_stalker.h"
+#endif
+
 void SetActorVisibility(u16 who, float value);
 extern int g_AI_inactive_time;
 
@@ -633,6 +637,14 @@ void CCustomMonster::eye_pp_s0()
 	VERIFY(_valid(rotation.current.pitch));
 
 	eye_matrix.setHPB(-rotation.current.yaw + m_fEyeShiftYaw, -rotation.current.pitch, 0);
+
+#ifdef HOLDERCUSTOM_NEW
+	if (cast_stalker() && cast_stalker()->Holder())
+	{
+		eye_matrix.setHPB(Direction().getH() + m_fEyeShiftYaw, Direction().getP(), 0);
+	}
+#endif
+
 	eye_matrix.c.add(X.c, m_tEyeShift);
 
 	VERIFY(_valid(eye_matrix));

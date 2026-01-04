@@ -181,13 +181,13 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Verified|x64'">
     <ClCompile>
       <AdditionalIncludeDirectories>$(xrSdkDir)include;$(ProjectDir)..\luajit-2\src\;$(xrSdkDir)include\luabind;$(ProjectDir)luabind\src;$(ProjectDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <DisableSpecificWarnings>4073;4100;4390;4714;4127;4273;4595;4996;4005;4530</DisableSpecificWarnings>
       <EnableEnhancedInstructionSet>NotSet</EnableEnhancedInstructionSet>
       <EnableFiberSafeOptimizations>false</EnableFiberSafeOptimizations>
       <ExceptionHandling>false</ExceptionHandling>
       <FavorSizeOrSpeed>Neither</FavorSizeOrSpeed>
-      <FunctionLevelLinking>false</FunctionLevelLinking>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
       <InlineFunctionExpansion>Disabled</InlineFunctionExpansion>
       <IntrinsicFunctions>false</IntrinsicFunctions>
       <LanguageStandard>stdcpp17</LanguageStandard>

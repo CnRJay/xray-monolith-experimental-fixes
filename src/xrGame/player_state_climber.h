@@ -1,5 +1,4 @@
-#ifndef PLAYER_STATE_CLIMBER_INCLUDED
-#define PLAYER_STATE_CLIMBER_INCLUDED
+#pragma once
 
 #include "player_state_param.h"
 #include "accumulative_states.h"
@@ -28,9 +27,4 @@ namespace award_system
 		bool m_player_is_climber;
 	}; //class player_state_climber
 
-	ADD_ACCUMULATIVE_STATE(acpv_climber, player_state_climber);
-#undef ACCUMULATIVE_STATE_LIST
-#define ACCUMULATIVE_STATE_LIST SAVE_TYPE_LIST(acpv_climber, player_state_climber)
-} //namespace award_system
-
-#endif //#ifndef PLAYER_STATE_CLIMBER_INCLUDED
+}

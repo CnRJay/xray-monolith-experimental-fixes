@@ -3282,13 +3282,7 @@
     <ClInclude Include="alife_registry_container.h">
       <Filter>AI\ALife\simulator_base\registry_container</Filter>
     </ClInclude>
-    <ClInclude Include="alife_registry_container_composition.h">
-      <Filter>AI\ALife\simulator_base\registry_container</Filter>
-    </ClInclude>
     <ClInclude Include="alife_registry_container_inline.h">
-      <Filter>AI\ALife\simulator_base\registry_container</Filter>
-    </ClInclude>
-    <ClInclude Include="alife_registry_container_space.h">
       <Filter>AI\ALife\simulator_base\registry_container</Filter>
     </ClInclude>
     <ClInclude Include="alife_registry_wrappers.h">
@@ -6340,9 +6334,6 @@
       <Filter>Core\Server\Games\client\mp\award_system\player_state</Filter>
     </ClInclude>
     <ClInclude Include="game_state_accumulator.h">
-      <Filter>Core\Server\Games\client\mp\award_system\player_state</Filter>
-    </ClInclude>
-    <ClInclude Include="game_state_accumulator_inline.h">
       <Filter>Core\Server\Games\client\mp\award_system\player_state</Filter>
     </ClInclude>
     <ClInclude Include="hits_store.h">
@@ -9589,6 +9580,12 @@
     </ClCompile>
     <ClCompile Include="searchlight.cpp">
       <Filter>Core\Client\Objects\searchlight</Filter>
+    </ClCompile>
+    <ClCompile Include="searchlight_script.cpp">
+      <Filter>Core\Client\Objects\searchlight_script</Filter>
+    </ClCompile>
+    <ClCompile Include="searchlight_struct.cpp">
+      <Filter>Core\Client\Objects\searchlight_struct</Filter>
     </ClCompile>
     <ClCompile Include="trade.cpp">
       <Filter>Core\Client\Objects\searchlight\Trade</Filter>

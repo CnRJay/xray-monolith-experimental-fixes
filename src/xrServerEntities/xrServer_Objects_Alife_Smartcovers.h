@@ -6,8 +6,7 @@
 //	Description : Server objects smartcovers for ALife simulator
 ////////////////////////////////////////////////////////////////////////////
 
-#ifndef xrServer_Objects_ALife_SmartcoversH
-#define xrServer_Objects_ALife_SmartcoversH
+#pragma once
 
 #include "xrServer_Objects_ALife.h"
 
@@ -82,7 +81,4 @@ private:
 
 SERVER_ENTITY_DECLARE_END
 
-add_to_type_list(CSE_SmartCover)
-#define script_type_list save_type_list(CSE_SmartCover)
 #pragma warning(pop)
-#endif

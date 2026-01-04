@@ -281,7 +281,3 @@ public:
 };
 
 #include "inventory_owner_inline.h"
-
-add_to_type_list(CInventoryOwner)
-#undef script_type_list
-#define script_type_list save_type_list(CInventoryOwner)

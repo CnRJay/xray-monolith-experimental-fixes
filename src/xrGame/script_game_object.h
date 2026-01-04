@@ -39,6 +39,10 @@
 #include "Missile.h"
 #include "WeaponKnife.h"
 
+#ifdef PROJECTOR_NEW
+#include "searchlight.h"
+#endif
+
 enum EPdaMsg;
 enum ESoundTypes;
 enum ETaskState;
@@ -114,6 +118,9 @@ class script_attachment;
 
 #ifdef STATIONARYMGUN_NEW
 class CWeaponStatMgun;
+#endif
+#ifdef PROJECTOR_NEW
+class CProjector;
 #endif
 
 #ifdef DEBUG
@@ -693,6 +700,9 @@ public:
 #ifdef STATIONARYMGUN_NEW
 	CWeaponStatMgun *get_stmgun();
 #endif
+#ifdef PROJECTOR_NEW
+	CProjector *get_projector();
+#endif
 	//LAMP
 	CHangingLamp* get_hanging_lamp();
 
@@ -1160,10 +1170,6 @@ public:
 
 DECLARE_SCRIPT_REGISTER_FUNCTION
 };
-
-add_to_type_list(CScriptGameObject)
-#undef script_type_list
-#define script_type_list save_type_list(CScriptGameObject)
 
 extern void sell_condition(CScriptIniFile* ini_file, LPCSTR section);
 extern void sell_condition(float friend_factor, float enemy_factor);

@@ -160,7 +160,3 @@ struct SArtefactDetectorsSupport
 	void UpdateOnFrame();
 	void Blink();
 };
-
-add_to_type_list(CArtefact)
-#undef script_type_list
-#define script_type_list save_type_list(CArtefact)

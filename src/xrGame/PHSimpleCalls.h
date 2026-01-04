@@ -28,10 +28,6 @@ private:
 DECLARE_SCRIPT_REGISTER_FUNCTION
 };
 
-add_to_type_list(CPHCallOnStepCondition)
-#undef script_type_list
-#define script_type_list save_type_list(CPHCallOnStepCondition)
-
 class CPHExpireOnStepCondition :
 	public CPHCallOnStepCondition
 {
@@ -40,10 +36,6 @@ public:
 	virtual bool is_true() { return true; }
 DECLARE_SCRIPT_REGISTER_FUNCTION
 };
-
-add_to_type_list(CPHExpireOnStepCondition)
-#undef script_type_list
-#define script_type_list save_type_list( CPHExpireOnStepCondition)
 
 class CPHShellBasedAction :
 	public CPHAction
@@ -73,10 +65,6 @@ public:
 #endif
 DECLARE_SCRIPT_REGISTER_FUNCTION
 };
-
-add_to_type_list(CPHConstForceAction)
-#undef script_type_list
-#define script_type_list save_type_list( CPHConstForceAction)
 
 class CPHReqComparerHasShell :
 	public CPHReqComparerV

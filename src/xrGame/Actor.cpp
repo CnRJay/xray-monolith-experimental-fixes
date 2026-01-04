@@ -2304,7 +2304,6 @@ void CActor::RenderText(LPCSTR Text, Fvector dpos, float* pdup, u32 color)
 
 	Fmatrix M;
 	Visual()->dcast_PKinematics()->CalculateBones();
-	smart_cast<IKinematics*>(Visual())->CalculateBones();
 	M.mul(XFORM(), Visual()->dcast_PKinematics()->LL_GetTransform(m_head));
 	//------------------------------------------------
 	Fvector v0, v1;

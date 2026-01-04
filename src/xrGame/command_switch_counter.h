@@ -27,9 +27,6 @@ namespace award_system
 		u32 m_counter;
 	}; // class command_switch_counter
 
-	ADD_ACCUMULATIVE_STATE(acpv_command_switch_count, command_switch_counter);
-#undef ACCUMULATIVE_STATE_LIST
-#define ACCUMULATIVE_STATE_LIST SAVE_TYPE_LIST(acpv_command_switch_count, command_switch_counter)
 } //namespace award_system
 
 

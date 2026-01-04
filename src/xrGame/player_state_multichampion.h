@@ -1,5 +1,4 @@
-#ifndef PLAYER_STATE_MULTICHAMPION_INCLUDED
-#define PLAYER_STATE_MULTICHAMPION_INCLUDED
+#pragma once
 
 #include "player_state_param.h"
 #include "accumulative_states.h"
@@ -28,9 +27,4 @@ namespace award_system
 		bool m_can_be_multichampion;
 	}; //class player_multichampion
 
-	ADD_ACCUMULATIVE_STATE(acpv_multi_champion, player_multichampion);
-#undef ACCUMULATIVE_STATE_LIST
-#define ACCUMULATIVE_STATE_LIST SAVE_TYPE_LIST(acpv_multi_champion, player_multichampion)
-} //namespace award_system
-
-#endif //#ifndef PLAYER_STATE_MULTICHAMPION_INCLUDED
+}

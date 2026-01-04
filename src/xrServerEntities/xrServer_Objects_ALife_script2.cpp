@@ -16,11 +16,20 @@ using namespace luabind;
 void CSE_ALifeObjectProjector::script_register(lua_State* L)
 {
 	module(L)[
+#ifdef PROJECTOR_NEW
+		luabind_class_dynamic_alife2(
+			CSE_ALifeObjectProjector,
+			"cse_alife_object_projector",
+			CSE_ALifeDynamicObjectVisual,
+			CSE_PHSkeleton
+		)
+#else
 		luabind_class_dynamic_alife1(
 			CSE_ALifeObjectProjector,
 			"cse_alife_object_projector",
 			CSE_ALifeDynamicObjectVisual
 		)
+#endif
 	];
 }
 
@@ -53,7 +62,7 @@ void CSE_ALifeCar::script_register(lua_State* L)
 void CSE_ALifeStationaryMgun::script_register(lua_State* L)
 {
 	module(L)[
-		luabind_class_dynamic_alife1(
+		luabind_class_dynamic_alife2(
 			CSE_ALifeStationaryMgun,
 			"cse_alife_stmgun",
 			CSE_ALifeDynamicObjectVisual,

@@ -114,8 +114,5 @@ DECLARE_SCRIPT_REGISTER_FUNCTION
 };
 
 typedef CActionPlanner<CScriptGameObject> CScriptActionPlanner;
-add_to_type_list(CScriptActionPlanner)
-#undef script_type_list
-#define script_type_list save_type_list(CScriptActionPlanner)
 
 #include "action_planner_inline.h"

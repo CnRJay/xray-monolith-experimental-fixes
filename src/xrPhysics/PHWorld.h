@@ -1,5 +1,5 @@
-#ifndef PH_WORLD_H
-#define PH_WORLD_H
+#pragma once
+
 #include "Physics.h"
 #include "phupdateobject.h"
 #include "IPHWorld.h"
@@ -166,12 +166,8 @@ private:
 	//	DECLARE_SCRIPT_REGISTER_FUNCTION
 };
 
-//add_to_type_list(CPHWorld)
-//#undef script_type_list
-//#define script_type_list save_type_list(CPHWorld)
 extern CPHWorld* ph_world;
 IC CPHWorld& inl_ph_world()
 {
 	return *ph_world;
 }
-#endif
