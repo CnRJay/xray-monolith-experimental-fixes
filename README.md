@@ -16,9 +16,6 @@
   </p>
 </div>
 
-
-> DISCLAIMER: This fork just exists to pull in the latest changes from Demonized Modded EXEs, until the author (CnRJay) updates the project. I'm unlikely going to fix existing issues and such.
-
 ## Overview
 
 **X-Ray Monolith: Next Gen** is a WIP fork of the **X-Ray Monolith Engine**, designed specifically for heavy modpacks (like G.A.M.M.A.) that run hundreds of scripts. The primary goal is to provide maximum stability and memory availability.
@@ -82,7 +79,7 @@ The latest release of the engine can be downloaded on the [releases page](https:
 ## Installation
 
 1.  **Backup**: Backup your existing `bin` folder in your Anomaly directory.
-2.  **Download**: Get the **Release** archive from the [releases page](https://github.com/dtrail/xray-monolith-gc64/releases).
+2.  **Download**: Get the **Release** archive from the [releases page](https://github.com/CnRJay/xray-monolith-gc64/releases).
 3.  **Extract**: Extract the contents (the `.exe` and `.dll` files) into your `ANOMALY/bin` folder.
     *   *Note: Ensure the new `lua51.dll` from this download is in the bin folder. The engine will not run with the standard Anomaly version.*
 4.  **Clear Cache (CRITICAL)**: Navigate to `appdata/shaders_cache` and **delete the folder**.
