@@ -340,8 +340,10 @@ RDEVICE.Statistic->TEST0.End		();
 #else
 			Item.vis_ID = 0;
 #endif
-			// Save it
-			D.G[index].items.push_back(ItemP);
+			{
+				xrCriticalSectionGuard lock(pool_mutex);
+				D.G[index].items.push_back(ItemP);
+			}
 		}
 	}
 
