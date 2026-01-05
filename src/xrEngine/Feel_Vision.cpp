@@ -266,61 +266,56 @@ namespace Feel
 						// Log("query");
 					}
 				}
+				// Log("Vis",feel_params.vis);
+				r_spatial.clear_not_free();
+				g_SpatialSpace->q_ray(r_spatial, 0, STYPE_VISIBLEFORAI, P, D, f);
 
-				// If static world already blocks the view, skip dynamic objects
-				if (feel_params.vis >= feel_params.vis_threshold)
+				RD.flags = CDB::OPT_ONLYFIRST;
+
+				bool collision_found = false;
+				xr_vector<ISpatial*>::const_iterator i = r_spatial.begin();
+				xr_vector<ISpatial*>::const_iterator e = r_spatial.end();
+				for (; i != e; ++i)
 				{
-					// Log("Vis",feel_params.vis);
-					r_spatial.clear_not_free();
-					g_SpatialSpace->q_ray(r_spatial, 0, STYPE_VISIBLEFORAI, P, D, f);
+					if (*i == m_owner)
+						continue;
 
-					RD.flags = CDB::OPT_ONLYFIRST;
+					if (*i == I->O)
+						continue;
 
-					bool collision_found = false;
-					xr_vector<ISpatial*>::const_iterator i = r_spatial.begin();
-					xr_vector<ISpatial*>::const_iterator e = r_spatial.end();
-					for (; i != e; ++i)
+					CObject const* object = (*i)->dcast_CObject();
+
+#ifdef SPATIAL_CHANGE
+					if (object && object->spatial.type & STYPE_FEELVISIONIGNORE)
 					{
-						if (*i == m_owner)
-							continue;
-
-						if (*i == I->O)
-							continue;
-
-						CObject const* object = (*i)->dcast_CObject();
-
-	#ifdef SPATIAL_CHANGE
-						if (object && object->spatial.type & STYPE_FEELVISIONIGNORE)
-						{
-							/* See through objects that have the flag. */
-							continue;
-						}
-	#endif
-
-						RQR.r_clear();
-						if (object && object->collidable.model && !object->collidable.model->_RayQuery(RD, RQR))
-							continue;
-
-						collision_found = true;
-						break;
+						/* See through objects that have the flag. */
+						continue;
 					}
+#endif
 
-					if (collision_found)
-						feel_params.vis = 0.f;
+					RQR.r_clear();
+					if (object && object->collidable.model && !object->collidable.model->_RayQuery(RD, RQR))
+						continue;
 
-					if (feel_params.vis < feel_params.vis_threshold)
-					{
-						// INVISIBLE, choose next point
-						I->fuzzy -= fuzzy_update_novis * dt;
-						clamp(I->fuzzy, -.5f, 1.f);
-						I->cp_LP = I->O->get_new_local_point_on_mesh(I->bone_id);
-					}
-					else
-					{
-						// VISIBLE
-						I->fuzzy += fuzzy_update_vis * dt;
-						clamp(I->fuzzy, -.5f, 1.f);
-					}
+					collision_found = true;
+					break;
+				}
+
+				if (collision_found)
+					feel_params.vis = 0.f;
+
+				if (feel_params.vis < feel_params.vis_threshold)
+				{
+					// INVISIBLE, choose next point
+					I->fuzzy -= fuzzy_update_novis * dt;
+					clamp(I->fuzzy, -.5f, 1.f);
+					I->cp_LP = I->O->get_new_local_point_on_mesh(I->bone_id);
+				}
+				else
+				{
+					// VISIBLE
+					I->fuzzy += fuzzy_update_vis * dt;
+					clamp(I->fuzzy, -.5f, 1.f);
 				}
 			}
 			else
