@@ -203,6 +203,10 @@ void CRender::create()
 
 	m_skinning = -1;
 	m_MSAASample = -1;
+	o.volsize = 8;
+	if (strstr(Core.Params, "-volumetric1")) o.volsize = 1;
+	if (strstr(Core.Params, "-volumetric2")) o.volsize = 2;
+	if (strstr(Core.Params, "-volumetric4")) o.volsize = 4;
 
 	// hardware
 	o.smapsize = 2048;

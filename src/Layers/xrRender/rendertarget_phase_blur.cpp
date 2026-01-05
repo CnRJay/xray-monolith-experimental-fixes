@@ -362,7 +362,7 @@ void CRenderTarget::phase_ssfx_volumetric_blur()
 	p1.set(1.0f, 1.0f);
 
 	// Volumetric always at 1/8 res
-	set_viewport_size(HW.pContext, w / 8, h / 8);
+	set_viewport_size(HW.pContext, w / RImplementation.o.volsize, h / RImplementation.o.volsize);
 
 	ref_rt* rt_VolBlur[2] = { &rt_ssfx_volumetric_tmp, &rt_ssfx_volumetric };
 	int pixelsize[4] = { 0, 1, 1, 2 }; // half pixel + pixelsize
@@ -385,7 +385,7 @@ void CRenderTarget::phase_ssfx_volumetric_blur()
 
 		// Draw COLOR
 		RCache.set_Element(s_ssfx_volumetric_blur->E[b % 2]);
-		RCache.set_c("blur_setup", w / 8, h / 8, pixelsize[b], pixelscale[b]);
+		RCache.set_c("blur_setup", w / RImplementation.o.volsize, h / RImplementation.o.volsize, pixelsize[b], pixelscale[b]);
 		RCache.set_Geometry(g_combine);
 		RCache.Render(D3DPT_TRIANGLELIST, Offset, 0, 4, 0, 2);
 	}

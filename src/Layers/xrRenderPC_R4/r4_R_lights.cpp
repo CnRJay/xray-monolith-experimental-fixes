@@ -189,13 +189,16 @@ void CRender::render_lights(light_Package& LP)
 
 					// Adjust resolution
 					if (RImplementation.o.ssfx_volumetric)
-						Target->set_viewport_size(HW.pContext, w / 8, h / 8);
+						Target->set_viewport_size(HW.pContext, w / RImplementation.o.volsize, h / RImplementation.o.volsize);
 
-				Target->accum_volumetric(L);
-				
-				// Restore resolution
-				if (RImplementation.o.ssfx_volumetric)
-					Target->set_viewport_size(HW.pContext, w, h);
+					if(ps_pfx_volumetric_mode == 1)
+						Target->accum_volumetric_lv(L);
+					else
+						Target->accum_volumetric(L);
+
+					// Restore resolution
+					if (RImplementation.o.ssfx_volumetric)
+						Target->set_viewport_size(HW.pContext, w, h);
 			}
 		}
 	}
