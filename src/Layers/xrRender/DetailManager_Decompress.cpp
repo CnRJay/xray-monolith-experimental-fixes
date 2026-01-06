@@ -108,6 +108,7 @@ void CDetailManager::cache_Decompress(Slot* S, CDB::COLLIDER* collider)
 #endif
 
 	if (0 == triCount) return;
+	xr_vector<SlotItem*> local_items[dm_obj_in_slot];
 
 	// Build shading table
 	float alpha255 [dm_obj_in_slot][4];
@@ -182,12 +183,6 @@ void CDetailManager::cache_Decompress(Slot* S, CDB::COLLIDER* collider)
 #endif
 
 			CDetail* Dobj = objects[DS.r_id(index)];
-			SlotItem* ItemP = nullptr;
-			{
-				xrCriticalSectionGuard lock(pool_mutex);
-				ItemP = poolSI.create();
-			}
-			SlotItem& Item = *ItemP;
 
 			// Position (XZ)
 			float rx = (float(x) / float(d_size)) * dm_slot_size + D.vis.box.min.x;
@@ -250,7 +245,16 @@ RDEVICE.Statistic->TEST0.End		();
 
 			if (y < D.vis.box.min.y) continue;
 			Item_P.y = y;
-			Item.normal = terrain_normal; // Save terrain normal here to feed the grass shader later.
+
+			// Allocate item only after validation passes
+			SlotItem* ItemP = nullptr;
+			{
+				xrCriticalSectionGuard lock(pool_mutex);
+				ItemP = poolSI.create();
+			}
+			SlotItem& Item = *ItemP;
+
+			Item.normal = terrain_normal;
 
 			// Angles and scale
 #ifndef		DBG_SWITCHOFF_RANDOMIZE
@@ -340,8 +344,17 @@ RDEVICE.Statistic->TEST0.End		();
 #else
 			Item.vis_ID = 0;
 #endif
-			// Save it
-			D.G[index].items.push_back(ItemP);
+			// Store locally
+			local_items[index].push_back(ItemP);
+		}
+	}
+
+	// Batch insert all items
+	for (u32 i = 0; i < dm_obj_in_slot; i++)
+	{
+		if (!local_items[i].empty())
+		{
+			D.G[i].items.insert(D.G[i].items.end(), local_items[i].begin(), local_items[i].end());
 		}
 	}
 
