@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "DetailManager.h"
 #include <algorithm>
-#include <tbb/task_group.h>
+#include <tbb/parallel_for.h>
 #include <tbb/blocked_range.h>
 #include <tbb/blocked_range2d.h>
 #include <tbb/enumerable_thread_specific.h>
@@ -169,52 +169,37 @@ void CDetailManager::cache_Update(int v_x, int v_z, Fvector& view, int limit)
 
 	if (!cache_task.empty())
 	{
-		// Sort tasks by distance
-		std::sort(cache_task.begin(), cache_task.end(), [&](Slot* A, Slot* B) {
-			float distA = view.distance_to_sqr(A->vis.sphere.P);
-			float distB = view.distance_to_sqr(B->vis.sphere.P);
-			return distA > distB;
-		});
-
 		u32 count = std::min((u32)limit, (u32)cache_task.size());
-		std::vector<Slot*> tasks_to_process;
-		tasks_to_process.reserve(count);
 
-		for (u32 i = 0; i < count; ++i)
-		{
-			tasks_to_process.push_back(cache_task.back());
-			cache_task.pop_back();
-		}
+		// Partial sorting
+		std::nth_element(cache_task.begin(), cache_task.end() - count, cache_task.end(),
+			[&](Slot* A, Slot* B) {
+				return view.distance_to_sqr(A->vis.sphere.P) > view.distance_to_sqr(B->vis.sphere.P);
+			});
 
-		tbb::enumerable_thread_specific<CDB::COLLIDER> tls_collider;
+		Slot** tasks_start = &cache_task[cache_task.size() - count];
 
-		tbb::task_group tg;
-		const size_t chunk_size = 16;
-		size_t task_count = tasks_to_process.size();
+		static tbb::enumerable_thread_specific<CDB::COLLIDER> tls_collider;
 
-		for (size_t i = 0; i < task_count; i += chunk_size) {
-			tg.run([&, i, task_count, chunk_size] {
+		tbb::parallel_for(tbb::blocked_range<u32>(0, count, 8),
+			[&](const tbb::blocked_range<u32>& range) {
 				CDB::COLLIDER& collider = tls_collider.local();
-				size_t current_chunk = std::min(chunk_size, task_count - i);
-				for (size_t j = 0; j < current_chunk; ++j) {
-					cache_Decompress(tasks_to_process[i + j], &collider);
+				for (u32 i = range.begin(); i != range.end(); ++i) {
+					cache_Decompress(tasks_start[i], &collider);
 				}
 			});
-		}
-		tg.wait();
+
+		// Remove processed tasks
+		cache_task.resize(cache_task.size() - count);
 	}
 
 	if (bNeedMegaUpdate)
 	{
-		tbb::task_group tg;
-		const u32 chunk_size = 8;
-		
-		for (u32 _mz1_start = 0; _mz1_start < dm_cache1_line; _mz1_start += chunk_size) {
-			tg.run([&, _mz1_start, chunk_size] {
-				u32 _mz1_end = std::min(_mz1_start + chunk_size, (u32)dm_cache1_line);
-				for (u32 _mz1 = _mz1_start; _mz1 < _mz1_end; ++_mz1)
+		tbb::parallel_for(tbb::blocked_range2d<u32>(0, dm_cache1_line, 0, dm_cache1_line),
+			[&](const tbb::blocked_range2d<u32>& r) {
+				for (u32 _mz1 = r.rows().begin(); _mz1 != r.rows().end(); ++_mz1)
 				{
-					for (u32 _mx1 = 0; _mx1 < dm_cache1_line; ++_mx1)
+					for (u32 _mx1 = r.cols().begin(); _mx1 != r.cols().end(); ++_mx1)
 					{
 						CacheSlot1& MS = cache_level1[_mz1][_mx1];
 						MS.empty = TRUE;
@@ -230,8 +215,6 @@ void CDetailManager::cache_Update(int v_x, int v_z, Fvector& view, int limit)
 					}
 				}
 			});
-		}
-		tg.wait();
 	}
 }
 
