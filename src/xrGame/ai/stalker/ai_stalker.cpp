@@ -1274,10 +1274,10 @@ void CAI_Stalker::shedule_Update(u32 DT)
 		u32 delay = 100;
 		float dist = 0.0f;
 		if (Level().CurrentEntity())
-			dist = Position().distance_to(Level().CurrentEntity()->Position());
+			dist = Position().distance_to_sqr(Level().CurrentEntity()->Position());
 
-		if (dist > 50.0f) delay = 333;
-		if (dist > 100.0f) delay = 1000;
+		if (dist > 2500.0f) delay = 333;
+		if (dist > 10000.0f) delay = 1000;
 
 		bool in_combat = (memory().enemy().selected() != 0);
 		bool taking_damage = (Device.dwTimeGlobal - memory().hit().last_hit_time() < 2000);
@@ -1317,11 +1317,11 @@ void CAI_Stalker::Think()
 		// Calculate lod
 		float dist = 0.0f;
 		if (Level().CurrentEntity())
-			dist = Position().distance_to(Level().CurrentEntity()->Position());
+			dist = Position().distance_to_sqr(Level().CurrentEntity()->Position());
 
 		u32 interval = 100;
-		if (dist > 50.0f) interval = 500;
-		if (dist > 150.0f) interval = 1000;
+		if (dist > 2500.0f) interval = 500;
+		if (dist > 22500.0f) interval = 1000;
 
 		// Load balancing
 		u32 offset = (ID() % 10) * 20;

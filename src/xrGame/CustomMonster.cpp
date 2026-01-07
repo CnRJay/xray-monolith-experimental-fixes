@@ -426,10 +426,10 @@ void CCustomMonster::shedule_Update(u32 DT)
 		u32 delay = 100;
 		float dist = 0.0f;
 		if (Level().CurrentEntity())
-			dist = Position().distance_to(Level().CurrentEntity()->Position());
+			dist = Position().distance_to_sqr(Level().CurrentEntity()->Position());
 
-		if (dist > 50.0f) delay = 333;
-		if (dist > 100.0f) delay = 1000;
+		if (dist > 2500.0f) delay = 333;
+		if (dist > 10000.0f) delay = 1000;
 
 		bool in_combat = (memory().enemy().selected() != 0);
 		bool taking_damage = (Device.dwTimeGlobal - memory().hit().last_hit_time() < 2000);
