@@ -43,6 +43,9 @@ void CDetailManager::hw_Load()
 {
 	hw_Load_Geom();
 	hw_Load_Shaders();
+#if defined(USE_DX10) || defined(USE_DX11)
+	hw_Load_RingBuffer();
+#endif
 }
 
 void CDetailManager::hw_Load_Geom()
@@ -152,6 +155,9 @@ void CDetailManager::hw_Load_Geom()
 
 void CDetailManager::hw_Unload()
 {
+#if defined(USE_DX10) || defined(USE_DX11)
+	hw_Unload_RingBuffer();
+#endif
 	// Destroy VS/VB/IB
 	hw_Geom.destroy();
 	HW.stats_manager.decrement_stats_vb(hw_VB);

@@ -1,0 +1,39 @@
+#include "common.h"
+
+// Texture sampler
+Texture2D s_base;
+SamplerState smp_base;
+
+struct v2p
+{
+    float4 hpos     : SV_Position;
+    float2 tc       : TEXCOORD0;
+    float3 normal   : TEXCOORD1;
+    float4 color    : COLOR0;
+    float  alpha    : TEXCOORD2;
+};
+
+struct p_output
+{
+    float4 color    : SV_Target0;
+};
+
+p_output main(v2p I)
+{
+    p_output O;
+    
+    // Sample base texture
+    float4 base = s_base.Sample(smp_base, I.tc);
+    
+    // Apply alpha test
+    clip(base.a * I.alpha - 0.5);
+    
+    // Apply lighting from instance color (sun, sun, sun, hemi)
+    float3 lighting = I.color.rgb + I.color.a * L_hemi_color.rgb;
+    
+    // Final color
+    O.color.rgb = base.rgb * lighting;
+    O.color.a = base.a * I.alpha;
+    
+    return O;
+}

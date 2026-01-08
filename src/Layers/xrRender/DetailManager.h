@@ -242,6 +242,43 @@ public:
 	void hw_Render();
 #if defined(USE_DX10) || defined(USE_DX11)
 	void hw_Render_dump(const Fvector4 &consts, const Fvector4 &wave, const Fvector4 &wind, const Fvector4& prev_wave, const Fvector4& prev_wind, u32 var_id, u32 lod_id);
+
+	// Rolling structured buffer for grass instancing
+	struct GrassInstanceData
+	{
+		Fvector4 mat0;    // Matrix row 0: _11*scale, _21*scale, _31*scale, _41
+		Fvector4 mat1;    // Matrix row 1: _12*scale, _22*scale, _32*scale, _42
+		Fvector4 mat2;    // Matrix row 2: _13*scale, _23*scale, _33*scale, _43
+		Fvector4 color;   // sun, sun, sun, hemi
+		Fvector4 params;  // normal.x, normal.y, normal.z, alpha
+	};
+
+#if defined(USE_DX11)
+	ID3D11Buffer*              m_GrassRingBuffer;
+	ID3D11ShaderResourceView*  m_GrassSRV;
+#elif defined(USE_DX10)
+	ID3D10Buffer*              m_GrassRingBuffer;
+	ID3D10ShaderResourceView*  m_GrassSRV;
+#endif
+	u32                        m_RingBufferCapacity;
+	u32                        m_CurrentOffset;
+	u32                        m_LastFrameReset;
+
+	// Per model geometry for instanced rendering
+	struct InstancedGeom
+	{
+		ID3DVertexBuffer* VB;
+		ID3DIndexBuffer*  IB;
+		u32               vertCount;
+		u32               idxCount;
+	};
+	xr_vector<InstancedGeom>   m_InstancedGeom;
+	ref_geom                   m_InstancedDecl;
+
+	void hw_Load_RingBuffer();
+	void hw_Load_InstancedGeom();
+	void hw_Unload_RingBuffer();
+	void hw_Render_dump_instanced(const Fvector4& consts, const Fvector4& wave, const Fvector4& wind, const Fvector4& prev_wave, const Fvector4& prev_wind, u32 var_id, u32 lod_id);
 #else	//	USE_DX10
 	void hw_Render_dump(ref_constant array, u32 var_id, u32 lod_id, u32 c_base);
 #endif	//	USE_DX10
