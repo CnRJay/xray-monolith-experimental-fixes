@@ -70,7 +70,7 @@ bool CAI_Stalker::feel_vision_isRelevant(CObject* O)
 	}
 
 	if (!E && !I) return (false);
-	if (E && !is_relation_enemy(E)) 
+	if (E && !is_relation_enemy(E) && E != Actor()) 
 		return false; // Only look at enemies
 
 	if (O->Visual()) {
