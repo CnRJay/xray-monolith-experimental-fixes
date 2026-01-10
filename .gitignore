@@ -36,4 +36,3 @@ src/3rd party/luajit-2/src/host/*.exe
 *~
 
 /docs
-nul
