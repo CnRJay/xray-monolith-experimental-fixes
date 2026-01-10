@@ -378,6 +378,10 @@ Fvector vertex_position(u32 level_vertex_id)
 void map_add_object_spot(u16 id, LPCSTR spot_type, LPCSTR text)
 {
 	CMapLocation* ml = Level().MapManager().AddMapLocation(spot_type, id);
+
+	if (!ml)
+		return;
+
 	if (xr_strlen(text))
 	{
 		ml->SetHint(text);
@@ -387,6 +391,10 @@ void map_add_object_spot(u16 id, LPCSTR spot_type, LPCSTR text)
 void map_add_object_spot_ser(u16 id, LPCSTR spot_type, LPCSTR text)
 {
 	CMapLocation* ml = Level().MapManager().AddMapLocation(spot_type, id);
+
+	if (!ml)
+		return;
+
 	if (xr_strlen(text))
 		ml->SetHint(text);
 

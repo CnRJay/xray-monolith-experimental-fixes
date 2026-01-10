@@ -12,6 +12,7 @@
 #include "xrServer.h"
 #include "game_object_space.h"
 #include "script_callback_ex.h"
+#include "alife_object_registry.h" // Add this include at the top of the file
 
 struct FindLocationBySpotID
 {
@@ -151,6 +152,12 @@ CMapManager::~CMapManager()
 
 CMapLocation* CMapManager::AddMapLocation(const shared_str& spot_type, u16 id)
 {
+	if (ai().get_alife() && !ai().alife().objects().object(id, true))
+	{
+		Msg("CMapManager::AddMapLocation: Blocked creation of spot [%s] for non-existent ID [%d]", spot_type.c_str(), id);
+		return NULL;
+	}
+
 	CMapLocation* l = xr_new<CMapLocation>(spot_type.c_str(), id);
 	Locations().push_back(SLocationKey(spot_type, id));
 	Locations().back().location = l;

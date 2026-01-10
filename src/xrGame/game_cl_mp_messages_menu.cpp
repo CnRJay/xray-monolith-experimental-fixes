@@ -164,7 +164,9 @@ void game_cl_mp::OnSpeechMessage(NET_Packet& P)
 
 		if (!Level().MapManager().HasMapLocation(FRIEND_RADION_LOCATION, ps->GameID))
 		{
-			(Level().MapManager().AddMapLocation(FRIEND_RADION_LOCATION, ps->GameID))->EnablePointer();
+			CMapLocation* location = Level().MapManager().AddMapLocation(FRIEND_RADION_LOCATION, ps->GameID);
+			if (location)
+				location->EnablePointer();
 		}
 	}
 

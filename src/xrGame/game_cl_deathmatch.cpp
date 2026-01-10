@@ -1235,7 +1235,9 @@ void game_cl_Deathmatch::UpdateMapLocations()
 	{
 		if (!Level().MapManager().HasMapLocation(SELF_LOCATION, local_player->GameID))
 		{
-			(Level().MapManager().AddMapLocation(SELF_LOCATION, local_player->GameID))->EnablePointer();
+			CMapLocation* location = Level().MapManager().AddMapLocation(SELF_LOCATION, local_player->GameID);
+			if (location)
+				location->EnablePointer();
 		}
 	}
 }

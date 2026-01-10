@@ -628,7 +628,9 @@ void game_cl_ArtefactHunt::UpdateMapLocations()
 				if (!Level().MapManager().HasMapLocation(ARTEFACT_NEUTRAL, artefactID))
 				{
 					Level().MapManager().RemoveMapLocationByObjectID(artefactID);
-					(Level().MapManager().AddMapLocation(ARTEFACT_NEUTRAL, artefactID))->EnablePointer();
+					CMapLocation* location = Level().MapManager().AddMapLocation(ARTEFACT_NEUTRAL, artefactID);
+					if (location)
+						location->EnablePointer();
 				};
 			}
 			else
@@ -638,7 +640,9 @@ void game_cl_ArtefactHunt::UpdateMapLocations()
 					if (!Level().MapManager().HasMapLocation(ARTEFACT_FRIEND, artefactID))
 					{
 						Level().MapManager().RemoveMapLocationByObjectID(artefactID);
-						(Level().MapManager().AddMapLocation(ARTEFACT_FRIEND, artefactID))->EnablePointer();
+						CMapLocation* location = Level().MapManager().AddMapLocation(ARTEFACT_FRIEND, artefactID);
+						if (location)
+							location->EnablePointer();
 					}
 				}
 				else
@@ -669,7 +673,9 @@ void game_cl_ArtefactHunt::UpdateMapLocations()
 					if (!OutfitWorkDown && */
 					if (!Level().MapManager().HasMapLocation(ARTEFACT_ENEMY, artefactID))
 					{
-						(Level().MapManager().AddMapLocation(ARTEFACT_ENEMY, artefactID))->EnablePointer();
+						CMapLocation* location = Level().MapManager().AddMapLocation(ARTEFACT_ENEMY, artefactID);
+						if (location)
+							location->EnablePointer();
 					}
 				}
 			};
