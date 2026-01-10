@@ -800,22 +800,18 @@ void game_cl_CaptureTheArtefact::UpdateMapLocations()
 		if (local_player->team == etGreenTeam)
 		{
 			tempLocation = Level().MapManager().AddMapLocation(FREE_ARTEFACT_FRIEND, greenArtefact);
-			VERIFY(tempLocation);
 			if (tempLocation)
 				tempLocation->EnablePointer();
 			tempLocation = Level().MapManager().AddMapLocation(ARTEFACT_NEUTRAL, blueArtefact);
-			VERIFY(tempLocation);
 			if (tempLocation)
 				tempLocation->EnablePointer();
 		}
 		else
 		{
 			tempLocation = Level().MapManager().AddMapLocation(ARTEFACT_NEUTRAL, greenArtefact);
-			VERIFY(tempLocation);
 			if (tempLocation)
 				tempLocation->EnablePointer();
 			tempLocation = Level().MapManager().AddMapLocation(FREE_ARTEFACT_FRIEND, blueArtefact);
-			VERIFY(tempLocation);
 			if (tempLocation)
 				tempLocation->EnablePointer();
 		}
@@ -827,7 +823,6 @@ void game_cl_CaptureTheArtefact::UpdateMapLocations()
 		{
 			Level().MapManager().RemoveMapLocationByObjectID(greenArtefact);
 			tempLocation = Level().MapManager().AddMapLocation(ARTEFACT_ENEMY, greenArtefactOwner);
-			VERIFY(tempLocation);
 			if (tempLocation)
 				tempLocation->EnablePointer();
 		}
@@ -835,7 +830,6 @@ void game_cl_CaptureTheArtefact::UpdateMapLocations()
 		{
 			Level().MapManager().RemoveMapLocationByObjectID(blueArtefact);
 			tempLocation = Level().MapManager().AddMapLocation(ARTEFACT_FRIEND, blueArtefactOwner);
-			VERIFY(tempLocation);
 			if (tempLocation)
 				tempLocation->EnablePointer();
 		}
@@ -846,7 +840,6 @@ void game_cl_CaptureTheArtefact::UpdateMapLocations()
 		{
 			Level().MapManager().RemoveMapLocationByObjectID(blueArtefact);
 			tempLocation = Level().MapManager().AddMapLocation(ARTEFACT_ENEMY, blueArtefactOwner);
-			VERIFY(tempLocation);
 			if (tempLocation)
 				tempLocation->EnablePointer();
 		}
@@ -854,7 +847,6 @@ void game_cl_CaptureTheArtefact::UpdateMapLocations()
 		{
 			Level().MapManager().RemoveMapLocationByObjectID(greenArtefact);
 			tempLocation = Level().MapManager().AddMapLocation(ARTEFACT_FRIEND, greenArtefactOwner);
-			VERIFY(tempLocation);
 			if (tempLocation)
 				tempLocation->EnablePointer();
 		}
