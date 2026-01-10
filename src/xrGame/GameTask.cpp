@@ -94,6 +94,10 @@ void CGameTask::CreateMapLocation(bool on_load)
 	else
 	{
 		m_linked_map_location = Level().MapManager().AddMapLocation(m_map_location, m_map_object_id);
+
+		if (!m_linked_map_location)
+			return;
+
 		m_linked_map_location->m_owner_task_id = m_ID;
 
 		if (m_map_hint.size())

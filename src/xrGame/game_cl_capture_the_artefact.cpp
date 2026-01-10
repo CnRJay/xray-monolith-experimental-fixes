@@ -800,20 +800,20 @@ void game_cl_CaptureTheArtefact::UpdateMapLocations()
 		if (local_player->team == etGreenTeam)
 		{
 			tempLocation = Level().MapManager().AddMapLocation(FREE_ARTEFACT_FRIEND, greenArtefact);
-			VERIFY(tempLocation);
-			tempLocation->EnablePointer();
+			if (tempLocation)
+				tempLocation->EnablePointer();
 			tempLocation = Level().MapManager().AddMapLocation(ARTEFACT_NEUTRAL, blueArtefact);
-			VERIFY(tempLocation);
-			tempLocation->EnablePointer();
+			if (tempLocation)
+				tempLocation->EnablePointer();
 		}
 		else
 		{
 			tempLocation = Level().MapManager().AddMapLocation(ARTEFACT_NEUTRAL, greenArtefact);
-			VERIFY(tempLocation);
-			tempLocation->EnablePointer();
+			if (tempLocation)
+				tempLocation->EnablePointer();
 			tempLocation = Level().MapManager().AddMapLocation(FREE_ARTEFACT_FRIEND, blueArtefact);
-			VERIFY(tempLocation);
-			tempLocation->EnablePointer();
+			if (tempLocation)
+				tempLocation->EnablePointer();
 		}
 	}
 
@@ -823,15 +823,15 @@ void game_cl_CaptureTheArtefact::UpdateMapLocations()
 		{
 			Level().MapManager().RemoveMapLocationByObjectID(greenArtefact);
 			tempLocation = Level().MapManager().AddMapLocation(ARTEFACT_ENEMY, greenArtefactOwner);
-			VERIFY(tempLocation);
-			tempLocation->EnablePointer();
+			if (tempLocation)
+				tempLocation->EnablePointer();
 		}
 		if (blueArtefactOwner)
 		{
 			Level().MapManager().RemoveMapLocationByObjectID(blueArtefact);
 			tempLocation = Level().MapManager().AddMapLocation(ARTEFACT_FRIEND, blueArtefactOwner);
-			VERIFY(tempLocation);
-			tempLocation->EnablePointer();
+			if (tempLocation)
+				tempLocation->EnablePointer();
 		}
 	}
 	else if (local_player->team == static_cast<u8>(etBlueTeam))
@@ -840,15 +840,15 @@ void game_cl_CaptureTheArtefact::UpdateMapLocations()
 		{
 			Level().MapManager().RemoveMapLocationByObjectID(blueArtefact);
 			tempLocation = Level().MapManager().AddMapLocation(ARTEFACT_ENEMY, blueArtefactOwner);
-			VERIFY(tempLocation);
-			tempLocation->EnablePointer();
+			if (tempLocation)
+				tempLocation->EnablePointer();
 		}
 		if (greenArtefactOwner)
 		{
 			Level().MapManager().RemoveMapLocationByObjectID(greenArtefact);
 			tempLocation = Level().MapManager().AddMapLocation(ARTEFACT_FRIEND, greenArtefactOwner);
-			VERIFY(tempLocation);
-			tempLocation->EnablePointer();
+			if (tempLocation)
+				tempLocation->EnablePointer();
 		}
 	}
 }
@@ -864,7 +864,11 @@ void game_cl_CaptureTheArtefact::OnSpawn(CObject* pObj)
 	CArtefact* pArtefact = smart_cast<CArtefact*>(pObj);
 	if (pArtefact)
 	{
-		Level().MapManager().AddMapLocation(ARTEFACT_NEUTRAL, pObj->ID())->EnablePointer();
+		CMapLocation* location = Level().MapManager().AddMapLocation(ARTEFACT_NEUTRAL, pObj->ID());
+			
+		if (location)
+			location->EnablePointer();
+
 		/*if (OnServer()) // huck :( - server logic must be ONLY ON SERVER !!!
 		{
 			if (GetGreenArtefactID() == pArtefact->ID())

@@ -691,7 +691,9 @@ void game_cl_TeamDeathmatch::UpdateMapLocations()
 			};
 			if (!Level().MapManager().HasMapLocation(FRIEND_LOCATION, id))
 			{
-				(Level().MapManager().AddMapLocation(FRIEND_LOCATION, id))->EnablePointer();
+				CMapLocation* location = Level().MapManager().AddMapLocation(FRIEND_LOCATION, id);
+				if (location)
+					location->EnablePointer();
 			}
 		}
 	};
