@@ -327,12 +327,14 @@ bool CInventory::DropItem(CGameObject* pObj, bool just_before_destroy, bool dont
 				CurrentGameUI()->OnInventoryAction(pIItem, GE_OWNERSHIP_REJECT);
 		};
 
-		if (smart_cast<CWeapon*>(pObj))
+		CWeapon* pWeapon = smart_cast<CWeapon*>(pObj);
+		CActor* pActor = Actor();
+		if (pWeapon && pActor)
 		{
-			Fvector dir = Actor()->Direction();
+			Fvector dir = pActor->Direction();
 			dir.y = sin(-45.f * PI / 180.f);
 			dir.normalize();
-			smart_cast<CWeapon*>(pObj)->SetActivationSpeedOverride(dir.mul(7));
+			pWeapon->SetActivationSpeedOverride(dir.mul(7));
 			pObj->H_SetParent(nullptr, dont_create_shell);
 		}
 		else
@@ -1141,10 +1143,11 @@ bool CInventory::Eat(PIItem pIItem)
 				return false;
 		}
 	*/
-	if (Actor()->m_inventory == this)
+	CActor* pActor = Actor();
+	if (pActor && pActor->m_inventory == this)
 	{
 		if (IsGameTypeSingle())
-			Actor()->callback(GameObject::eUseObject)((smart_cast<CGameObject*>(pIItem))->lua_game_object());
+			pActor->callback(GameObject::eUseObject)((smart_cast<CGameObject*>(pIItem))->lua_game_object());
 
 		if (pItemToEat->IsUsingCondition() && pItemToEat->GetRemainingUses() < 1 && pItemToEat->CanDelete())
 			CurrentGameUI()->GetActorMenu().RefreshCurrentItemCell();
