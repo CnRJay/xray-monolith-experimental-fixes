@@ -311,30 +311,40 @@ bool CInventory::DropItem(CGameObject* pObj, bool just_before_destroy, bool dont
 
 	pIItem->m_pInventory = NULL;
 
-
-	m_pOwner->OnItemDrop(smart_cast<CInventoryItem*>(pObj), just_before_destroy);
-
-	CalcTotalWeight();
-	InvalidateState();
-	m_drop_last_frame = true;
-
-	if (CurrentGameUI())
+	if (m_pOwner != nullptr)
 	{
-		CObject* pActor_owner = smart_cast<CObject*>(m_pOwner);
+		m_pOwner->OnItemDrop(smart_cast<CInventoryItem*>(pObj), just_before_destroy);
 
-		if (Level().CurrentViewEntity() == pActor_owner)
-			CurrentGameUI()->OnInventoryAction(pIItem, GE_OWNERSHIP_REJECT);
-	};
-	if (smart_cast<CWeapon*>(pObj))
-	{
-		Fvector dir = Actor()->Direction();
-		dir.y = sin(-45.f * PI / 180.f);
-		dir.normalize();
-		smart_cast<CWeapon*>(pObj)->SetActivationSpeedOverride(dir.mul(7));
-		pObj->H_SetParent(nullptr, dont_create_shell);
+		CalcTotalWeight();
+		InvalidateState();
+		m_drop_last_frame = true;
+
+		if (CurrentGameUI())
+		{
+			CObject* pActor_owner = smart_cast<CObject*>(m_pOwner);
+
+			if (Level().CurrentViewEntity() == pActor_owner)
+				CurrentGameUI()->OnInventoryAction(pIItem, GE_OWNERSHIP_REJECT);
+		};
+
+		if (smart_cast<CWeapon*>(pObj))
+		{
+			Fvector dir = Actor()->Direction();
+			dir.y = sin(-45.f * PI / 180.f);
+			dir.normalize();
+			smart_cast<CWeapon*>(pObj)->SetActivationSpeedOverride(dir.mul(7));
+			pObj->H_SetParent(nullptr, dont_create_shell);
+		}
+		else
+		{
+			pObj->H_SetParent(nullptr, dont_create_shell);
+		}
 	}
 	else
-		pObj->H_SetParent(nullptr, dont_create_shell);
+	{
+		return false;
+	}
+
 	return true;
 }
 
