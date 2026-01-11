@@ -209,7 +209,8 @@ void CGameObject::OnEvent(NET_Packet& P, u16 type)
 			HDS.who = Hitter;
 			if (!HDS.who)
 			{
-				Msg("! ERROR: hitter object [%d] is NULL on client.", HDS.whoID);
+				Msg("! ERROR: hitter object [%d] is NULL on client. Ignoring hit to prevent crash.", HDS.whoID);
+				return;
 			}
 			//-------------------------------------------------------
 			switch (HDS.PACKET_TYPE)
