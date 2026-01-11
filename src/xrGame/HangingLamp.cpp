@@ -460,11 +460,12 @@ void CHangingLamp::TurnOff()
 void CHangingLamp::Hit(SHit* pHDS)
 {
 	SHit HDS = *pHDS;
+	const CGameObject* who_object = smart_cast<const CGameObject*>(HDS.who);
 	callback(GameObject::eHit)(
 		lua_game_object(),
 		HDS.power,
 		HDS.dir,
-		smart_cast<const CGameObject*>(HDS.who)->lua_game_object(),
+		who_object ? who_object->lua_game_object() : nullptr,
 		HDS.bone()
 	);
 	BOOL bWasAlive = Alive();

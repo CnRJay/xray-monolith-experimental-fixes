@@ -263,11 +263,12 @@ void CBaseMonster::HitSignal(float amount, Fvector& vLocalDir, CObject* who, s16
 
 	Morale.on_hit();
 
+	const CGameObject* who_object = smart_cast<const CGameObject*>(who);
 	callback(GameObject::eHit)(
 		lua_game_object(),
 		amount,
 		vLocalDir,
-		smart_cast<const CGameObject*>(who)->lua_game_object(),
+		who_object ? who_object->lua_game_object() : nullptr,
 		element
 	);
 

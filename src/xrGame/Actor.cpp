@@ -691,12 +691,13 @@ void CActor::Hit(SHit* pHDS)
 				HDS.power = HitArtefactsOnBelt(HDS.damage(), HDS.hit_type);
 				HDS.add_wound = true;
 
-				/* AVO: send script callback*/
+			/* AVO: send script callback*/
+				const CGameObject* who_object = smart_cast<const CGameObject*>(HDS.who);
 				callback(GameObject::eHit)(
 					this->lua_game_object(),
 					HDS.damage(),
 					HDS.direction(),
-					smart_cast<const CGameObject*>(HDS.who)->lua_game_object(),
+					who_object ? who_object->lua_game_object() : nullptr,
 					HDS.boneID
 				);
 			}

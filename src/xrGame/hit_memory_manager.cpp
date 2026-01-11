@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////
 //	Module 		: hit_memory_manager.cpp
 //	Created 	: 02.10.2001
-//  Modified 	: 19.11.2003
+//ï¿½ Modified 	: 19.11.2003
 //	Author		: Dmitriy Iassenev
 //	Description : Hit memory manager
 ////////////////////////////////////////////////////////////////////////////
@@ -112,11 +112,12 @@ void CHitMemoryManager::add(float amount, const Fvector& vLocalDir, const CObjec
 		m_last_hit_time = Device.dwTimeGlobal;
 	}
 
+	const CGameObject* who_object = smart_cast<const CGameObject*>(who);
 	object().callback(GameObject::eHit)(
 		m_object->lua_game_object(),
 		amount,
 		vLocalDir,
-		smart_cast<const CGameObject*>(who)->lua_game_object(),
+		who_object ? who_object->lua_game_object() : nullptr,
 		element
 		);
 
