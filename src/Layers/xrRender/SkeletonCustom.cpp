@@ -467,6 +467,13 @@ void CKinematics::Spawn()
 void CKinematics::Depart()
 {
 	inherited::Depart();
+	
+	for (auto& wm : wallmarks)
+	{
+		if (wm)
+			wm->InvalidateParent();
+	}
+	
 	// wallmarks
 	ClearWallmarks();
 

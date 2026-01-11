@@ -491,14 +491,18 @@ void CWallmarksEngine::Render()
 			}
 
 			FVF::LIT* w_save = w_verts;
-			try
+			CKinematics* parent = W->Parent();
+			if (parent)
 			{
-				W->Parent()->RenderWallmark(W, w_verts);
-			}
-			catch (...)
-			{
-				Msg("! Failed to render dynamic wallmark");
-				w_verts = w_save;
+				try
+				{
+					parent->RenderWallmark(W, w_verts);
+				}
+				catch (...)
+				{
+					Msg("! Failed to render dynamic wallmark");
+					w_verts = w_save;
+				}
 			}
 
 #ifdef	DEBUG

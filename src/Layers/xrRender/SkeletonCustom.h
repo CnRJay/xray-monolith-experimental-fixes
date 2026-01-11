@@ -63,6 +63,7 @@ public:
 #endif
 
   IC CKinematics *Parent() { return m_Parent; }
+  void InvalidateParent() { m_Parent = nullptr; }
   IC u32 VCount() { return m_Faces.size() * 3; }
   IC bool Similar(ref_shader &sh, const Fvector &cp, float eps) {
     return (m_Shader == sh) && m_ContactPoint.similar(cp, eps);
