@@ -349,7 +349,8 @@ void CRenderTarget::accum_volumetric_lv(light* L)
 	L_clr.mul(L->m_volumetric_intensity);
 	L_clr.mul(L->m_volumetric_distance);
 	L_clr.mul(L->get_LOD());
-
+	L_clr.mul(0.3); //LV: another magic number, but since gamma has 9125801250808+1 magic numbers, it doesn't matter.
+	
 	L_pos.set(L->position);
 	L_dir.set(L->direction);
 	L_dir.normalize();
