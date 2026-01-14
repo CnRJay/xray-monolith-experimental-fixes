@@ -50,9 +50,7 @@ extern bool use_discord;
 extern Fvector4 ps_ssfx_grass_interactive;
 
 #ifdef ECO_RENDER
-std::chrono::high_resolution_clock::time_point tlastf = std::chrono::high_resolution_clock::now(), tcurrentf = std::
-	                                               chrono::high_resolution_clock::now();
-std::chrono::duration<float> time_span;
+std::chrono::steady_clock::time_point g_LastFrameTime = std::chrono::steady_clock::now();
 ENGINE_API float refresh_rate = 0;
 #endif // ECO_RENDER
 
@@ -436,18 +434,27 @@ void CRenderDevice::on_idle()
 		if (refresh_rate == 0)
 			refresh_rate = GetMonitorRefresh();
 
-		float rr;
+		const float targetFrameTime = ps_framelimiter ? (1.f / ps_framelimiter) : refresh_rate;
+		const auto targetDuration = std::chrono::duration_cast<std::chrono::steady_clock::duration>(
+			std::chrono::duration<float>(targetFrameTime));
 
-		if (ps_framelimiter)
-			rr = 1.f / ps_framelimiter;
-		else
-			rr = refresh_rate;
+		auto now = std::chrono::steady_clock::now();
+		auto elapsed = now - g_LastFrameTime;
 
-		auto target = tlastf + std::chrono::duration_cast<std::chrono::steady_clock::duration>(
-			std::chrono::duration<float>(rr));
-		std::this_thread::sleep_until(target);
+		if (elapsed > targetDuration * 2)
+			g_LastFrameTime = now;
 
-		tlastf = target;
+		auto targetTime = g_LastFrameTime + targetDuration;
+
+		const auto spinThreshold = std::chrono::milliseconds(2);
+		auto sleepUntil = targetTime - spinThreshold;
+		if (std::chrono::steady_clock::now() < sleepUntil)
+			std::this_thread::sleep_until(sleepUntil);
+
+		while (std::chrono::steady_clock::now() < targetTime)
+			_mm_pause();
+
+		g_LastFrameTime = targetTime;
 	}
 #endif // ECO_RENDER END
 
