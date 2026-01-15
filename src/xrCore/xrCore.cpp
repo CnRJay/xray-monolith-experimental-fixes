@@ -114,15 +114,15 @@ void xrCore::_initialize(LPCSTR _ApplicationName, LogCallback cb, BOOL init_fs, 
 		//Load cmd line from file if it exists
 		std::ifstream cmdlineTxt;
 		char path_A[MAX_PATH];
-		strcpy(path_A, Core.ApplicationPath);
-		strcat(path_A, "\\..\\commandline.txt");
+		xr_strcpy(path_A, sizeof(path_A), Core.ApplicationPath);
+		xr_strcat(path_A, sizeof(path_A), "\\..\\commandline.txt");
 		cmdlineTxt.open(path_A);
 		
 		if (!cmdlineTxt)
 		{
 			cmdlineTxt.close();
-			strcpy(path_A, Core.WorkingPath);
-			strcat(path_A, "\\commandline.txt");
+			xr_strcpy(path_A, sizeof(path_A), Core.WorkingPath);
+			xr_strcat(path_A, sizeof(path_A), "\\commandline.txt");
 			cmdlineTxt.open(path_A);
 		}
 
@@ -131,12 +131,12 @@ void xrCore::_initialize(LPCSTR _ApplicationName, LogCallback cb, BOOL init_fs, 
 			Msg("Found commandline file!");
 			std::string line;
 			char temp[2048];
-			sprintf(temp, Params);
-			strcat(temp, " ");
+			xr_strcpy(temp, sizeof(temp), Params);
+			xr_strcat(temp, sizeof(temp), " ");
 			while (std::getline(cmdlineTxt, line))
 			{
-				strcat(temp, line.c_str());
-				strcat(temp, " ");
+				xr_strcat(temp, sizeof(temp), line.c_str());
+				xr_strcat(temp, sizeof(temp), " ");
 			}
 			Params = xr_strdup(temp);
 		}

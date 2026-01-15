@@ -95,7 +95,6 @@ void xrDebug::backend(const char* reason, const char* expression, const char* ar
 
 	// Call the dialog
 	dlgExpr = reason;
-	xr_sprintf()
 	dlgFile = file;
 	xr_sprintf(dlgLine, "%d", line);
 	INT_PTR res = -1;
@@ -182,7 +181,7 @@ void __cdecl xrDebug::fatal(const char* file, int line, const char* function, co
 
 	va_list p;
 	va_start(p, F);
-	vsprintf(buffer, F, p);
+	vsprintf_s(buffer, sizeof(buffer), F, p);
 	va_end(p);
 
 	bool ignore_always = true;

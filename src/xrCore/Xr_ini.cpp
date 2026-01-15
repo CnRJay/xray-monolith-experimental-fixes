@@ -349,7 +349,7 @@ void CInifile::Load(IReader* F, LPCSTR path
 				IReader* I = FS.r_open(_fn);
 				R_ASSERT3(I, "Can't find include file:", name);
 
-				strcpy(currentFileName, name);
+				xr_strcpy(currentFileName, sizeof(currentFileName), name);
 
 				LTXLoad(I, inc_path, OutputData, ParentDataMap, bOverridesOnly, false);
 

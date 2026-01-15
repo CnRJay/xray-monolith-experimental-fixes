@@ -336,7 +336,7 @@ void IWriter::w_printf(const char* format, ...)
 #ifndef _EDITOR
 	vsprintf_s(buf, format, mark);
 #else
-    vsprintf(buf, format, mark);
+    vsprintf_s(buf, sizeof(buf), format, mark);
 #endif
 	va_end(mark);
 

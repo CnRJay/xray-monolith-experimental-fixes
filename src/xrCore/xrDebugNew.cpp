@@ -490,7 +490,7 @@ void __cdecl xrDebug::fatal(const char* file, int line, const char* function, co
 
 	va_list p;
 	va_start(p, F);
-	vsprintf(buffer, F, p);
+	vsprintf_s(buffer, sizeof(buffer), F, p);
 	va_end(p);
 
 	bool ignore_always = true;
