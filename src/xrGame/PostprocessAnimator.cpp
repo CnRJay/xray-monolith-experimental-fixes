@@ -496,7 +496,7 @@ CPostprocessAnimatorControlled::CPostprocessAnimatorControlled(CEffectorControll
 
 CPostprocessAnimatorControlled::~CPostprocessAnimatorControlled()
 {
-	m_controller->SetPP(NULL);
+	m_controller->SetPP(nullptr);
 }
 
 BOOL CPostprocessAnimatorControlled::Valid()

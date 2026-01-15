@@ -9,7 +9,7 @@
 #include "commdlg.h"
 #include "vfw.h"
 
-EFS_Utils* xr_EFS = NULL;
+EFS_Utils* xr_EFS = nullptr;
 //----------------------------------------------------
 EFS_Utils::EFS_Utils()
 {

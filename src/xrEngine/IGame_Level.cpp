@@ -16,17 +16,17 @@
 
 //#include "securom_api.h"
 
-ENGINE_API IGame_Level* g_pGameLevel = NULL;
+ENGINE_API IGame_Level* g_pGameLevel = nullptr;
 extern BOOL g_bLoaded;
 
 IGame_Level::IGame_Level()
 {
 	m_pCameras = xr_new<CCameraManager>(true);
 	g_pGameLevel = this;
-	pLevel = NULL;
+	pLevel = nullptr;
 	bReady = false;
-	pCurrentEntity = NULL;
-	pCurrentViewEntity = NULL;
+	pCurrentEntity = nullptr;
+	pCurrentViewEntity = nullptr;
 	Device.DumpResourcesMemoryUsage();
 }
 
@@ -48,8 +48,8 @@ IGame_Level::~IGame_Level()
 	Device.seqFrame.Remove(this);
 	CCameraManager::ResetPP();
 	///////////////////////////////////////////
-	Sound->set_geometry_occ(NULL);
-	Sound->set_handler(NULL);
+	Sound->set_geometry_occ(nullptr);
+	Sound->set_handler(nullptr);
 	Device.DumpResourcesMemoryUsage();
 
 	u32 m_base = 0, c_base = 0, m_lmaps = 0, c_lmaps = 0;

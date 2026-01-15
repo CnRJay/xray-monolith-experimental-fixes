@@ -356,7 +356,7 @@ void CRender::Render()
 			z_distance * g_pGamePersistent->Environment().CurrentEnv->far_plane);
 		m_zfill.mul(m_project, Device.mView);
 		r_pmask(true, false); // enable priority "0"
-		set_Recorder(NULL);
+		set_Recorder(nullptr);
 		phase = PHASE_SMAP;
 		render_main(m_zfill, false);
 		r_pmask(true, false); // disable priority "1"
@@ -403,16 +403,16 @@ void CRender::Render()
 	Device.Statistic->RenderCALC.Begin();
 	r_pmask(true, false, true); // enable priority "0",+ capture wmarks
 	if (bSUN) set_Recorder(&main_coarse_structure);
-	else set_Recorder(NULL);
+	else set_Recorder(nullptr);
 	phase = PHASE_NORMAL;
 	render_main(Device.mFullTransform, true);
-	set_Recorder(NULL);
+	set_Recorder(nullptr);
 	r_pmask(true, false); // disable priority "1"
 	Device.Statistic->RenderCALC.End();
 
 	if (ps_r2_ls_flags.test(R2FLAG_TERRAIN_PREPASS))
 	{
-		Target->u_setrt(Device.dwWidth, Device.dwHeight, NULL, NULL, NULL, !RImplementation.o.dx10_msaa ? HW.pBaseZB : Target->rt_MSAADepth->pZRT);
+		Target->u_setrt(Device.dwWidth, Device.dwHeight, nullptr, NULL, nullptr, !RImplementation.o.dx10_msaa ? HW.pBaseZB : Target->rt_MSAADepth->pZRT);
 		r_dsgraph_render_landscape(0, false);
 	}
 

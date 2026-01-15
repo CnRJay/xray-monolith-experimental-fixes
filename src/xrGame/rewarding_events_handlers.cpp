@@ -9,7 +9,7 @@ namespace award_system
 	                                                   event_action_delegate_t ea_delegate) :
 		m_player_state_accum(pstate_accum),
 		m_reward_action(ea_delegate),
-		m_null_hanlder(NULL)
+		m_null_hanlder(nullptr)
 	{
 	}
 

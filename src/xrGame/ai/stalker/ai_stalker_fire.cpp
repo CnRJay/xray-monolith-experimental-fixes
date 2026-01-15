@@ -463,7 +463,7 @@ void CAI_Stalker::update_best_item_info_impl()
 	if (ai().script_engine().functor("_g.update_best_weapon", funct))
 	{
 		CGameObject* cur_itm = smart_cast<CGameObject*>(m_best_item_to_kill);
-		CScriptGameObject* GO = funct(this->lua_game_object(), cur_itm ? cur_itm->lua_game_object() : NULL);
+		CScriptGameObject* GO = funct(this->lua_game_object(), cur_itm ? cur_itm->lua_game_object() : nullptr);
 		CInventoryItem* bw = GO ? smart_cast<CInventoryItem*>(&GO->object()) : NULL;
 		if (bw)
 		{
@@ -1102,8 +1102,8 @@ void CAI_Stalker::check_throw_trajectory(const float& throw_time)
 {
 	m_throw_enabled = false;
 
-	xr_vector<trajectory_pick>* trajectory_picks = NULL;
-	xr_vector<Fvector>* collide_tris = NULL;
+	xr_vector<trajectory_pick>* trajectory_picks = nullptr;
+	xr_vector<Fvector>* collide_tris = nullptr;
 #ifdef DEBUG
 	trajectory_picks				=	& m_throw_picks;
 	collide_tris					=	& m_throw_collide_tris;

@@ -45,8 +45,8 @@
 //--------------------------------------------------------------------
 CUIGameDM::CUIGameDM()
 {
-	m_game = NULL;
-	m_voteStatusWnd = NULL;
+	m_game = nullptr;
+	m_voteStatusWnd = nullptr;
 }
 
 //--------------------------------------------------------------------

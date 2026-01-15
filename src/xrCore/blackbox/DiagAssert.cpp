@@ -177,7 +177,7 @@ BOOL __stdcall RealAssert  ( DWORD  dwOverrideOpts  ,
     // The module name.
     char   szModName[ MAX_PATH + 1 ] ;
     // The decoded message from FormatMessage
-    LPSTR  szFmtMsg = NULL ;
+    LPSTR  szFmtMsg = nullptr ;
     // The options.
     DWORD  dwOpts = dwOverrideOpts ;
     // The last error value.  (Which is preserved across the call).
@@ -446,7 +446,7 @@ static DWORD __stdcall GetModBase ( HANDLE hProcess , DWORD dwAddr )
                                             szFile                   ,
                                             MAX_PATH                  );
 
-            HANDLE hFile = NULL ;
+            HANDLE hFile = nullptr ;
 
             if ( 0 != dwNameLen )
             {

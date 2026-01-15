@@ -98,7 +98,7 @@ struct Bonus_Struct
 		BonusName = "";
 		MoneyStr = "";
 		Money = 0;
-		//IconShader = NULL;
+		//IconShader = nullptr;
 		IconRects.clear();
 	}
 
@@ -106,7 +106,7 @@ struct Bonus_Struct
 	{
 		//if (IconShader)
 		//	IconShader.destroy();
-		//IconShader = NULL;
+		//IconShader = nullptr;
 		IconRects.clear();
 	}
 
@@ -353,7 +353,7 @@ public:
 		game_cl_mp* m_owner;
 		CMemoryWriter m_writer;
 
-		fr_callback_binder() : m_frnode(NULL), m_active(false)
+		fr_callback_binder() : m_frnode(nullptr), m_active(false)
 		{
 		};
 		void __stdcall receiving_file_callback(file_transfer::receiving_status_t status, u32 bytes_received,

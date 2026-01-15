@@ -12,8 +12,8 @@
 #include <sstream>
 #include "mezz_stringbuffer.h"
 
-XRCORE_API CInifile const* pSettings = NULL;
-XRCORE_API CInifile const* pSettingsAuth = NULL;
+XRCORE_API CInifile const* pSettings = nullptr;
+XRCORE_API CInifile const* pSettingsAuth = nullptr;
 
 BOOL print_dltx_warnings = FALSE;
 
@@ -387,7 +387,7 @@ void CInifile::Load(IReader* F, LPCSTR path
 				}
 			}
 
-			Current = NULL;
+			Current = nullptr;
 		};
 
 		std::unordered_set<std::string> sectionsMarkedForCreate;
@@ -414,7 +414,7 @@ void CInifile::Load(IReader* F, LPCSTR path
 				MezzStringBuffer split_dir;
 				MezzStringBuffer split_name;
 
-				_splitpath_s(m_file_name, split_drive, split_drive.GetSize(), split_dir, split_dir.GetSize(), split_name, split_name.GetSize(), NULL, 0);
+				_splitpath_s(m_file_name, split_drive, split_drive.GetSize(), split_dir, split_dir.GetSize(), split_name, split_name.GetSize(), nullptr, 0);
 
 				std::string FilePath = std::string(split_drive) + std::string(split_dir);
 				std::string FileName = split_name;
@@ -661,8 +661,8 @@ void CInifile::Load(IReader* F, LPCSTR path
 					}
 
 					Item I;
-					I.first = (name[0] ? name : NULL);
-					I.second = bIsDelete ? DLTX_DELETE.c_str() : (str2[0] ? str2.GetBuffer() : NULL);
+					I.first = (name[0] ? name : nullptr);
+					I.second = bIsDelete ? DLTX_DELETE.c_str() : (str2[0] ? str2.GetBuffer() : nullptr);
 
 					auto fname = toLowerCaseCopy(trimCopy(getFilename(std::string(currentFileName))));
 					// Remove .ltx part, unused for now
@@ -695,7 +695,7 @@ void CInifile::Load(IReader* F, LPCSTR path
 					OutputData->emplace(std::pair<std::string, Sect>(std::string(Current->Name.c_str()), *Current));
 					OverrideToFilename[std::string(Current->Name.c_str())][currentFileName] = true;
 					SectionToFilename[std::string(Current->Name.c_str())] = currentFileName;
-					Current = NULL;
+					Current = nullptr;
 				}
 			}
 		}
@@ -857,7 +857,7 @@ void CInifile::Load(IReader* F, LPCSTR path
 				CInifile::SectIt_ sect_it = std::lower_bound(CurrentSect->Data.begin(), CurrentSect->Data.end(), *I.first, item_pred);
 
 				// If item list doesn't exist and wasn't deleted by previous operation, insert as is
-				if (I.second != NULL && deletedItems.find(I.first.c_str()) == deletedItems.end() && dltx_listmode == '>' && (sect_it == CurrentSect->Data.end() || !sect_it->first.equal(I.first))) {
+				if (I.second != nullptr && deletedItems.find(I.first.c_str()) == deletedItems.end() && dltx_listmode == '>' && (sect_it == CurrentSect->Data.end() || !sect_it->first.equal(I.first))) {
 					CurrentSect->Data.insert(sect_it, I);	
 
 				// If item list exists, split existing list and perform operation
@@ -865,7 +865,7 @@ void CInifile::Load(IReader* F, LPCSTR path
 
 					//Msg("%s has dltx_listmode %s", I.first.c_str(), std::string(1, dltx_listmode).c_str());
 
-					if (dltx_listmode && sect_it->second != NULL) {
+					if (dltx_listmode && sect_it->second != nullptr) {
 						// Split list 
 						auto split_list = [](const std::string items, const std::string delimiter = ",") {
 							std::string i = items;
@@ -1264,7 +1264,7 @@ u64 CInifile::r_u64(LPCSTR S, LPCSTR L) const
 {
 	LPCSTR C = r_string(S, L);
 #ifndef _EDITOR
-	return _strtoui64(C, NULL, 10);
+	return _strtoui64(C, nullptr, 10);
 #else
     return (u64)_atoi64(C);
 #endif

@@ -206,12 +206,12 @@ RayCollider::RayCollider()
 	  mCulling(true),
 #ifdef OPC_USE_CALLBACKS
 	mUserData			(0),
-	mObjCallback		(null),
+	mObjCallback		(nullptr),
 #else
-	  mFaces(null),
-	  mVerts(null),
+	  mFaces(nullptr),
+	  mVerts(nullptr),
 #endif
-	  mStabbedFaces(null),
+	  mStabbedFaces(nullptr),
 	  mMaxDist(flt_max)
 {
 }
@@ -242,7 +242,7 @@ const char* RayCollider::ValidateSettings()
 	if (TemporalCoherenceEnabled() && !FirstContactEnabled()) return "Temporal coherence only works with "
 		"First contact"" mode!";
 	if (mClosestHit && FirstContactEnabled()) return "Closest hit doesn't work with ""First contact"" mode!";
-	return null;
+	return nullptr;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

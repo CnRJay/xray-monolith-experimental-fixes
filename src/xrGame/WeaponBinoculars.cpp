@@ -16,7 +16,7 @@ float czoom;
 
 CWeaponBinoculars::CWeaponBinoculars()
 {
-	m_binoc_vision = NULL;
+	m_binoc_vision = nullptr;
 	m_bVision = false;
 }
 

@@ -44,7 +44,7 @@ void CSoundRender_Target::render()
 void CSoundRender_Target::stop()
 {
 	dettach();
-	m_pEmitter = NULL;
+	m_pEmitter = nullptr;
 	rendering = FALSE;
 }
 

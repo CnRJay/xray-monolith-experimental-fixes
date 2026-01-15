@@ -13,7 +13,7 @@ BOOL CFlare::net_Spawn(CSE_Abstract* DC)
 {
 	BOOL res = inherited::net_Spawn(DC);
 	SwitchState(eFlareHidden);
-	m_pFlareParticles = NULL;
+	m_pFlareParticles = nullptr;
 	return res;
 }
 

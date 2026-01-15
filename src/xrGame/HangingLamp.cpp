@@ -312,7 +312,7 @@ void CHangingLamp::UpdateCL()
 		if (isFlickering)
 		{
 			float tg = Device.fTimeGlobal;
-			if (lastFlicker == NULL) lastFlicker = tg;
+			if (lastFlicker == 0.f) lastFlicker = tg;
 			if (tg - lastFlicker >= l_flickerDelay)
 			{
 				int rando = rand() % 100 + 1;

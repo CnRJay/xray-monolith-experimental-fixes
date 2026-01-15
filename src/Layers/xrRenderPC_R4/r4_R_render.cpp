@@ -261,7 +261,7 @@ void CRender::render_menu()
 	}
 
 	// Actual Display
-	Target->u_setrt(Device.dwWidth, Device.dwHeight, HW.pBaseRT, NULL, NULL, HW.pBaseZB);
+	Target->u_setrt(Device.dwWidth, Device.dwHeight, HW.pBaseRT, nullptr, NULL, HW.pBaseZB);
 	RCache.set_Shader(Target->s_menu);
 	RCache.set_Geometry(Target->g_menu);
 
@@ -400,7 +400,7 @@ void CRender::renderGBuffer() {
 	Device.Statistic->RenderCALC.Begin();
 	r_pmask(true, false, true); // enable priority "0",+ capture wmarks
 	if (bSUN && Target == TargetMain) set_Recorder(&main_coarse_structure);
-	else set_Recorder(NULL);
+	else set_Recorder(nullptr);
 	phase = PHASE_NORMAL;
 
 	//SVP HACK: Use main frame view matrix to prevent rendering the wrong sector
@@ -409,7 +409,7 @@ void CRender::renderGBuffer() {
 	View = 0;
 
 	render_main(main_ft, true);
-	set_Recorder(NULL);
+	set_Recorder(nullptr);
 	r_pmask(true, false); // disable priority "1"
 	Device.Statistic->RenderCALC.End();
 
@@ -420,7 +420,7 @@ void CRender::renderGBuffer() {
 		FLOAT ColorRGBA[4] = { 1.0f, 0.0f, 0.0f, 1.0f };
 		HW.pContext->ClearRenderTargetView(Target->rt_ssfx_hud->pRT, ColorRGBA);
 
-		Target->u_setrt(Target->rt_ssfx_hud, NULL, NULL, HW.pBaseZB);
+		Target->u_setrt(Target->rt_ssfx_hud, nullptr, NULL, HW.pBaseZB);
 		r_dsgraph_render_hud(true);
 
 		// Reset Depth
@@ -447,7 +447,7 @@ void CRender::renderGBuffer() {
 
 	if (ps_r2_ls_flags.test(R2FLAG_TERRAIN_PREPASS))
 	{
-		Target->u_setrt(Device.dwWidth, Device.dwHeight, NULL, NULL, NULL, !RImplementation.o.dx10_msaa ? Target->baseZB : Target->rt_MSAADepth->pZRT);
+		Target->u_setrt(Device.dwWidth, Device.dwHeight, nullptr, NULL, nullptr, !RImplementation.o.dx10_msaa ? Target->baseZB : Target->rt_MSAADepth->pZRT);
 		r_dsgraph_render_landscape(0, false);
 	}
 
@@ -710,7 +710,7 @@ void CRender::combineLightingAndBloom()
 		// Render Emissive on `rt_ssfx_bloom_emissive`
 		FLOAT ColorRGBA[4] = { 0,0,0,0 };
 		HW.pContext->ClearRenderTargetView(Target->rt_ssfx_bloom_emissive->pRT, ColorRGBA);
-		Target->u_setrt(Target->rt_ssfx_bloom_emissive, NULL, NULL, !RImplementation.o.dx10_msaa ? Target->baseZB : Target->rt_MSAADepth->pZRT);
+		Target->u_setrt(Target->rt_ssfx_bloom_emissive, nullptr, NULL, !RImplementation.o.dx10_msaa ? Target->baseZB : Target->rt_MSAADepth->pZRT);
 
 		unbind_s_base();
 
@@ -779,7 +779,7 @@ void CRender::Render()
 	if (!(g_pGameLevel && g_hud)
 		|| bMenu)
 	{
-		Target->u_setrt(Device.dwWidth, Device.dwHeight, HW.pBaseRT, NULL, NULL, HW.pBaseZB);
+		Target->u_setrt(Device.dwWidth, Device.dwHeight, HW.pBaseRT, nullptr, NULL, HW.pBaseZB);
 		return;
 	}
 

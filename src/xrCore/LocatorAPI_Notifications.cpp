@@ -19,7 +19,7 @@ static CRITICAL_SECTION CS;
 // TShellChangeThread -------------------------------------------------------
 CFS_PathNotificator::CFS_PathNotificator() : CThread(0)
 {
-	FMutex = CreateMutex(NULL, true /* initial owner - must be Release'd by this thread*/, NULL);
+	FMutex = CreateMutex(NULL, true /* initial owner - must be Release'd by this thread*/, nullptr);
 	if (FMutex)
 		WaitForSingleObject(FMutex, INFINITE);
 }

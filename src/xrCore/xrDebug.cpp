@@ -31,8 +31,8 @@ static BOOL bException = FALSE;
 XRCORE_API xrDebug Debug;
 
 // Dialog support
-static const char* dlgExpr = NULL;
-static const char* dlgFile = NULL;
+static const char* dlgExpr = nullptr;
+static const char* dlgFile = nullptr;
 static char dlgLine[16];
 
 static INT_PTR CALLBACK DialogProc(HWND hw, UINT msg, WPARAM wp, LPARAM lp)
@@ -115,7 +115,7 @@ void xrDebug::backend(const char* reason, const char* expression, const char* ar
 	case -1:
 	case IDC_STOP:
 		if (bException) TerminateProcess(GetCurrentProcess(), 3);
-		else RaiseException(0, 0, 0, NULL);
+		else RaiseException(0, 0, 0, nullptr);
 		break;
 	case IDC_DEBUG:
 		DEBUG_INVOKE;
@@ -224,7 +224,7 @@ LONG WINAPI UnhandledFilter(struct _EXCEPTION_POINTERS* pExceptionInfo)
 	// firstly see if dbghelp.dll is around and has the function we need
 	// look next to the EXE first, as the one in System32 might be old
 	// (e.g. Windows 2000)
-	HMODULE hDll = NULL;
+	HMODULE hDll = nullptr;
 	string_path szDbgHelpPath;
 
 	if (GetModuleFileName(NULL, szDbgHelpPath, _MAX_PATH))
@@ -237,13 +237,13 @@ LONG WINAPI UnhandledFilter(struct _EXCEPTION_POINTERS* pExceptionInfo)
 		}
 	}
 
-	if (hDll == NULL)
+	if (hDll == nullptr)
 	{
 		// load any version we can
 		hDll = ::LoadLibrary("DBGHELP.DLL");
 	}
 
-	LPCTSTR szResult = NULL;
+	LPCTSTR szResult = nullptr;
 
 	if (hDll)
 	{
@@ -265,14 +265,14 @@ LONG WINAPI UnhandledFilter(struct _EXCEPTION_POINTERS* pExceptionInfo)
 			xr_strcat(szDumpPath, ".mdmp");
 
 			// create the file
-			HANDLE hFile = ::CreateFile(szDumpPath, GENERIC_WRITE, FILE_SHARE_WRITE, NULL, CREATE_ALWAYS,
-			                            FILE_ATTRIBUTE_NORMAL, NULL);
+			HANDLE hFile = ::CreateFile(szDumpPath, GENERIC_WRITE, FILE_SHARE_WRITE, nullptr, CREATE_ALWAYS,
+			                            FILE_ATTRIBUTE_NORMAL, nullptr);
 			if (INVALID_HANDLE_VALUE == hFile)
 			{
 				// try to place into current directory
 				MoveMemory(szDumpPath, szDumpPath + 5, strlen(szDumpPath));
-				hFile = ::CreateFile(szDumpPath, GENERIC_WRITE, FILE_SHARE_WRITE, NULL, CREATE_ALWAYS,
-				                     FILE_ATTRIBUTE_NORMAL, NULL);
+				hFile = ::CreateFile(szDumpPath, GENERIC_WRITE, FILE_SHARE_WRITE, nullptr, CREATE_ALWAYS,
+				                     FILE_ATTRIBUTE_NORMAL, nullptr);
 			}
 			if (hFile != INVALID_HANDLE_VALUE)
 			{
@@ -280,12 +280,12 @@ LONG WINAPI UnhandledFilter(struct _EXCEPTION_POINTERS* pExceptionInfo)
 
 				ExInfo.ThreadId = ::GetCurrentThreadId();
 				ExInfo.ExceptionPointers = pExceptionInfo;
-				ExInfo.ClientPointers = NULL;
+				ExInfo.ClientPointers = nullptr;
 
 				// write the dump
 				MINIDUMP_TYPE dump_flags = MINIDUMP_TYPE(MiniDumpNormal | MiniDumpFilterMemory | MiniDumpScanMemory);
 
-				BOOL bOK = pDump(GetCurrentProcess(), GetCurrentProcessId(), hFile, dump_flags, &ExInfo, NULL, NULL);
+				BOOL bOK = pDump(GetCurrentProcess(), GetCurrentProcessId(), hFile, dump_flags, &ExInfo, nullptr, nullptr);
 				if (bOK)
 				{
 					xr_sprintf(szScratch, "Saved dump file to '%s'", szDumpPath);

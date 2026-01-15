@@ -36,13 +36,13 @@ void CUIActorMenu::DeInitUpgradeMode()
 {
 	m_PartnerCharacterInfo->Show(false);
 	m_pUpgradeWnd->Show(false);
-	m_pUpgradeWnd->set_info_cur_upgrade(NULL);
+	m_pUpgradeWnd->set_info_cur_upgrade(nullptr);
 	m_pUpgradeWnd->m_btn_repair->Enable(false);
 
 	if (m_upgrade_selected)
 	{
 		m_upgrade_selected->Mark(false);
-		m_upgrade_selected = NULL;
+		m_upgrade_selected = nullptr;
 	}
 	if (m_pPartnerInvOwner)
 	{

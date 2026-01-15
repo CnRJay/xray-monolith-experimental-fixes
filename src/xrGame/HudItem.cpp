@@ -1,4 +1,4 @@
-﻿#include "stdafx.h"
+#include "stdafx.h"
 #include "HudItem.h"
 #include "physic_item.h"
 #include "actor.h"
@@ -32,7 +32,7 @@ CHudItem::CHudItem()
 	EnableHudInertion(TRUE);
 	AllowHudInertion(TRUE);
 	m_bStopAtEndAnimIsRunning = false;
-	m_current_motion_def = NULL;
+	m_current_motion_def = nullptr;
 	m_started_rnd_anim_idx = u8(-1);
 
 	m_fLR_CameraFactor = 0.f;
@@ -560,7 +560,7 @@ void CHudItem::UpdateCL()
 
 					const motion_marks::interval* Iprev = M.pick_mark(motion_prev_time);
 					const motion_marks::interval* Icurr = M.pick_mark(motion_curr_time);
-					if (Iprev == NULL && Icurr != NULL /* || M.is_mark_between(motion_prev_time, motion_curr_time)*/)
+					if (Iprev == nullptr && Icurr != nullptr /* || M.is_mark_between(motion_prev_time, motion_curr_time)*/)
 					{
 						OnMotionMark(m_startedMotionState, M);
 					}
@@ -570,7 +570,7 @@ void CHudItem::UpdateCL()
 			m_dwMotionCurrTm = Device.dwTimeGlobal;
 			if (m_dwMotionCurrTm > m_dwMotionEndTm)
 			{
-				m_current_motion_def = NULL;
+				m_current_motion_def = nullptr;
 				m_dwMotionStartTm = 0;
 				m_dwMotionEndTm = 0;
 				m_dwMotionCurrTm = 0;
@@ -618,7 +618,7 @@ void CHudItem::OnH_B_Independent(bool just_before_destroy)
 	g_player_hud->detach_item(this);
 	Msg("---Detaching hud item [%s][%d]", this->HudSection().c_str(), this->object().ID());
 	}*/
-	//SetHudItemData			(NULL);
+	//SetHudItemData			(nullptr);
 }
 
 void CHudItem::OnH_A_Independent()
@@ -793,7 +793,7 @@ void CHudItem::StopCurrentAnimWithoutCallback()
 	m_dwMotionEndTm = 0;
 	m_dwMotionCurrTm = 0;
 	m_bStopAtEndAnimIsRunning = false;
-	m_current_motion_def = NULL;
+	m_current_motion_def = nullptr;
 }
 
 BOOL CHudItem::GetHUDmode()
@@ -819,7 +819,7 @@ void CHudItem::PlayAnimIdle()
 {
 	if (TryPlayAnimIdle()) return;
 
-	PlayHUDMotion("anm_idle", TRUE, NULL, GetState());
+	PlayHUDMotion("anm_idle", TRUE, nullptr, GetState());
 }
 
 bool CHudItem::TryPlayAnimIdle()
@@ -847,7 +847,7 @@ bool CHudItem::TryPlayAnimIdle()
 			else if (st.bCrouch)
 			{
 				if (!PlayAnimCrouchIdleMoving())
-					PlayHUDMotion("anm_idle_moving", TRUE, NULL, GetState(), .7f);
+					PlayHUDMotion("anm_idle_moving", TRUE, nullptr, GetState(), .7f);
 				return true;
 			}
 #endif //-NEW_ANIMS
@@ -892,7 +892,7 @@ bool CHudItem::PlayAnimCrouchIdleMoving()
 {
 	if (HudAnimationExist("anm_idle_moving_crouch"))
 	{
-		PlayHUDMotion("anm_idle_moving_crouch", TRUE, NULL, GetState());
+		PlayHUDMotion("anm_idle_moving_crouch", TRUE, nullptr, GetState());
 		return true;
 	}
 	return false;
@@ -908,7 +908,7 @@ bool CHudItem::NeedBlendAnm()
 
 void CHudItem::PlayAnimIdleMoving()
 {
-	PlayHUDMotion("anm_idle_moving", TRUE, NULL, GetState(), isActorAccelerated(Actor()->MovingState(), false) ? 1.f : .75f);
+	PlayHUDMotion("anm_idle_moving", TRUE, nullptr, GetState(), isActorAccelerated(Actor()->MovingState(), false) ? 1.f : .75f);
 }
 
 #include "weapon.h"
@@ -916,7 +916,7 @@ void CHudItem::PlayAnimIdleMoving()
 
 void CHudItem::PlayAnimIdleSprint()
 {
-	PlayHUDMotion("anm_idle_sprint", TRUE, NULL, GetState());
+	PlayHUDMotion("anm_idle_sprint", TRUE, nullptr, GetState());
 }
 
 void CHudItem::OnMovementChanged(ACTOR_DEFS::EMoveCommand cmd)
@@ -1181,7 +1181,7 @@ void CHudItem::OnFrame()
 void CHudItem::net_Relcase(CObject* O)
 {
 	if (PP.result.O == O)
-		PP.result.O = NULL;
+		PP.result.O = nullptr;
 }
 
 float CHudItem::GetBaseHudFov()

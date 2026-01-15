@@ -327,7 +327,7 @@ namespace file_transfer
 		if (temp_iter != m_receivers.end())
 		{
 			Msg("! ERROR: SV: file already receiving from client [%d]", from_client);
-			return NULL;
+			return nullptr;
 		}
 		filereceiver_node* frnode = xr_new<filereceiver_node>(file_name, rstate_callback);
 		m_receivers.insert(std::make_pair(from_client, frnode));
@@ -335,7 +335,7 @@ namespace file_transfer
 		{
 			Msg("! ERROR: SV: failed to create file [%s]", file_name.c_str());
 			stop_receive_file(from_client);
-			return NULL;
+			return nullptr;
 		}
 		return frnode;
 	}
@@ -348,7 +348,7 @@ namespace file_transfer
 		if (temp_iter != m_receivers.end())
 		{
 			Msg("! ERROR: SV: file already receiving from client [%d]", from_client);
-			return NULL;
+			return nullptr;
 		}
 		filereceiver_node* frnode = xr_new<filereceiver_node>(&mem_writer, rstate_callback);
 		m_receivers.insert(std::make_pair(from_client, frnode));
@@ -394,10 +394,10 @@ namespace file_transfer
 
 
 	client_site::client_site() :
-		m_transfering(NULL)
+		m_transfering(nullptr)
 	{
 #ifdef DEBUG
-	m_stat_graph = NULL;
+	m_stat_graph = nullptr;
 #endif
 	}
 
@@ -565,7 +565,7 @@ namespace file_transfer
 		if (is_receiving_active(from_client))
 		{
 			Msg("! ERROR: CL: file already receiving from client [%d]", from_client);
-			return NULL;
+			return nullptr;
 		}
 		filereceiver_node* frnode = xr_new<filereceiver_node>(file_name, rstate_callback);
 		m_receivers.insert(std::make_pair(from_client, frnode));
@@ -573,7 +573,7 @@ namespace file_transfer
 		{
 			Msg("! ERROR: CL: failed to create file [%s]", file_name.c_str());
 			stop_receive_file(from_client);
-			return NULL;
+			return nullptr;
 		}
 		return frnode;
 	}
@@ -585,7 +585,7 @@ namespace file_transfer
 		if (is_receiving_active(from_client))
 		{
 			Msg("! ERROR: CL: file already receiving from client [%d]", from_client);
-			return NULL;
+			return nullptr;
 		}
 		mem_writer.clear();
 		filereceiver_node* frnode = xr_new<filereceiver_node>(&mem_writer, rstate_callback);

@@ -231,9 +231,9 @@ cphysics_shell_scripted* CScriptGameObject::get_physics_shell() const
 {
 	CPhysicsShellHolder* ph_shell_holder = smart_cast<CPhysicsShellHolder*>(&object());
 	if (!ph_shell_holder)
-		return NULL;
+		return nullptr;
 	if (!ph_shell_holder->PPhysicsShell())
-		return NULL;
+		return nullptr;
 	return get_script_wrapper<cphysics_shell_scripted>(*ph_shell_holder->PPhysicsShell());
 }
 
@@ -289,7 +289,7 @@ LPCSTR CScriptGameObject::WhoHitName()
 	{
 		ai().script_engine().script_log(ScriptStorage::eLuaMessageTypeError,
 		                                "CScriptGameObject : cannot access class member  WhoHitName()");
-		return NULL;
+		return nullptr;
 	}
 }
 
@@ -304,7 +304,7 @@ LPCSTR CScriptGameObject::WhoHitSectionName()
 	{
 		ai().script_engine().script_log(ScriptStorage::eLuaMessageTypeError,
 		                                "CScriptGameObject : cannot access class member  WhoHitName()");
-		return NULL;
+		return nullptr;
 	}
 }
 
@@ -1183,7 +1183,7 @@ CGameObject& CScriptGameObject::object() const
     ai().script_engine().script_log(eLuaMessageTypeError, "you are trying to use a destroyed object [%x]", m_game_object);
     THROW2(m_game_object && m_game_object->lua_game_object() == this, "Probably, you are trying to use a destroyed object!");
 #endif // #ifdef DEBUG
-	static CGameObject* m_game_object_dummy = NULL;
+	static CGameObject* m_game_object_dummy = nullptr;
 	if (!m_game_object || m_game_object->lua_game_object() != this)
 		return (*m_game_object_dummy);
 

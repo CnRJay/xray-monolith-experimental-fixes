@@ -300,7 +300,7 @@ public:
         ,mt_csLeave(MUTEX_PROFILE_ID(CRenderDevice::mt_csLeave))
 #endif // #ifdef PROFILE_CRITICAL_SECTIONS
 	{
-		m_hWnd = NULL;
+		m_hWnd = nullptr;
 		b_is_Active = FALSE;
 		b_is_Ready = FALSE;
 		b_hide_cursor = FALSE;

@@ -74,7 +74,7 @@ BOOL CRenderTarget::Create()
 
 	if ((rtHeight != Device.dwHeight) || (rtWidth != Device.dwWidth))
 	{
-		R_CHK(HW.pDevice->CreateDepthStencilSurface (rtWidth,rtHeight,HW.Caps.fDepth,D3DMULTISAMPLE_NONE,0,TRUE,&ZB,NULL));
+		R_CHK(HW.pDevice->CreateDepthStencilSurface (rtWidth,rtHeight,HW.Caps.fDepth,D3DMULTISAMPLE_NONE,0,TRUE,&ZB,nullptr));
 	}
 	else
 	{
@@ -83,13 +83,13 @@ BOOL CRenderTarget::Create()
 	}
 
 	// Temp ZB, used by some of the shadowing code
-	R_CHK(HW.pDevice->CreateDepthStencilSurface (512,512,HW.Caps.fDepth,D3DMULTISAMPLE_NONE,0,TRUE,&pTempZB,NULL));
+	R_CHK(HW.pDevice->CreateDepthStencilSurface (512,512,HW.Caps.fDepth,D3DMULTISAMPLE_NONE,0,TRUE,&pTempZB,nullptr));
 
 	//	Igor: TMP
 	//	Create an RT for online screenshot makining
 	//u32		w = Device.dwWidth, h = Device.dwHeight;
-	//HW.pDevice->CreateOffscreenPlainSurface(Device.dwWidth,Device.dwHeight,D3DFMT_A8R8G8B8,D3DPOOL_SYSTEMMEM,&pFB,NULL);
-	HW.pDevice->CreateOffscreenPlainSurface(rtWidth, rtHeight, HW.Caps.fTarget, D3DPOOL_SYSTEMMEM, &pFB,NULL);
+	//HW.pDevice->CreateOffscreenPlainSurface(Device.dwWidth,Device.dwHeight,D3DFMT_A8R8G8B8,D3DPOOL_SYSTEMMEM,&pFB,nullptr);
+	HW.pDevice->CreateOffscreenPlainSurface(rtWidth, rtHeight, HW.Caps.fTarget, D3DPOOL_SYSTEMMEM, &pFB,nullptr);
 
 	// Shaders and stream
 	s_postprocess[0].create("postprocess");
@@ -408,7 +408,7 @@ void CRenderTarget::phase_distortion()
 	RCache.set_ZB(ZB);
 	RCache.set_CullMode(CULL_CCW);
 	RCache.set_ColorWriteEnable();
-	CHK_DX(HW.pDevice->Clear ( 0L, NULL, D3DCLEAR_TARGET, color_rgba(127,127,127,127), 1.0f, 0L));
+	CHK_DX(HW.pDevice->Clear ( 0L, nullptr, D3DCLEAR_TARGET, color_rgba(127,127,127,127), 1.0f, 0L));
 
 	if (g_pGameLevel && g_pGamePersistent && !g_pGamePersistent->OnRenderPPUI_query())
 	{

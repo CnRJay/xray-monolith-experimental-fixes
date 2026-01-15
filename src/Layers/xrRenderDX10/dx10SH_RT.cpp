@@ -9,11 +9,11 @@
 
 CRT::CRT()
 {
-	pSurface = NULL;
-	pRT = NULL;
-	pZRT = NULL;
+	pSurface = nullptr;
+	pRT = nullptr;
+	pZRT = nullptr;
 #ifdef USE_DX11
-	pUAView = NULL;
+	pUAView = nullptr;
 #endif
 	dwWidth = 0;
 	dwHeight = 0;
@@ -105,7 +105,7 @@ void CRT::create(LPCSTR Name, u32 w, u32 h, D3DFORMAT f, u32 SampleCount)
 
 	// Try to create texture/surface
 	DEV->Evict();
-	//_hr = HW.pDevice->CreateTexture		(w, h, 1, usage, f, D3DPOOL_DEFAULT, &pSurface,NULL);
+	//_hr = HW.pDevice->CreateTexture		(w, h, 1, usage, f, D3DPOOL_DEFAULT, &pSurface,nullptr);
 	//if (FAILED(_hr) || (0==pSurface))	return;
 	// Create the render target texture
 	D3D_TEXTURE2D_DESC desc;
@@ -133,7 +133,7 @@ void CRT::create(LPCSTR Name, u32 w, u32 h, D3DFORMAT f, u32 SampleCount)
 		desc.BindFlags |= D3D11_BIND_UNORDERED_ACCESS;
 #endif
 
-	CHK_DX(HW.pDevice->CreateTexture2D( &desc, NULL, &pSurface ));
+	CHK_DX(HW.pDevice->CreateTexture2D( &desc, nullptr, &pSurface ));
 	HW.stats_manager.increment_stats_rtarget(pSurface);
 	// OK
 #ifdef DEBUG
@@ -235,8 +235,8 @@ CRTC::CRTC			()
 {
 	if (pSurface)	return;
 
-	pSurface									= NULL;
-	pRT[0]=pRT[1]=pRT[2]=pRT[3]=pRT[4]=pRT[5]	= NULL;
+	pSurface									= nullptr;
+	pRT[0]=pRT[1]=pRT[2]=pRT[3]=pRT[4]=pRT[5]	= nullptr;
 	dwSize										= 0;
 	fmt											= D3DFMT_UNKNOWN;
 }
@@ -286,7 +286,7 @@ void CRTC::create	(LPCSTR Name, u32 size,	D3DFORMAT f)
 
 	// Try to create texture/surface
 	DEV->Evict					();
-	_hr = HW.pDevice->CreateCubeTexture	(size, 1, D3DUSAGE_RENDERTARGET, f, D3DPOOL_DEFAULT, &pSurface,NULL);
+	_hr = HW.pDevice->CreateCubeTexture	(size, 1, D3DUSAGE_RENDERTARGET, f, D3DPOOL_DEFAULT, &pSurface,nullptr);
 	if (FAILED(_hr) || (0==pSurface))	return;
 
 	// OK
@@ -300,7 +300,7 @@ void CRTC::create	(LPCSTR Name, u32 size,	D3DFORMAT f)
 void CRTC::destroy		()
 {
 	pTexture->surface_set	(0);
-	pTexture				= NULL;
+	pTexture				= nullptr;
 	for (u32 face=0; face<6; face++)
 		_RELEASE	(pRT[face]	);
 	_RELEASE	(pSurface	);

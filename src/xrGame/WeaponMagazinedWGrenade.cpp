@@ -103,7 +103,7 @@ BOOL CWeaponMagazinedWGrenade::net_Spawn(CSE_Abstract* DC)
 	}
 	else
 	{
-		xr_vector<CCartridge>* pM = NULL;
+		xr_vector<CCartridge>* pM = nullptr;
 		bool b_if_grenade_mode = (m_bGrenadeMode && iAmmoElapsed && !getRocketCount());
 		if (b_if_grenade_mode)
 			pM = &m_magazine;
@@ -821,12 +821,12 @@ void CWeaponMagazinedWGrenade::PlayAnimIdle()
 		{
 			if (m_bGrenadeMode)
 				iAmmoElapsed == 0 && HudAnimationExist("anm_idle_empty_g_aim")
-				? PlayHUDMotion("anm_idle_empty_g_aim", TRUE, NULL, GetState())
-				: PlayHUDMotion("anm_idle_g_aim", TRUE, NULL, GetState());
+				? PlayHUDMotion("anm_idle_empty_g_aim", TRUE, nullptr, GetState())
+				: PlayHUDMotion("anm_idle_g_aim", TRUE, nullptr, GetState());
 			else
 				iAmmoElapsed == 0 && HudAnimationExist("anm_idle_empty_w_gl_aim")
-				? PlayHUDMotion("anm_idle_empty_w_gl_aim", TRUE, NULL, GetState())
-				: PlayHUDMotion("anm_idle_w_gl_aim", TRUE, NULL, GetState());
+				? PlayHUDMotion("anm_idle_empty_w_gl_aim", TRUE, nullptr, GetState())
+				: PlayHUDMotion("anm_idle_w_gl_aim", TRUE, nullptr, GetState());
 		}
 		else
 		{
@@ -856,24 +856,24 @@ void CWeaponMagazinedWGrenade::PlayAnimIdle()
 			{
 				if (act_state == 0)
 					iAmmoElapsed == 0 && HudAnimationExist("anm_idle_empty_g")
-					? PlayHUDMotion("anm_idle_empty_g", TRUE, NULL, GetState())
-					: PlayHUDMotion("anm_idle_g", TRUE, NULL, GetState());
+					? PlayHUDMotion("anm_idle_empty_g", TRUE, nullptr, GetState())
+					: PlayHUDMotion("anm_idle_g", TRUE, nullptr, GetState());
 				else if (act_state == 1)
 					iAmmoElapsed == 0 && HudAnimationExist("anm_idle_sprint_empty_g")
-					? PlayHUDMotion("anm_idle_sprint_empty_g", TRUE, NULL, GetState())
-					: PlayHUDMotion("anm_idle_sprint_g", TRUE, NULL, GetState());
+					? PlayHUDMotion("anm_idle_sprint_empty_g", TRUE, nullptr, GetState())
+					: PlayHUDMotion("anm_idle_sprint_g", TRUE, nullptr, GetState());
 				else if (act_state == 2)
 				{
 					iAmmoElapsed == 0 && HudAnimationExist("anm_idle_moving_empty_g")
-						? PlayHUDMotion("anm_idle_moving_empty_g", TRUE, NULL, GetState())
-						: PlayHUDMotion("anm_idle_moving_g", TRUE, NULL, GetState());
+						? PlayHUDMotion("anm_idle_moving_empty_g", TRUE, nullptr, GetState())
+						: PlayHUDMotion("anm_idle_moving_g", TRUE, nullptr, GetState());
 				}
 				else if (act_state == 3)
 				{
 #ifdef NEW_ANIMS //AVO: custom move animation
 					iAmmoElapsed == 0 && HudAnimationExist("anm_idle_moving_crouch_empty_g")
-						? PlayHUDMotion("anm_idle_moving_crouch_empty_g", TRUE, NULL, GetState())
-						: iAmmoElapsed == 0 && HudAnimationExist("anm_idle_moving_empty_g") ? PlayHUDMotion("anm_idle_moving_empty_g", TRUE, NULL, GetState(), .7f) : PlayHUDMotion("anm_idle_moving_g", TRUE, NULL, GetState(), .7f);
+						? PlayHUDMotion("anm_idle_moving_crouch_empty_g", TRUE, nullptr, GetState())
+						: iAmmoElapsed == 0 && HudAnimationExist("anm_idle_moving_empty_g") ? PlayHUDMotion("anm_idle_moving_empty_g", TRUE, nullptr, GetState(), .7f) : PlayHUDMotion("anm_idle_moving_g", TRUE, nullptr, GetState(), .7f);
 #endif //-NEW_ANIMS
 				}
 			}
@@ -881,24 +881,24 @@ void CWeaponMagazinedWGrenade::PlayAnimIdle()
 			{
 				if (act_state == 0)
 					iAmmoElapsed == 0 && HudAnimationExist("anm_idle_empty_w_gl")
-						? PlayHUDMotion("anm_idle_empty_w_gl", TRUE, NULL, GetState())
-						: PlayHUDMotion("anm_idle_w_gl", TRUE, NULL, GetState());
+						? PlayHUDMotion("anm_idle_empty_w_gl", TRUE, nullptr, GetState())
+						: PlayHUDMotion("anm_idle_w_gl", TRUE, nullptr, GetState());
 				else if (act_state == 1)
 					iAmmoElapsed == 0 && HudAnimationExist("anm_idle_sprint_empty_w_gl")
-						? PlayHUDMotion("anm_idle_sprint_empty_w_gl", TRUE, NULL, GetState())
-						: PlayHUDMotion("anm_idle_sprint_w_gl", TRUE, NULL, GetState());
+						? PlayHUDMotion("anm_idle_sprint_empty_w_gl", TRUE, nullptr, GetState())
+						: PlayHUDMotion("anm_idle_sprint_w_gl", TRUE, nullptr, GetState());
 				else if (act_state == 2)
 				{
 					iAmmoElapsed == 0 && HudAnimationExist("anm_idle_moving_empty_w_gl")
-						? PlayHUDMotion("anm_idle_moving_empty_w_gl", TRUE, NULL, GetState())
-						: PlayHUDMotion("anm_idle_moving_w_gl", TRUE, NULL, GetState());
+						? PlayHUDMotion("anm_idle_moving_empty_w_gl", TRUE, nullptr, GetState())
+						: PlayHUDMotion("anm_idle_moving_w_gl", TRUE, nullptr, GetState());
 				}
 				else if (act_state == 3)
 				{
 #ifdef NEW_ANIMS //AVO: custom move animation
 					iAmmoElapsed == 0 && HudAnimationExist("anm_idle_moving_crouch_empty_w_gl")
-						? PlayHUDMotion("anm_idle_moving_crouch_empty_w_gl", TRUE, NULL, GetState())
-						: iAmmoElapsed == 0 && HudAnimationExist("anm_idle_moving_empty_w_gl") ? PlayHUDMotion("anm_idle_moving_empty_w_gl", TRUE, NULL, GetState(), .7f) : PlayHUDMotion("anm_idle_moving_w_gl", TRUE, NULL, GetState(), .7f);
+						? PlayHUDMotion("anm_idle_moving_crouch_empty_w_gl", TRUE, nullptr, GetState())
+						: iAmmoElapsed == 0 && HudAnimationExist("anm_idle_moving_empty_w_gl") ? PlayHUDMotion("anm_idle_moving_empty_w_gl", TRUE, nullptr, GetState(), .7f) : PlayHUDMotion("anm_idle_moving_w_gl", TRUE, nullptr, GetState(), .7f);
 #endif //-NEW_ANIMS
 				}
 			}
@@ -970,13 +970,13 @@ bool CWeaponMagazinedWGrenade::TryPlayAnimBore()
 		{
 			if (iAmmoElapsed == 0 && HudAnimationExist("anm_bore_empty_g"))
 			{
-				PlayHUDMotion("anm_bore_empty_g", TRUE, NULL, GetState());
+				PlayHUDMotion("anm_bore_empty_g", TRUE, nullptr, GetState());
 				return true;
 			}
 
 			if (HudAnimationExist("anm_bore_g"))
 			{
-				PlayHUDMotion("anm_bore_g", TRUE, NULL, GetState());
+				PlayHUDMotion("anm_bore_g", TRUE, nullptr, GetState());
 				return true;
 			}
 		}
@@ -984,13 +984,13 @@ bool CWeaponMagazinedWGrenade::TryPlayAnimBore()
 		{
 			if (iAmmoElapsed == 0 && HudAnimationExist("anm_bore_empty_w_gl"))
 			{
-				PlayHUDMotion("anm_bore_empty_w_gl", TRUE, NULL, GetState());
+				PlayHUDMotion("anm_bore_empty_w_gl", TRUE, nullptr, GetState());
 				return true;
 			}
 
 			if (HudAnimationExist("anm_bore_w_gl"))
 			{
-				PlayHUDMotion("anm_bore_w_gl", TRUE, NULL, GetState());
+				PlayHUDMotion("anm_bore_w_gl", TRUE, nullptr, GetState());
 				return true;
 			}
 		}

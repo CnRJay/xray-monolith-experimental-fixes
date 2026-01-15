@@ -21,7 +21,7 @@ public:
 protected:
 	crypto::xr_dsa::private_key_t m_private_key;
 private:
-	xr_dsa_signer() : m_dsa(NULL, NULL, NULL)
+	xr_dsa_signer() : m_dsa(NULL, nullptr, nullptr)
 	{
 	};
 

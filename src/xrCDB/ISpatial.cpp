@@ -8,8 +8,8 @@
 #include "../xrengine/PS_Instance.h"
 #endif
 
-ISpatial_DB* g_SpatialSpace = NULL;
-ISpatial_DB* g_SpatialSpacePhysic = NULL;
+ISpatial_DB* g_SpatialSpace = nullptr;
+ISpatial_DB* g_SpatialSpacePhysic = nullptr;
 
 Fvector c_spatial_offset [8] =
 {
@@ -30,8 +30,8 @@ ISpatial::ISpatial(ISpatial_DB* space)
 	spatial.sphere.R = 0;
 	spatial.node_center.set(0, 0, 0);
 	spatial.node_radius = 0;
-	spatial.node_ptr = NULL;
-	spatial.sector = NULL;
+	spatial.node_ptr = nullptr;
+	spatial.sector = nullptr;
 	spatial.space = space;
 }
 
@@ -86,8 +86,8 @@ void ISpatial::spatial_unregister()
 	{
 		// remove
 		spatial.space->remove(this);
-		spatial.node_ptr = NULL;
-		spatial.sector = NULL;
+		spatial.node_ptr = nullptr;
+		spatial.sector = nullptr;
 	}
 	else
 	{
@@ -131,7 +131,7 @@ void ISpatial_NODE::_init(ISpatial_NODE* _parent)
 {
 	parent = _parent;
 	children[0] = children[1] = children[2] = children[3] =
-		children[4] = children[5] = children[6] = children[7] = NULL;
+		children[4] = children[5] = children[6] = children[7] = nullptr;
 	items.clear();
 }
 
@@ -144,7 +144,7 @@ void ISpatial_NODE::_insert(ISpatial* S)
 
 void ISpatial_NODE::_remove(ISpatial* S)
 {
-	S->spatial.node_ptr = NULL;
+	S->spatial.node_ptr = nullptr;
 	xr_vector<ISpatial*>::iterator it = std::find(items.begin(), items.end(), S);
 	VERIFY(it!=items.end());
 	items.erase(it);
@@ -158,10 +158,10 @@ ISpatial_DB::ISpatial_DB()
 	:cs(MUTEX_PROFILE_ID(ISpatial_DB))
 #endif // PROFILE_CRITICAL_SECTIONS
 {
-	rt_insert_object = NULL;
-	m_bounds = NULL;
-	q_result = NULL;
-	m_root = NULL;
+	rt_insert_object = nullptr;
+	m_bounds = 0;
+	q_result = nullptr;
+	m_root = nullptr;
 	stat_nodes = 0;
 	stat_objects = 0;
 }
@@ -194,9 +194,9 @@ void ISpatial_DB::initialize(Fbox& BB)
 		allocator_pool.reserve(128);
 		m_center.set(bbc);
 		m_bounds = _max(_max(bbd.x, bbd.y), bbd.z);
-		rt_insert_object = NULL;
+		rt_insert_object = nullptr;
 		if (0 == m_root) m_root = _node_create();
-		m_root->_init(NULL);
+		m_root->_init(nullptr);
 	}
 }
 
@@ -217,7 +217,7 @@ void ISpatial_DB::_node_destroy(ISpatial_NODE* & P)
 	VERIFY(P->_empty());
 	stat_nodes --;
 	allocator_pool.push_back(P);
-	P = NULL;
+	P = nullptr;
 }
 
 void ISpatial_DB::_insert(ISpatial_NODE* N, Fvector& n_C, float n_R)

@@ -29,7 +29,7 @@ class CPHStaticGeomShell :
 	}
 
 	virtual u16 get_elements_number() { return 0; };
-	virtual CPHSynchronize* get_element_sync(u16 element) { return NULL; };
+	virtual CPHSynchronize* get_element_sync(u16 element) { return nullptr; };
 public:
 	void Activate(const Fmatrix& form);
 	void Deactivate();

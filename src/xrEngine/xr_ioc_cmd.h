@@ -648,7 +648,7 @@ public:
 
 	virtual void Execute(LPCSTR args)
 	{
-		strncpy_s(value, size, !xr_strcmp(args, "(NULL)") ? "" : args, size - 1);
+		strncpy_s(value, size, !xr_strcmp(args, "(nullptr)") ? "" : args, size - 1);
 	}
 
 	virtual void Status(TStatus& S)

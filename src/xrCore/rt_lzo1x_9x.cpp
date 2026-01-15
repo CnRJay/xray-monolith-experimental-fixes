@@ -440,7 +440,7 @@ void assert_match( const lzo_swd_p swd, lzo_uint m_len, lzo_uint m_off )
     }
     else
     {
-        assert(swd->dict != NULL);
+        assert(swd->dict != nullptr);
         d_off = m_off - (lzo_uint) (c->bp - c->in);
         assert(d_off <= swd->dict_len);
         if (m_len > d_off)

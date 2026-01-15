@@ -50,7 +50,7 @@ namespace award_system
 		CInifile rewards_config(tmp_reader);
 
 		u32 reward_index = 0;
-		LPCSTR section_name = NULL;
+		LPCSTR section_name = nullptr;
 		char tmp_dst_buff[16];
 
 		STRCONCAT(section_name,

@@ -903,7 +903,7 @@ void CRender::render_sun()
 			add_Geometry(root);
 		}
 	}
-	set_Recorder(NULL);
+	set_Recorder(nullptr);
 
 	//	Prepare to interact with D3DX code
 	const D3DXMATRIX& m_View = *((D3DXMATRIX*)(&Device.mView));

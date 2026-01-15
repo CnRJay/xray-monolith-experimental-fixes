@@ -23,7 +23,7 @@ void CRenderTarget::phase_ssfx_rain()
 
 	set_viewport_size(HW.pContext, w / 8.0f, h / 8.0f);
 
-	u_setrt(rt_ssfx_rain, 0, 0, NULL);
+	u_setrt(rt_ssfx_rain, 0, 0, nullptr);
 	RCache.set_CullMode(CULL_NONE);
 	RCache.set_Stencil(FALSE);
 

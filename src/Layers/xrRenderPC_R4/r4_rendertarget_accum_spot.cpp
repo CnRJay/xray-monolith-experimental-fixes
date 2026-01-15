@@ -301,7 +301,7 @@ void CRenderTarget::accum_volumetric_lv(light* L)
 			HW.pContext->ClearRenderTargetView(rt_ssfx_volumetric->pRT, ColorRGBA);
 		}
 
-		u_setrt(rt_ssfx_volumetric, NULL, NULL, NULL);
+		u_setrt(rt_ssfx_volumetric, nullptr, NULL, nullptr);
 
 		RCache.set_Stencil(FALSE);
 		RCache.set_CullMode(CULL_NONE);
@@ -402,7 +402,7 @@ void CRenderTarget::accum_volumetric(light* L)
 			HW.pContext->ClearRenderTargetView(rt_ssfx_volumetric->pRT, ColorRGBA);
 		}
 
-		u_setrt(rt_ssfx_volumetric, NULL, NULL, NULL);
+		u_setrt(rt_ssfx_volumetric, nullptr, NULL, nullptr);
 
 		RCache.set_Stencil(FALSE);
 		RCache.set_CullMode(CULL_NONE);

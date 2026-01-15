@@ -200,7 +200,7 @@ public:
 			radius = 0.0f;
 			bone_id = BI_NONE;
 			car = acar;
-			joint = NULL;
+			joint = nullptr;
 			inited = false;
 		}
 	};
@@ -273,8 +273,8 @@ public:
 		{
 			bone_id = BI_NONE;
 			pcar = acar;
-			p_pgobject = NULL;
-			pelement = NULL;
+			p_pgobject = nullptr;
+			pelement = nullptr;
 		}
 
 		~SExhaust();
@@ -360,7 +360,7 @@ public:
 			open_time = 0;
 			bone_id = BI_NONE;
 			pcar = acar;
-			joint = NULL;
+			joint = nullptr;
 			state = closed;
 			torque = 500.f;
 			a_vel = M_PI;

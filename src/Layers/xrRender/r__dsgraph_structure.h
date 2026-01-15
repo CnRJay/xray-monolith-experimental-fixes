@@ -130,8 +130,8 @@ public:
 public:
 	R_dsgraph_structure()
 	{
-		val_pObject = NULL;
-		val_pTransform = NULL;
+		val_pObject = nullptr;
+		val_pTransform = nullptr;
 		val_bHUD = FALSE;
 		val_bCamAttached = FALSE;
 		val_bInvisible = FALSE;

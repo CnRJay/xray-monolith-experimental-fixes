@@ -91,7 +91,7 @@ element_fracture CPHFracturesHolder::SplitFromEnd(CPHElement* element, u16 fract
 
 	if (m_fractures.size() - fracture > 0)
 	{
-		if (new_element->m_fratures_holder == NULL) //create fractures holder if it was not created before
+		if (new_element->m_fratures_holder == nullptr) //create fractures holder if it was not created before
 		{
 			new_element->m_fratures_holder = xr_new<CPHFracturesHolder>();
 		}

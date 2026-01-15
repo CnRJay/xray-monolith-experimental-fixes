@@ -62,7 +62,7 @@ private:
 	Root DATA;
 	void Load(IReader* F, LPCSTR path
 #ifndef _EDITOR
-	          , allow_include_func_t allow_include_func = NULL
+	          , allow_include_func_t allow_include_func = nullptr
 #endif
 	);
 public:
@@ -72,7 +72,7 @@ public:
 	CInifile(IReader* F,
 	         LPCSTR path = 0
 #ifndef _EDITOR
-	         , allow_include_func_t allow_include_func = NULL
+	         , allow_include_func_t allow_include_func = nullptr
 #endif
 	);
 
@@ -82,7 +82,7 @@ public:
 	         BOOL SaveAtEnd = TRUE,
 	         u32 sect_count = 0
 #ifndef _EDITOR
-	         , allow_include_func_t allow_include_func = NULL
+	         , allow_include_func_t allow_include_func = nullptr
 #endif
 	);
 

@@ -63,7 +63,7 @@ public:
 	//связь диалога между двумя DialogManager
 	virtual void Init(CPhraseDialogManager* speaker_first, CPhraseDialogManager* speaker_second);
 
-	IC bool IsInited() const { return ((FirstSpeaker() != NULL) && (SecondSpeaker() != NULL)); }
+	IC bool IsInited() const { return ((FirstSpeaker() != nullptr) && (SecondSpeaker() != nullptr)); }
 
 	//реинициализация диалога
 	virtual void Reset();

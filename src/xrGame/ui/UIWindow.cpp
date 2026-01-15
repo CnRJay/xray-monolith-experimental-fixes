@@ -106,12 +106,12 @@ void CUIWindow::ResetPPMode()
 }
 
 CUIWindow::CUIWindow()
-	: m_pParentWnd(NULL),
-	  m_pMouseCapturer(NULL),
-	  m_pMessageTarget(NULL),
-	  m_pKeyboardCapturer(NULL),
+	: m_pParentWnd(nullptr),
+	  m_pMouseCapturer(nullptr),
+	  m_pMessageTarget(nullptr),
+	  m_pKeyboardCapturer(nullptr),
 	  m_bAutoDelete(false),
-	  //m_pHint(NULL),
+	  //m_pHint(nullptr),
 	  m_bCursorOverWindow(false),
 	  m_bPP(false),
 	  m_dwFocusReceiveTime(0),
@@ -260,7 +260,7 @@ void CUIWindow::DetachChild(CUIWindow* pChild)
 	R_ASSERT(it!=m_ChildWndList.end());
 	m_ChildWndList.erase(it);
 
-	pChild->SetParent(NULL);
+	pChild->SetParent(nullptr);
 
 	if (pChild->IsAutoDelete())
 		xr_delete(pChild);
@@ -276,7 +276,7 @@ void CUIWindow::DetachAll()
 
 void CUIWindow::GetAbsoluteRect(Frect& r)
 {
-	if (GetParent() == NULL)
+	if (GetParent() == nullptr)
 	{
 		GetWndRect(r);
 		return;
@@ -319,7 +319,7 @@ bool CUIWindow::OnMouseAction(float x, float y, EUIMessages mouse_action)
 		m_dwLastClickTime = dwCurTime;
 	}
 
-	if (GetParent() == NULL)
+	if (GetParent() == nullptr)
 	{
 		if (!wndRect.in(cursor_pos))
 			return false;
@@ -428,7 +428,7 @@ void CUIWindow::OnFocusReceive()
 	m_bCursorOverWindow = true;
 
 	if (GetMessageTarget())
-		GetMessageTarget()->SendMessage(this, WINDOW_FOCUS_RECEIVED, NULL);
+		GetMessageTarget()->SendMessage(this, WINDOW_FOCUS_RECEIVED, nullptr);
 
 	//if (m_pHint)
 	//	bShowHint = true;
@@ -440,7 +440,7 @@ void CUIWindow::OnFocusLost()
 	m_bCursorOverWindow = false;
 
 	if (GetMessageTarget())
-		GetMessageTarget()->SendMessage(this, WINDOW_FOCUS_LOST, NULL);
+		GetMessageTarget()->SendMessage(this, WINDOW_FOCUS_LOST, nullptr);
 
 	//bShowHint = false;
 }
@@ -467,7 +467,7 @@ void CUIWindow::SetCapture(CUIWindow* pChildWindow, bool capture_status)
 	}
 	else
 	{
-		m_pMouseCapturer = NULL;
+		m_pMouseCapturer = nullptr;
 	}
 }
 
@@ -540,7 +540,7 @@ void CUIWindow::SetKeyboardCapture(CUIWindow* pChildWindow, bool capture_status)
 		m_pKeyboardCapturer = pChildWindow;
 	}
 	else
-		m_pKeyboardCapturer = NULL;
+		m_pKeyboardCapturer = nullptr;
 }
 
 
@@ -589,7 +589,7 @@ CUIWindow* CUIWindow::GetChildMouseHandler()
 //для перевода окна и потомков в исходное состояние
 void CUIWindow::Reset()
 {
-	m_pMouseCapturer = NULL;
+	m_pMouseCapturer = nullptr;
 }
 
 void CUIWindow::ResetAll()
@@ -622,10 +622,10 @@ CUIWindow* CUIWindow::FindChild(const shared_str name)
 	for (; it != it_e; ++it)
 	{
 		CUIWindow* pRes = (*it)->FindChild(name);
-		if (pRes != NULL)
+		if (pRes != nullptr)
 			return pRes;
 	}
-	return NULL;
+	return nullptr;
 }
 
 void CUIWindow::SetParent(CUIWindow* pNewParent)
@@ -783,7 +783,7 @@ void CUIWindow::RemoveHint()
 {
 	if (m_pHint)
 		xr_delete(m_pHint);
-	m_pHint = NULL;
+	m_pHint = nullptr;
 }
 
 void CUIWindow::SetHintText(LPCSTR text)	

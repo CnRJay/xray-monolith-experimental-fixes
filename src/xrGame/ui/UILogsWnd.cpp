@@ -39,7 +39,7 @@ u64 const day2ms = u64(24 * 60 * 60 * 1000);
 
 CUILogsWnd::CUILogsWnd()
 {
-	//	m_actor_ch_info			= NULL;
+	//	m_actor_ch_info			= nullptr;
 	m_previous_time = Device.dwTimeGlobal;
 	m_selected_period = 0;
 }
@@ -163,7 +163,7 @@ void CUILogsWnd::Init()
 void itemToCache(CUIWindow* w)
 {
 	w->SetAutoDelete(false);
-	w->SetParent(NULL);
+	w->SetParent(nullptr);
 }
 
 extern CActor* g_actor;

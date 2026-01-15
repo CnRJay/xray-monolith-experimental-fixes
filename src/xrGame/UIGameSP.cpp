@@ -25,7 +25,7 @@
 
 
 CUIGameSP::CUIGameSP()
-	: m_game(NULL), m_game_objective(NULL)
+	: m_game(nullptr), m_game_objective(nullptr)
 {
 	TalkMenu = xr_new<CUITalkWnd>();
 	UIChangeLevelWnd = xr_new<CChangeLevelWnd>();
@@ -82,7 +82,7 @@ void CUIGameSP::OnFrame()
 		{
 			RemoveCustomStatic("main_task");
 			RemoveCustomStatic("secondary_task");
-			m_game_objective = NULL;
+			m_game_objective = nullptr;
 		}
 	}
 }

@@ -40,7 +40,7 @@ CPHJoint::~CPHJoint()
 	xr_delete(m_destroy_info);
 	VERIFY(!bActive);
 	axes.clear();
-	if (m_back_ref)*m_back_ref = NULL;
+	if (m_back_ref)*m_back_ref = nullptr;
 };
 
 void CPHJoint::SetBackRef(CPhysicsJoint** j)
@@ -566,15 +566,15 @@ void CPHJoint::SetLimits(const float low, const float high, const int axis_num)
 
 CPHJoint::CPHJoint(CPhysicsJoint::enumType type, CPhysicsElement* first, CPhysicsElement* second)
 {
-	pShell = NULL;
+	pShell = nullptr;
 	m_bone_id = u16(-1);
-	m_back_ref = NULL;
-	m_destroy_info = NULL;
-	pFirstGeom = NULL;
+	m_back_ref = nullptr;
+	m_destroy_info = nullptr;
+	pFirstGeom = nullptr;
 	pFirst_element = cast_PHElement(first);
 	pSecond_element = cast_PHElement(second);
-	m_joint = NULL;
-	m_joint1 = NULL;
+	m_joint = nullptr;
+	m_joint1 = nullptr;
 	eType = type;
 	bActive = false;
 
@@ -679,10 +679,10 @@ void CPHJoint::Deactivate()
 		if (m_joint1->world)pShell->Island().RemoveJoint(m_joint1);
 		dJointDestroy(m_joint);
 		dJointDestroy(m_joint1);
-		m_joint1 = NULL;
+		m_joint1 = nullptr;
 		break;
 	}
-	m_joint = NULL;
+	m_joint = nullptr;
 	bActive = false;
 }
 

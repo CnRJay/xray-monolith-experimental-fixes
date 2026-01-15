@@ -23,7 +23,7 @@
 #include "UIInventoryUpgradeWnd.h"
 
 UIUpgrade::UIUpgrade(CUIInventoryUpgradeWnd* parent_wnd)
-	: m_point(NULL)
+	: m_point(nullptr)
 {
 	VERIFY(parent_wnd);
 	m_parent_wnd = parent_wnd;
@@ -35,7 +35,7 @@ UIUpgrade::UIUpgrade(CUIInventoryUpgradeWnd* parent_wnd)
 	m_color->SetAutoDelete(true);
 	AttachChild(m_color);
 
-	m_upgrade_id = NULL;
+	m_upgrade_id = nullptr;
 	Reset();
 }
 
@@ -244,7 +244,7 @@ void UIUpgrade::OnFocusLost()
 	inherited::OnFocusLost();
 	highlight_relation(false);
 
-	m_parent_wnd->set_info_cur_upgrade(NULL);
+	m_parent_wnd->set_info_cur_upgrade(nullptr);
 	m_button_state = BUTTON_FREE;
 }
 
@@ -255,7 +255,7 @@ void UIUpgrade::OnClick()
 		m_parent_wnd->AskUsing(make_string("%s %s", CStringTable().translate("st_upgrade_install").c_str(),
 		                                   get_upgrade()->name()).c_str(), get_upgrade()->id_str());
 	}
-	m_parent_wnd->set_info_cur_upgrade(NULL);
+	m_parent_wnd->set_info_cur_upgrade(nullptr);
 	highlight_relation(true);
 
 	m_button_state = BUTTON_PRESSED;
@@ -263,14 +263,14 @@ void UIUpgrade::OnClick()
 
 bool UIUpgrade::OnDbClick()
 {
-	m_parent_wnd->set_info_cur_upgrade(NULL);
+	m_parent_wnd->set_info_cur_upgrade(nullptr);
 	m_button_state = BUTTON_DPRESSED;
 	return true;
 }
 
 void UIUpgrade::OnRClick()
 {
-	m_parent_wnd->set_info_cur_upgrade(NULL);
+	m_parent_wnd->set_info_cur_upgrade(nullptr);
 	highlight_relation(true);
 	m_button_state = BUTTON_PRESSED;
 }
@@ -421,7 +421,7 @@ void CUIUpgradePoint::OnFocusLost()
 {
 	inherited::OnFocusLost();
 	m_parent_upgrade->set_button_state(UIUpgrade::BUTTON_FREE);
-	m_parent_upgrade->get_upgrade_window()->set_info_cur_upgrade(NULL);
+	m_parent_upgrade->get_upgrade_window()->set_info_cur_upgrade(nullptr);
 	m_parent_upgrade->highlight_relation(false);
 	m_parent_upgrade->update_mask();
 }

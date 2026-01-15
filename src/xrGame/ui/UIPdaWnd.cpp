@@ -41,11 +41,11 @@ void RearrangeTabButtons(CUITabControl* pTab);
 
 CUIPdaWnd::CUIPdaWnd()
 {
-	pUITaskWnd = NULL;
-	pUIRankingWnd = NULL;
-	pUILogsWnd = NULL;
-	m_hint_wnd = NULL;
-	m_battery_bar = NULL;
+	pUITaskWnd = nullptr;
+	pUIRankingWnd = nullptr;
+	pUILogsWnd = nullptr;
+	m_hint_wnd = nullptr;
+	m_battery_bar = nullptr;
 	m_power = 0.f;
 	last_cursor_pos.set(UI_BASE_WIDTH / 2.f, UI_BASE_HEIGHT / 2.f);
 	m_cursor_box.set(117.f, 39.f, UI_BASE_WIDTH - 121.f, UI_BASE_HEIGHT - 37.f);
@@ -67,7 +67,7 @@ void CUIPdaWnd::Init()
 	CUIXml uiXml;
 	uiXml.Load(CONFIG_PATH, UI_PATH, GetPdaXml());
 
-	m_pActiveDialog = NULL;
+	m_pActiveDialog = nullptr;
 	m_sActiveSection = "";
 
 	CUIXmlInit::InitWindow(uiXml, "main", 0, this);
@@ -231,7 +231,7 @@ void CUIPdaWnd::Show(bool status)
 	{
 		InventoryUtilities::SendInfoToActor("ui_pda");
 
-		if (m_sActiveSection == NULL || strcmp(m_sActiveSection.c_str(), "") == 0)
+		if (m_sActiveSection == nullptr || strcmp(m_sActiveSection.c_str(), "") == 0)
 		{
 			SetActiveSubdialog("eptTasks");
 			UITabControl->SetActiveTab("eptTasks");

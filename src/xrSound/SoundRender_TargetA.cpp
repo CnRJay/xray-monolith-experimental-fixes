@@ -85,7 +85,7 @@ void CSoundRender_TargetA::render()
 	// demonized: explicitly disable effects by sending sounds to null slot, ie. not sending
 	else
 	{
-		A_CHK(alSource3i(pSource, AL_AUXILIARY_SEND_FILTER, AL_EFFECTSLOT_NULL, 0, NULL));
+		A_CHK(alSource3i(pSource, AL_AUXILIARY_SEND_FILTER, AL_EFFECTSLOT_NULL, 0, 0));
 	}
 	A_CHK(alSourcePlay(pSource));
 
@@ -97,7 +97,7 @@ void CSoundRender_TargetA::stop()
 	if (rendering)
 	{
 		A_CHK(alSourceStop(pSource));
-		A_CHK(alSourcei (pSource, AL_BUFFER, NULL));
+		A_CHK(alSourcei (pSource, AL_BUFFER, 0));
 		A_CHK(alSourcei (pSource, AL_SOURCE_RELATIVE, TRUE));
 	}
 	inherited::stop();
@@ -108,7 +108,7 @@ void CSoundRender_TargetA::rewind()
 	inherited::rewind();
 
 	A_CHK(alSourceStop(pSource));
-	A_CHK(alSourcei (pSource, AL_BUFFER, NULL));
+	A_CHK(alSourcei (pSource, AL_BUFFER, 0));
 	for (u32 buf_idx = 0; buf_idx < sdef_target_count; buf_idx++)
 		fill_block(pBuffers[buf_idx]);
 	A_CHK(alSourceQueueBuffers (pSource, sdef_target_count, pBuffers));

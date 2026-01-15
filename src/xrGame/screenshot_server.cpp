@@ -140,7 +140,7 @@ void clientdata_proxy::save_proxy_screenshot()
 	string_path screenshot_fn;
 	string_path str_digest;
 
-	LPCSTR dest_file_name = NULL;
+	LPCSTR dest_file_name = nullptr;
 	STRCONCAT(dest_file_name,
 	          clgame->make_file_name(m_cheater_name.c_str(), screenshot_fn),
 	          "_",
@@ -168,7 +168,7 @@ void clientdata_proxy::save_proxy_config()
 		return;
 
 	string_path config_fn;
-	LPCSTR fn_suffix = NULL;
+	LPCSTR fn_suffix = nullptr;
 	string_path dest_file_name;
 
 	STRCONCAT(fn_suffix,

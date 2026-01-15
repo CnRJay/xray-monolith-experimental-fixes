@@ -166,7 +166,7 @@ void CWalmarkManager::StartWorkflow()
 
 		if (test > 0.f)
 		{
-			if (Level().ObjectSpace.RayTest(m_pos, pdir, test, collide::rqtStatic, NULL, m_owner))
+			if (Level().ObjectSpace.RayTest(m_pos, pdir, test, collide::rqtStatic, nullptr, m_owner))
 			{
 				++_ray_test;
 				continue;

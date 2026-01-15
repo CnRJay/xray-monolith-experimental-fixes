@@ -174,7 +174,7 @@ void CPhysicsShellHolder::create_physic_shell()
 
 void CPhysicsShellHolder::init()
 {
-	m_pPhysicsShell = NULL;
+	m_pPhysicsShell = nullptr;
 	b_sheduled = false;
 
 #if 1
@@ -685,18 +685,18 @@ void CPhysicsShellHolder::IgnoreCollisionCallback(bool &do_colide, bool bo1, dCo
 	CGameObject *obj = (gd1) ? smart_cast<CGameObject *>(gd1->ph_ref_object) : NULL;
 	CGameObject *who = (gd2) ? smart_cast<CGameObject *>(gd2->ph_ref_object) : NULL;
 
-	if (obj == NULL)
+	if (obj == nullptr)
 	{
 		return;
 	}
 
 	CPhysicsShellHolder *a = (obj) ? smart_cast<CPhysicsShellHolder *>(obj) : NULL;
-	if (a == NULL)
+	if (a == nullptr)
 	{
 		return;
 	}
 
-	if (who == NULL)
+	if (who == nullptr)
 	{
 		if (a->m_ignore_collision_flag & CPhysicsShellHolder::ICmap)
 		{

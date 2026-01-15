@@ -10,14 +10,14 @@
 
 IC CScriptMonsterAction::CScriptMonsterAction()
 {
-	m_tObject = NULL;
+	m_tObject = nullptr;
 	m_tAction = MonsterSpace::eGA_None;
 	m_bCompleted = true;
 }
 
 IC CScriptMonsterAction::CScriptMonsterAction(MonsterSpace::EScriptMonsterGlobalAction action)
 {
-	m_tObject = NULL;
+	m_tObject = nullptr;
 	m_tAction = action;
 	m_bCompleted = false;
 }

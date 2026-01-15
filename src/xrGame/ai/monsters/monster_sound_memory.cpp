@@ -36,7 +36,7 @@ TSoundDangerValue tagSoundElement::ConvertSoundType(ESoundTypes stype)
 CMonsterSoundMemory::CMonsterSoundMemory()
 {
 	time_memory = 0;
-	monster = NULL;
+	monster = nullptr;
 	Sounds.reserve(20);
 	m_time_help_sound = 0;
 	m_help_node = u32(-1);

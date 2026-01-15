@@ -49,7 +49,7 @@ void CRenderTarget::phase_hdr10_bloom()
         RCache.set_c("hdr10_bloom_sparams", dx, dy, 0, 0);
 
         set_viewport_size(HW.pContext, bloom_w, bloom_h);
-        u_setrt(rt_HDR10_HalfRes[dst], NULL, NULL, NULL);
+        u_setrt(rt_HDR10_HalfRes[dst], nullptr, NULL, nullptr);
         RCache.Render(D3DPT_TRIANGLELIST, Offset, 0, 4, 0, 2);
     }
 
@@ -69,7 +69,7 @@ void CRenderTarget::phase_hdr10_bloom()
                 float dy = ps_r4_hdr10_bloom_blur_scale * float(pass + 1) * 1.0f / bloom_h;
                 RCache.set_c("hdr10_bloom_sparams", dx, dy, float(dir % 2), 0);
 
-                u_setrt(rt_HDR10_HalfRes[dst], NULL, NULL, NULL);
+                u_setrt(rt_HDR10_HalfRes[dst], nullptr, NULL, nullptr);
                 RCache.Render(D3DPT_TRIANGLELIST, Offset, 0, 4, 0, 2);
             }
         }
@@ -81,7 +81,7 @@ void CRenderTarget::phase_hdr10_bloom()
         RCache.set_Geometry(g_combine);
 
         set_viewport_size(HW.pContext, orig_w, orig_h);
-        u_setrt(rt_Color, NULL, NULL, NULL);
+        u_setrt(rt_Color, nullptr, NULL, nullptr);
         RCache.Render(D3DPT_TRIANGLELIST, Offset, 0, 4, 0, 2);
     }
 

@@ -34,7 +34,7 @@ void dump_list_lines()
 
 CUILine::CUILine()
 {
-	m_tmpLine = NULL;
+	m_tmpLine = nullptr;
 	m_text = "";
 #ifdef LOG_ALL_LINES
 	ListLinesCount++;
@@ -73,7 +73,7 @@ void CUILine::setTextFromSublines() {
 CUILine::CUILine(const CUILine& other)
 {
 	m_subLines = other.m_subLines;
-	m_tmpLine = NULL;
+	m_tmpLine = nullptr;
 	setTextFromSublines();
 #ifdef LOG_ALL_LINES
 	ListLinesCount++;

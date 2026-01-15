@@ -8,10 +8,10 @@ int g_svTextConsoleUpdateRate = 1;
 
 CTextConsole::CTextConsole()
 {
-	m_pMainWnd = NULL;
-	m_hConsoleWnd = NULL;
-	m_hLogWnd = NULL;
-	m_hLogWndFont = NULL;
+	m_pMainWnd = nullptr;
+	m_hConsoleWnd = nullptr;
+	m_hLogWnd = nullptr;
+	m_hLogWndFont = nullptr;
 
 	m_bScrollLog = true;
 	m_dwStartLine = 0;
@@ -23,7 +23,7 @@ CTextConsole::CTextConsole()
 
 CTextConsole::~CTextConsole()
 {
-	m_pMainWnd = NULL;
+	m_pMainWnd = nullptr;
 }
 
 //-------------------------------------------------------------------------------------------
@@ -346,7 +346,7 @@ void CTextConsole::OnFrame()
 	 return;
 	 }
 	 */
-	InvalidateRect(m_hConsoleWnd, NULL, FALSE);
+	InvalidateRect(m_hConsoleWnd, nullptr, FALSE);
 	SetCursor(LoadCursor(NULL, IDC_ARROW));
 	// m_bNeedUpdate = true;
 }

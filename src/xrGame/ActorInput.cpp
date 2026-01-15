@@ -185,7 +185,7 @@ void CActor::IR_OnKeyboardPress(int cmd)
 			{
 				CCustomDevice* dev = smart_cast<CCustomDevice*>(dev_active);
 				if (dev)
-					dev->ToggleDevice(g_player_hud->attached_item(0) != NULL);
+					dev->ToggleDevice(g_player_hud->attached_item(0) != nullptr);
 			}
 		}
 		break;
@@ -825,7 +825,7 @@ void CActor::NoClipFly(int cmd)
 			if(det_active)
 			{
 				CCustomDetector* det = smart_cast<CCustomDetector*>(det_active);
-					det->ToggleDetector(g_player_hud->attached_item(0)!=NULL);
+					det->ToggleDetector(g_player_hud->attached_item(0)!=nullptr);
 				return;
 			}
 		}

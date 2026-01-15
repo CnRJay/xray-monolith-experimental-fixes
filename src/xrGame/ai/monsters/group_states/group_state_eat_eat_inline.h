@@ -48,7 +48,7 @@ bool CStateGroupEatingAbstract::check_start_conditions()
 	VERIFY(corpse);
 
 	Fvector nearest_bone_pos;
-	if ((corpse->m_pPhysicsShell == NULL) || (!corpse->m_pPhysicsShell->isActive()))
+	if ((corpse->m_pPhysicsShell == nullptr) || (!corpse->m_pPhysicsShell->isActive()))
 	{
 		nearest_bone_pos = corpse->Position();
 	}
@@ -82,7 +82,7 @@ bool CStateGroupEatingAbstract::check_completion()
 	if (object->EatedCorpse != corpse) return true;
 
 	Fvector nearest_bone_pos;
-	if ((corpse->m_pPhysicsShell == NULL) || (!corpse->m_pPhysicsShell->isActive()))
+	if ((corpse->m_pPhysicsShell == nullptr) || (!corpse->m_pPhysicsShell->isActive()))
 	{
 		nearest_bone_pos = corpse->Position();
 	}

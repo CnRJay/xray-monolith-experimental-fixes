@@ -7,8 +7,8 @@
 
 CRT::CRT()
 {
-	pSurface = NULL;
-	pRT = NULL;
+	pSurface = nullptr;
+	pRT = nullptr;
 	dwWidth = 0;
 	dwHeight = 0;
 	fmt = D3DFMT_UNKNOWN;
@@ -72,7 +72,7 @@ void CRT::create(LPCSTR Name, u32 w, u32 h, D3DFORMAT f, u32 SampleCount)
 
 	// Try to create texture/surface
 	DEV->Evict();
-	_hr = HW.pDevice->CreateTexture(w, h, 1, usage, f, D3DPOOL_DEFAULT, &pSurface,NULL);
+	_hr = HW.pDevice->CreateTexture(w, h, 1, usage, f, D3DPOOL_DEFAULT, &pSurface,nullptr);
 	HW.stats_manager.increment_stats_rtarget(pSurface);
 
 	if (FAILED(_hr) || (0 == pSurface)) return;
@@ -124,8 +124,8 @@ CRTC::CRTC			()
 {
 	if (pSurface)	return;
 
-	pSurface									= NULL;
-	pRT[0]=pRT[1]=pRT[2]=pRT[3]=pRT[4]=pRT[5]	= NULL;
+	pSurface									= nullptr;
+	pRT[0]=pRT[1]=pRT[2]=pRT[3]=pRT[4]=pRT[5]	= nullptr;
 	dwSize										= 0;
 	fmt											= D3DFMT_UNKNOWN;
 }
@@ -168,7 +168,7 @@ void CRTC::create	(LPCSTR Name, u32 size,	D3DFORMAT f)
 
 	// Try to create texture/surface
 	DEV->Evict					();
-	_hr = HW.pDevice->CreateCubeTexture	(size, 1, D3DUSAGE_RENDERTARGET, f, D3DPOOL_DEFAULT, &pSurface,NULL);
+	_hr = HW.pDevice->CreateCubeTexture	(size, 1, D3DUSAGE_RENDERTARGET, f, D3DPOOL_DEFAULT, &pSurface,nullptr);
 	if (FAILED(_hr) || (0==pSurface))	return;
 
 	// OK
@@ -182,7 +182,7 @@ void CRTC::create	(LPCSTR Name, u32 size,	D3DFORMAT f)
 void CRTC::destroy		()
 {
 	pTexture->surface_set	(0);
-	pTexture				= NULL;
+	pTexture				= nullptr;
 	for (u32 face=0; face<6; face++)
 		_RELEASE	(pRT[face]	);
 	_RELEASE	(pSurface	);

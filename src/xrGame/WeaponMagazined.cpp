@@ -1,4 +1,4 @@
-﻿#include "pch_script.h"
+#include "pch_script.h"
 
 #include "WeaponMagazined.h"
 #include "actor.h"
@@ -32,7 +32,7 @@ ENGINE_API extern float psHUD_FOV_def;
 
 BOOL g_auto_reload = FALSE;
 
-CUIXml* pWpnScopeXml = NULL;
+CUIXml* pWpnScopeXml = nullptr;
 
 void createWpnScopeXML()
 {
@@ -53,8 +53,8 @@ CWeaponMagazined::CWeaponMagazined(ESoundTypes eSoundType) : CWeapon()
 	m_eSoundReloadEmpty = ESoundTypes(SOUND_TYPE_WEAPON_RECHARGING | eSoundType);
 
 	m_sounds_enabled = true;
-	m_sSndShotCurrent = NULL;
-	m_sSilencerFlameParticles = m_sSilencerSmokeParticles = NULL;
+	m_sSndShotCurrent = nullptr;
+	m_sSilencerFlameParticles = m_sSilencerSmokeParticles = nullptr;
 
 	m_bFireSingleShot = false;
 	m_iShotNum = 0;
@@ -491,7 +491,7 @@ void CWeaponMagazined::ReloadMagazine()
 
 	if (!m_bLockType)
 	{
-		m_pCurrentAmmo = NULL;
+		m_pCurrentAmmo = nullptr;
 	}
 
 	if (!m_pInventory) return;
@@ -741,7 +741,7 @@ void CWeaponMagazined::state_Fire(float dt)
 		d.set(get_LastFD());
 
 		if (!H_Parent()) return;
-		if (smart_cast<CMPPlayersBag*>(H_Parent()) != NULL)
+		if (smart_cast<CMPPlayersBag*>(H_Parent()) != nullptr)
 		{
 			Msg("! WARNING: state_Fire of object [%d][%s] while parent is CMPPlayerBag...", ID(), cNameSect().c_str());
 			return;
@@ -1238,7 +1238,7 @@ bool CWeaponMagazined::TryPlayAnimBore()
 void CWeaponMagazined::PlayAnimIdleSprint()
 {
 	iAmmoElapsed == 0 && HudAnimationExist("anm_idle_sprint_empty")
-		? PlayHUDMotion("anm_idle_sprint_empty", TRUE, NULL, GetState())
+		? PlayHUDMotion("anm_idle_sprint_empty", TRUE, nullptr, GetState())
 		: inherited::PlayAnimIdleSprint();
 }
 
@@ -1247,7 +1247,7 @@ void CWeaponMagazined::PlayAnimIdleMoving()
 	bool bAccelerated = isActorAccelerated(Actor()->MovingState(), IsZoomed());
 
 	iAmmoElapsed == 0 && HudAnimationExist("anm_idle_moving_empty")
-		? PlayHUDMotion("anm_idle_moving_empty", TRUE, NULL, GetState(), bAccelerated ? 1.f : .75f)
+		? PlayHUDMotion("anm_idle_moving_empty", TRUE, nullptr, GetState(), bAccelerated ? 1.f : .75f)
 		: inherited::PlayAnimIdleMoving();
 }
 
@@ -1256,8 +1256,8 @@ bool CWeaponMagazined::PlayAnimCrouchIdleMoving()
 	if (iAmmoElapsed == 0)
 	{
 		HudAnimationExist("anm_idle_moving_crouch_empty")
-			? PlayHUDMotion("anm_idle_moving_crouch_empty", TRUE, NULL, GetState())
-			: HudAnimationExist("anm_idle_moving_empty") ? PlayHUDMotion("anm_idle_moving_empty", TRUE, NULL, GetState(), .7f) : inherited::PlayAnimCrouchIdleMoving();
+			? PlayHUDMotion("anm_idle_moving_crouch_empty", TRUE, nullptr, GetState())
+			: HudAnimationExist("anm_idle_moving_empty") ? PlayHUDMotion("anm_idle_moving_empty", TRUE, nullptr, GetState(), .7f) : inherited::PlayAnimCrouchIdleMoving();
 
 		return true;
 	}
@@ -1420,14 +1420,14 @@ bool CWeaponMagazined::DetachScope(const char* item_section_name, bool b_spawn_i
 		if (m_modular_attachments) {
 			if (!xr_strcmp(*it, item_section_name))
 			{
-				m_cur_scope = NULL;
+				m_cur_scope = 0;
 				detached = true;
 			}
 		} else {
 			LPCSTR iter_scope_name = pSettings->r_string((*it), "scope_name");
 			if (!xr_strcmp(iter_scope_name, item_section_name))
 			{
-				m_cur_scope = NULL;
+				m_cur_scope = 0;
 				detached = true;
 			}
 		}
@@ -1501,7 +1501,7 @@ void CWeaponMagazined::InitAddons()
 		shared_str scope_tex_name;
 		if (m_eScopeStatus == ALife::eAddonAttachable)
 		{
-			scope_tex_name = READ_IF_EXISTS(pSettings, r_string, GetScopeName(), "scope_texture", NULL);
+			scope_tex_name = READ_IF_EXISTS(pSettings, r_string, GetScopeName(), "scope_texture", nullptr);
 			m_zoom_params.m_fScopeZoomFactor = pSettings->r_float(GetScopeName(), "scope_zoom_factor");
 			m_zoom_params.m_sUseZoomPostprocess = READ_IF_EXISTS(pSettings, r_string, GetScopeName(), "scope_nightvision", 0);
 			m_zoom_params.m_bUseDynamicZoom = READ_IF_EXISTS(pSettings, r_bool, GetScopeName(), "scope_dynamic_zoom", FALSE);
@@ -1514,7 +1514,7 @@ void CWeaponMagazined::InitAddons()
 				scope_2dtexactive = 0;//crookr
 			}
 
-			if (!g_dedicated_server && scope_tex_name != NULL)
+			if (!g_dedicated_server && scope_tex_name != nullptr)
 			{
 				m_UIScope = xr_new<CUIWindow>();
 				createWpnScopeXML();
@@ -1691,8 +1691,8 @@ void CWeaponMagazined::PlayAnimReload()
 void CWeaponMagazined::PlayAnimAim()
 {
 	iAmmoElapsed == 0 && HudAnimationExist("anm_idle_aim_empty")
-		? PlayHUDMotion("anm_idle_aim_empty", TRUE, NULL, GetState())
-		: PlayHUDMotion("anm_idle_aim", TRUE, NULL, GetState());
+		? PlayHUDMotion("anm_idle_aim_empty", TRUE, nullptr, GetState())
+		: PlayHUDMotion("anm_idle_aim", TRUE, nullptr, GetState());
 }
 
 void CWeaponMagazined::PlayAnimIdle()
@@ -1710,8 +1710,8 @@ void CWeaponMagazined::PlayAnimIdle()
 	if (TryPlayAnimIdle()) return;
 
 	iAmmoElapsed == 0 && HudAnimationExist("anm_idle_empty")
-		? PlayHUDMotion("anm_idle_empty", TRUE, NULL, GetState())
-		: PlayHUDMotion("anm_idle", TRUE, NULL, GetState());
+		? PlayHUDMotion("anm_idle_empty", TRUE, nullptr, GetState())
+		: PlayHUDMotion("anm_idle", TRUE, nullptr, GetState());
 }
 
 void CWeaponMagazined::PlayAnimShoot()

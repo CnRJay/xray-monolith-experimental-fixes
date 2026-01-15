@@ -52,7 +52,7 @@ const typename _registry_type::_data* CALifeRegistryWrapper<_registry_type>::obj
 
 	VERIFY(0xffff != id);
 
-	typename _registry_type::_data* registy_container = ai().alife().registry((_registry_type*)NULL).object(id, true);
+	typename _registry_type::_data* registy_container = ai().alife().registry((_registry_type*)nullptr).object(id, true);
 	return registy_container;
 }
 
@@ -74,13 +74,13 @@ typename _registry_type::_data& CALifeRegistryWrapper<_registry_type>::objects(u
 			return ((*I).second);
 	}
 
-	typename _registry_type::_data* registy_container = ai().alife().registry((_registry_type*)NULL).object(id, true);
+	typename _registry_type::_data* registy_container = ai().alife().registry((_registry_type*)nullptr).object(id, true);
 
 	if (!registy_container)
 	{
 		typename _registry_type::_data new_registry;
-		ai().alife().registry((_registry_type*)NULL).add(id, new_registry, false);
-		registy_container = ai().alife().registry((_registry_type*)NULL).object(id, true);
+		ai().alife().registry((_registry_type*)nullptr).add(id, new_registry, false);
+		registy_container = ai().alife().registry((_registry_type*)nullptr).object(id, true);
 		VERIFY(registy_container);
 	}
 	return *registy_container;

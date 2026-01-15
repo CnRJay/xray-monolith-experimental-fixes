@@ -48,7 +48,7 @@ extern void restore_actor();
 bool g_bDisableAllInput = false;
 extern float g_fTimeFactor;
 
-#define CURRENT_ENTITY()	(game?((GameID() == eGameIDSingle) ? CurrentEntity() : CurrentControlEntity()):NULL)
+#define CURRENT_ENTITY()	(game?((GameID() == eGameIDSingle) ? CurrentEntity() : CurrentControlEntity()):nullptr)
 
 void CLevel::IR_OnMouseWheel(int direction)
 {

@@ -259,7 +259,7 @@ void game_sv_mp::KillPlayer(ClientID id_who, u16 GameID)
 	if (xrCData)
 	{
 		//-------------------------------------------------------
-		OnPlayerKillPlayer(xrCData->ps, xrCData->ps, KT_HIT, SKT_NONE, NULL);
+		OnPlayerKillPlayer(xrCData->ps, xrCData->ps, KT_HIT, SKT_NONE, nullptr);
 		if (xrCData->ps)
 			xrCData->ps->m_bClearRun = false;
 	};
@@ -727,10 +727,10 @@ TeamStruct* game_sv_mp::GetTeamData(u32 Team)
 {
 	VERIFY(TeamList.size());
 	if (TeamList.empty())
-		return NULL;
+		return nullptr;
 
 	if (TeamList.size() <= Team)
-		return NULL;
+		return nullptr;
 
 	return &(TeamList[Team]);
 };
@@ -1099,7 +1099,7 @@ void game_sv_mp::OnVoteStart(LPCSTR VoteCommand, ClientID sender)
 			LevelName[255] = 0;
 			LevelVersion[255] = 0;
 
-			LPCSTR sv_vote_command = NULL;
+			LPCSTR sv_vote_command = nullptr;
 			STRCONCAT(sv_vote_command, votecommands[i].command, " ", LevelName, " ", LevelVersion);
 			m_pVoteCommand = sv_vote_command;
 			xr_sprintf(resVoteCommand,
@@ -1179,7 +1179,7 @@ void game_sv_mp::OnVoteStart(LPCSTR VoteCommand, ClientID sender)
 	};
 	vote_status_setter tmp_functor;
 	tmp_functor.senderID = sender;
-	tmp_functor.pStartedPlayer = NULL;
+	tmp_functor.pStartedPlayer = nullptr;
 	m_server->ForEachClientDo(tmp_functor);
 
 	signal_Syncronize();
@@ -1373,7 +1373,7 @@ void game_sv_mp::SetPlayersDefItems(game_PlayerState* ps)
 		for (u32 it = 0; it < ps->pItemList.size(); it++)
 		{
 			u16* pItemID = &(ps->pItemList[it]);
-			//			WeaponDataStruct* pWpnS = NULL;
+			//			WeaponDataStruct* pWpnS = nullptr;
 			//			if (!GetTeamItem_ByID(&pWpnS, &(TeamList[ps->team].aWeapons), *pItemID)) continue;
 			if (m_strWeaponsData->GetItemsCount() <= *pItemID) continue;
 			shared_str WeaponName = m_strWeaponsData->GetItemName((*pItemID) & 0x00FF);
@@ -1393,7 +1393,7 @@ void game_sv_mp::SetPlayersDefItems(game_PlayerState* ps)
 	for (u32 it = 0; it < ps->pItemList.size(); it++)
 	{
 		u16* pItemID = &(ps->pItemList[it]);
-		//		WeaponDataStruct* pWpnS = NULL;
+		//		WeaponDataStruct* pWpnS = nullptr;
 		//		if (!GetTeamItem_ByID(&pWpnS, &(TeamList[ps->team].aWeapons), *pItemID)) continue;
 		if (m_strWeaponsData->GetItemsCount() <= *pItemID) continue;
 
@@ -1408,7 +1408,7 @@ void game_sv_mp::SetPlayersDefItems(game_PlayerState* ps)
 			AmmoID = u16(m_strWeaponsData->GetItemIdx(BaseAmmoName) & 0xffff);
 		};
 		//		if (!pWpnS->WeaponBaseAmmo.size()) continue;
-		//		WeaponDataStruct* pWpnAmmo = NULL;
+		//		WeaponDataStruct* pWpnAmmo = nullptr;
 		//		if (!GetTeamItem_ByName(&pWpnAmmo, &(TeamList[ps->team].aWeapons), *(pWpnS->WeaponBaseAmmo))) continue;
 		if (AmmoID == u16(-1)) continue;
 
@@ -2269,19 +2269,19 @@ IClient* game_sv_mp::BanPlayer(ClientID const& client_id, s32 ban_time_sec, xrCl
 	if (client_id == m_server->GetServerClient()->ID)
 	{
 		Msg("! ERROR: can't ban server client.");
-		return NULL;
+		return nullptr;
 	}
 	xrClientData* client_to_ban = static_cast<xrClientData*>(
 		m_server->ID_to_client(client_id)
 	);
 
 	if (!client_to_ban)
-		return NULL;
+		return nullptr;
 
 	if (client_to_ban->m_admin_rights.m_has_admin_rights)
 	{
 		Msg("! ERROR: Can't ban player with admin rights");
-		return NULL;
+		return nullptr;
 	}
 	m_cdkey_ban_list.ban_player(client_to_ban, ban_time_sec, initiator);
 	return client_to_ban;
@@ -2297,7 +2297,7 @@ void game_sv_mp::UnBanPlayer(size_t banned_player_index)
 	m_cdkey_ban_list.unban_player_by_index(banned_player_index);
 }
 
-void game_sv_mp::PrintBanList(char const* filter = NULL)
+void game_sv_mp::PrintBanList(char const* filter = nullptr)
 {
 	m_cdkey_ban_list.print_ban_list(filter);
 }

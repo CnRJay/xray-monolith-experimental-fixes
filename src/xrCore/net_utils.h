@@ -78,7 +78,7 @@ public:
 	u32 timeReceive;
 	bool w_allow;
 public:
-	NET_Packet() : inistream(NULL), w_allow(true)
+	NET_Packet() : inistream(nullptr), w_allow(true)
 	{
 	}
 
@@ -104,7 +104,7 @@ public:
 
 	IC void w(const void* p, u32 count)
 	{
-		R_ASSERT(inistream == NULL || w_allow);
+		R_ASSERT(inistream == nullptr || w_allow);
 		VERIFY(p && count);
 		VERIFY(B.count + count < NET_PacketSizeLimit);
 		CopyMemory(&B.data[B.count], p, count);
@@ -232,7 +232,7 @@ public:
 		else
 		{
 			IIniFileStream* tmp = inistream;
-			inistream = NULL;
+			inistream = nullptr;
 			w_u8(0);
 			inistream = tmp; //hack -(
 		}
@@ -290,7 +290,7 @@ public:
 
 	IC void r(void* p, u32 count)
 	{
-		R_ASSERT(inistream == NULL);
+		R_ASSERT(inistream == nullptr);
 		VERIFY(p && count);
 		CopyMemory(p, &B.data[r_pos], count);
 		r_pos += count;

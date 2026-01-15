@@ -79,7 +79,7 @@ struct ECORE_API resptrcode_geom : public resptr_base<SGeometry>
 {
 	void create(D3DVERTEXELEMENT9* decl, ID3DVertexBuffer* vb, ID3DIndexBuffer* ib);
 	void create(u32 FVF, ID3DVertexBuffer* vb, ID3DIndexBuffer* ib);
-	void destroy() { _set(NULL); }
+	void destroy() { _set(nullptr); }
 	u32 stride() const { return _get()->vb_stride; }
 };
 
@@ -160,7 +160,7 @@ struct ECORE_API resptrcode_shader : public resptr_base<Shader>
 {
 	void create(LPCSTR s_shader = 0, LPCSTR s_textures = 0, LPCSTR s_constants = 0, LPCSTR s_matrices = 0);
 	void create(IBlender* B, LPCSTR s_shader = 0, LPCSTR s_textures = 0, LPCSTR s_constants = 0, LPCSTR s_matrices = 0);
-	void destroy() { _set(NULL); }
+	void destroy() { _set(nullptr); }
 };
 
 typedef resptr_core<Shader, resptrcode_shader> ref_shader;

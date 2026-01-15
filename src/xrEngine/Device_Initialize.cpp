@@ -46,7 +46,7 @@ PROTECT_API void CRenderDevice::Initialize()
 #endif // #ifdef INGAME_EDITOR
 
 	// Unless a substitute hWnd has been specified, create a window to render into
-	if (m_hWnd == NULL)
+	if (m_hWnd == nullptr)
 	{
 		const char* wndclass = "_XRAY_1.5";
 
@@ -83,11 +83,11 @@ PROTECT_API void CRenderDevice::Initialize()
 	GetClientRect(m_hWnd, &m_rcWindowClient);
 
 	/*
-	if (strstr(lpCmdLine,"-gpu_sw")!=NULL) HW.Caps.bForceGPU_SW = TRUE;
+	if (strstr(lpCmdLine,"-gpu_sw")!=nullptr) HW.Caps.bForceGPU_SW = TRUE;
 	else HW.Caps.bForceGPU_SW = FALSE;
-	if (strstr(lpCmdLine,"-gpu_nopure")!=NULL) HW.Caps.bForceGPU_NonPure = TRUE;
+	if (strstr(lpCmdLine,"-gpu_nopure")!=nullptr) HW.Caps.bForceGPU_NonPure = TRUE;
 	else HW.Caps.bForceGPU_NonPure = FALSE;
-	if (strstr(lpCmdLine,"-gpu_ref")!=NULL) HW.Caps.bForceGPU_REF = TRUE;
+	if (strstr(lpCmdLine,"-gpu_ref")!=nullptr) HW.Caps.bForceGPU_REF = TRUE;
 	else HW.Caps.bForceGPU_REF = FALSE;
 	*/
 

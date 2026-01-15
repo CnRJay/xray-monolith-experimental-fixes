@@ -158,7 +158,7 @@ ID3DTexture2D*	TW_LoadTextureFromTexture
  )
 {
 	// Calculate levels & dimensions
-	ID3DTexture2D*		t_dest			= NULL;
+	ID3DTexture2D*		t_dest			= nullptr;
 	D3DSURFACE_DESC			t_from_desc0	;
 	R_CHK					(t_from->GetLevelDesc	(0,&t_from_desc0));
 	int levels_exist		= t_from->GetLevelCount();
@@ -322,8 +322,8 @@ ID3DBaseTexture* CRender::texture_load(LPCSTR fRName, u32& ret_msize, bool bStag
 	static bool bAllowStaging = !RImplementation.o.no_ram_textures;
 	bStaging &= bAllowStaging;
 
-	ID3DBaseTexture* pTexture2D = NULL;
-	//IDirect3DCubeTexture9*	pTextureCUBE	= NULL;
+	ID3DBaseTexture* pTexture2D = nullptr;
+	//IDirect3DCubeTexture9*	pTextureCUBE	= nullptr;
 	string_path fn;
 	//u32						dwWidth,dwHeight;
 	u32 img_size = 0;
@@ -338,7 +338,7 @@ ID3DBaseTexture* CRender::texture_load(LPCSTR fRName, u32& ret_msize, bool bStag
 	string_path fname;
 	xr_strcpy(fname, fRName); //. andy if (strext(fname)) *strext(fname)=0;
 	fix_texture_name(fname);
-	IReader* S = NULL;
+	IReader* S = nullptr;
 	//if (!FS.exist(fn,"$game_textures$",	fname,	".dds")	&& strstr(fname,"_bump"))	goto _BUMP_from_base;
 	if (strstr(fname, "_bump"))
 	{

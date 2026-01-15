@@ -821,7 +821,7 @@ CRenderTarget::CRenderTarget(LPCSTR name, u32 width, u32 height)
 		}
 
 		//rt_smap_surf.create			(r2_RT_smap_surf,			size,size,nullrt		);
-		//rt_smap_ZB					= NULL;
+		//rt_smap_ZB					= nullptr;
 		s_accum_mask.create(b_accum_mask, "r3\\accum_mask");
 		s_accum_direct.create(b_accum_direct, "r3\\accum_direct");
 
@@ -877,8 +877,8 @@ CRenderTarget::CRenderTarget(LPCSTR name, u32 width, u32 height)
 		VERIFY(!"Use HW SMAPs only!");
 		//u32	size					=RImplementation.o.smapsize	;
 		//rt_smap_surf.create			(r2_RT_smap_surf,			size,size,D3DFMT_R32F);
-		//rt_smap_depth				= NULL;
-		//R_CHK						(HW.pDevice->CreateDepthStencilSurface	(size,size,D3DFMT_D24X8,D3DMULTISAMPLE_NONE,0,TRUE,&rt_smap_ZB,NULL));
+		//rt_smap_depth				= nullptr;
+		//R_CHK						(HW.pDevice->CreateDepthStencilSurface	(size,size,D3DFMT_D24X8,D3DMULTISAMPLE_NONE,0,TRUE,&rt_smap_ZB,nullptr));
 		//s_accum_mask.create			(b_accum_mask,				"r2\\accum_mask");
 		//s_accum_direct.create		(b_accum_direct,			"r2\\accum_direct");
 		//if (RImplementation.o.advancedpp)
@@ -1011,7 +1011,7 @@ CRenderTarget::CRenderTarget(LPCSTR name, u32 width, u32 height)
 			xr_sprintf(name, "%s_%d", r2_RT_luminance_pool, it);
 			rt_LUM_pool[it].create(name, 1, 1, D3DFMT_R32F);
 			//u_setrt						(rt_LUM_pool[it],	0,	0,	0			);
-			//CHK_DX						(HW.pDevice->Clear( 0L, NULL, D3DCLEAR_TARGET,	0x7f7f7f7f,	1.0f, 0L));
+			//CHK_DX						(HW.pDevice->Clear( 0L, nullptr, D3DCLEAR_TARGET,	0x7f7f7f7f,	1.0f, 0L));
 			FLOAT ColorRGBA[4] = {127.0f / 255.0f, 127.0f / 255.0f, 127.0f / 255.0f, 127.0f / 255.0f};
 			HW.pContext->ClearRenderTargetView(rt_LUM_pool[it]->pRT, ColorRGBA);
 		}
@@ -1403,15 +1403,15 @@ CRenderTarget::~CRenderTarget()
 	Device.m_SecondViewport.update_lens_params = nullptr;
 
 	// Textures
-	t_material->surface_set(NULL);
+	t_material->surface_set(nullptr);
 
 #ifdef DEBUG
 	_SHOW_REF					("t_material_surf",t_material_surf);
 #endif // DEBUG
 	_RELEASE(t_material_surf);
 
-	t_LUM_src->surface_set(NULL);
-	t_LUM_dest->surface_set(NULL);
+	t_LUM_src->surface_set(nullptr);
+	t_LUM_dest->surface_set(nullptr);
 
 #ifdef DEBUG
 	ID3DBaseTexture*	pSurf = 0;
@@ -1426,8 +1426,8 @@ CRenderTarget::~CRenderTarget()
 	//_SHOW_REF("t_envmap_0 - #small",t_envmap_0->pSurface);
 	//_SHOW_REF("t_envmap_1 - #small",t_envmap_1->pSurface);
 #endif // DEBUG
-	t_envmap_0->surface_set(NULL);
-	t_envmap_1->surface_set(NULL);
+	t_envmap_0->surface_set(nullptr);
+	t_envmap_1->surface_set(nullptr);
 	t_envmap_0.destroy();
 	t_envmap_1.destroy();
 
@@ -1437,14 +1437,14 @@ CRenderTarget::~CRenderTarget()
 	// Jitter
 	for (int it = 0; it < TEX_jitter_count; it++)
 	{
-		t_noise[it]->surface_set(NULL);
+		t_noise[it]->surface_set(nullptr);
 #ifdef DEBUG
 		_SHOW_REF("t_noise_surf[it]",t_noise_surf[it]);
 #endif // DEBUG
 		_RELEASE(t_noise_surf[it]);
 	}
 
-	t_noise_mipped->surface_set(NULL);
+	t_noise_mipped->surface_set(nullptr);
 #ifdef DEBUG
 	_SHOW_REF("t_noise_surf_mipped",t_noise_surf_mipped);
 #endif // DEBUG

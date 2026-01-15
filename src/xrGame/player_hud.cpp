@@ -1,4 +1,4 @@
-﻿#include "stdafx.h"
+#include "stdafx.h"
 #include "player_hud.h"
 #include "HudItem.h"
 #include "ui_base.h"
@@ -14,7 +14,7 @@
 
 extern int g_nearwall;
 
-player_hud* g_player_hud = NULL;
+player_hud* g_player_hud = nullptr;
 Fvector _ancor_pos;
 Fvector _wpn_root_pos;
 
@@ -28,7 +28,7 @@ player_hud_motion* player_hud_motion_container::find_motion(const shared_str& na
 		if (s == name)
 			return &(*it);
 	}
-	return NULL;
+	return nullptr;
 }
 
 void player_hud_motion_container::load(IKinematicsAnimated* model, const shared_str& sect)
@@ -36,7 +36,7 @@ void player_hud_motion_container::load(IKinematicsAnimated* model, const shared_
 	CInifile::Sect& _sect = pSettings->r_section(sect);
 	CInifile::SectCIt _b = _sect.Data.begin();
 	CInifile::SectCIt _e = _sect.Data.end();
-	player_hud_motion* pm = NULL;
+	player_hud_motion* pm = nullptr;
 
 	string512 buff;
 	MotionID motion_ID;
@@ -515,12 +515,12 @@ void hud_item_measures::load(const shared_str& sect_name, IKinematics* K)
 	float fStrafeMinAngle_aim = READ_IF_EXISTS(pSettings, r_float, sect_name, "strafe_cam_aim_min_angle", 7.0f);
 
 	//--> (Data 1)
-	m_strafe_offset[2][0].set((bStrafeEnabled ? 1.0f : 0.0f), fFullStrafeTime, NULL); // normal
-	m_strafe_offset[2][1].set((bStrafeEnabled_aim ? 1.0f : 0.0f), fFullStrafeTime_aim, NULL); // aim-GL
+	m_strafe_offset[2][0].set((bStrafeEnabled ? 1.0f : 0.0f), fFullStrafeTime, 0.f); // normal
+	m_strafe_offset[2][1].set((bStrafeEnabled_aim ? 1.0f : 0.0f), fFullStrafeTime_aim, 0.f); // aim-GL
 
 	//--> (Data 2)
-	m_strafe_offset[3][0].set(fStrafeCamLFactor, fStrafeMinAngle, NULL); // normal
-	m_strafe_offset[3][1].set(fStrafeCamLFactor_aim, fStrafeMinAngle_aim, NULL); // aim-GL
+	m_strafe_offset[3][0].set(fStrafeCamLFactor, fStrafeMinAngle, 0.f); // normal
+	m_strafe_offset[3][1].set(fStrafeCamLFactor_aim, fStrafeMinAngle_aim, 0.f); // aim-GL
 
 	// Загрузка параметров смещения / инерции
 	m_inertion_params.m_tendto_speed = READ_IF_EXISTS(pSettings, r_float, sect_name, "inertion_tendto_speed",
@@ -1751,7 +1751,7 @@ void player_hud::detach_item_idx(u16 idx)
 	if (NULL == m_attached_items[idx]) return;
 
 	m_attached_items[idx]->m_parent_hud_item->on_b_hud_detach();
-	m_attached_items[idx] = NULL;
+	m_attached_items[idx] = nullptr;
 
 	if (idx == 1)
 	{

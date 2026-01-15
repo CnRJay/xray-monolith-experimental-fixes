@@ -25,7 +25,7 @@ bool get_actual(const CScriptActionPlanner* action_planner)
 
 CScriptActionPlanner* cast_planner(CScriptActionBase* action)
 {
-	if (!action) return NULL;
+	if (!action) return nullptr;
 	return (smart_cast<CScriptActionPlanner*>(action));
 }
 

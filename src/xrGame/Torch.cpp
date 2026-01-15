@@ -140,12 +140,12 @@ void CTorch::Switch(bool light_on)
 		if (light_on && !m_switched_on)
 		{
 			if (m_sounds.FindSoundItem("SndTurnOn", false))
-				m_sounds.PlaySound("SndTurnOn", pActor->Position(), NULL, !!pActor->HUDview());
+				m_sounds.PlaySound("SndTurnOn", pActor->Position(), nullptr, !!pActor->HUDview());
 		}
 		else if (!light_on && m_switched_on)
 		{
 			if (m_sounds.FindSoundItem("SndTurnOff", false))
-				m_sounds.PlaySound("SndTurnOff", pActor->Position(), NULL, !!pActor->HUDview());
+				m_sounds.PlaySound("SndTurnOff", pActor->Position(), nullptr, !!pActor->HUDview());
 		}
 	}
 
@@ -313,7 +313,7 @@ void CTorch::UpdateCL()
 	if (isFlickering)
 	{
 		float tg = Device.fTimeGlobal;
-		if (lastFlicker == NULL) lastFlicker = tg;
+		if (lastFlicker == 0) lastFlicker = tg;
 		if (tg - lastFlicker >= l_flickerDelay)
 		{
 			int rando = rand() % 100 + 1;

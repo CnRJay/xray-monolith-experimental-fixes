@@ -284,7 +284,7 @@ CCameraEffectorControlled::CCameraEffectorControlled(CEffectorController* c)
 
 CCameraEffectorControlled::~CCameraEffectorControlled()
 {
-	m_controller->SetCam(NULL);
+	m_controller->SetCam(nullptr);
 }
 
 BOOL CCameraEffectorControlled::Valid()
@@ -301,7 +301,7 @@ SndShockEffector::SndShockEffector()
 	m_snd_length = 0.0f;
 	m_cur_length = 0.0f;
 	m_stored_volume = -1.0f;
-	m_actor = NULL;
+	m_actor = nullptr;
 }
 
 SndShockEffector::~SndShockEffector()

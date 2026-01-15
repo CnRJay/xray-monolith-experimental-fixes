@@ -117,7 +117,7 @@ public:
 	virtual void Collide();
 	virtual void near_callback(CPHObject* obj) { ; }
 	virtual void RMotionsQuery(qResultVec& res) { ; }
-	virtual CPHMoveStorage* MoveStorage() { return NULL; }
+	virtual CPHMoveStorage* MoveStorage() { return nullptr; }
 	virtual ECastType CastType() { return tpNotDefinite; }
 
 	void SetDeadBody() { m_flags.set(is_deadbody, TRUE); }

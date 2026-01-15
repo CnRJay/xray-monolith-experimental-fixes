@@ -159,7 +159,7 @@ void SBinocVisibleObj::Update()
 			u32 clr = subst_alpha(m_lt.GetTextureColor(), 255);
 
 			//-----------------------------------------------------
-			CActor* pActor = NULL;
+			CActor* pActor = nullptr;
 			if (IsGameTypeSingle()) pActor = Actor();
 			else
 			{
@@ -239,7 +239,7 @@ void CBinocularsVision::Update()
 	if (g_dedicated_server)
 		return;
 	//-----------------------------------------------------
-	const CActor* pActor = NULL;
+	const CActor* pActor = nullptr;
 	if (IsGameTypeSingle()) pActor = Actor();
 	else
 	{
@@ -290,7 +290,7 @@ void CBinocularsVision::Update()
 			new_vis_obj->create_default(m_frame_color.get());
 			new_vis_obj->m_upd_speed = m_rotating_speed;
 
-			m_sounds.PlaySound("found_snd", Fvector().set(0, 0, 0), NULL, true);
+			m_sounds.PlaySound("found_snd", Fvector().set(0, 0, 0), nullptr, true);
 		}
 	}
 
@@ -330,7 +330,7 @@ void CBinocularsVision::Update()
 		(*it)->Update();
 
 		if (bLocked != visObj->m_flags.test(flTargetLocked))
-			m_sounds.PlaySound("catch_snd", Fvector().set(0, 0, 0), NULL, true);
+			m_sounds.PlaySound("catch_snd", Fvector().set(0, 0, 0), nullptr, true);
 	}
 }
 

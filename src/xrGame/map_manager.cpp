@@ -141,7 +141,7 @@ CMapManager::CMapManager()
 {
 	m_locations_wrapper = xr_new<CMapLocationWrapper>();
 	m_locations_wrapper->registry().init(1);
-	m_locations = NULL;
+	m_locations = nullptr;
 }
 
 CMapManager::~CMapManager()
@@ -155,7 +155,7 @@ CMapLocation* CMapManager::AddMapLocation(const shared_str& spot_type, u16 id)
 	if (ai().get_alife() && !ai().alife().objects().object(id, true))
 	{
 		Msg("CMapManager::AddMapLocation: Blocked creation of spot [%s] for non-existent ID [%d]", spot_type.c_str(), id);
-		return NULL;
+		return nullptr;
 	}
 
 	CMapLocation* l = xr_new<CMapLocation>(spot_type.c_str(), id);
@@ -173,7 +173,7 @@ CMapLocation* CMapManager::AddMapLocation(const shared_str& spot_type, u16 id)
 
 CMapLocation* CMapManager::AddRelationLocation(CInventoryOwner* pInvOwner)
 {
-	if (!Level().CurrentViewEntity())return NULL;
+	if (!Level().CurrentViewEntity())return nullptr;
 
 	ALife::ERelationType relation = ALife::eRelationTypeFriend;
 	CInventoryOwner* pActor = smart_cast<CInventoryOwner*>(Level().CurrentViewEntity());
@@ -289,7 +289,7 @@ bool CMapManager::HasMapLocation(const shared_str& spot_type, u16 id)
 {
 	CMapLocation* l = GetMapLocation(spot_type, id);
 
-	return (l != NULL);
+	return (l != nullptr);
 }
 
 CMapLocation* CMapManager::GetMapLocation(const shared_str& spot_type, u16 id)

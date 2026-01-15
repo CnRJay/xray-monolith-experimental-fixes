@@ -1,4 +1,4 @@
-﻿#include "stdafx.h"
+#include "stdafx.h"
 #include "customdetector.h"
 #include "ui/ArtefactDetectorUI.h"
 #include "hudmanager.h"
@@ -15,8 +15,8 @@ ITEM_INFO::ITEM_INFO()
 {
 	snd_time = 0.0f;
 	cur_period = 0.0f;
-	pParticle = NULL;
-	curr_ref = NULL;
+	pParticle = nullptr;
+	curr_ref = nullptr;
 }
 
 ITEM_INFO::~ITEM_INFO()

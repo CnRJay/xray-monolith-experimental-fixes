@@ -51,9 +51,9 @@ void CSE_ALifeObject::spawn_supplies(LPCSTR ini_string)
 		for (u32 k = 0; ini.r_line(loadout_section, k, &itmSection, &V); k++)
 		{
 			// If level=<lname> then only spawn items if object on that level
-			if (strstr(V, "level=") != NULL)
+			if (strstr(V, "level=") != nullptr)
 			{
-				if (strstr(V, lname) != NULL)
+				if (strstr(V, lname) != nullptr)
 					OnlyOne.push_back(k);
 			}
 			else

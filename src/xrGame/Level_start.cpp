@@ -79,9 +79,9 @@ bool CLevel::net_Start(const char* op_server, const char* op_client)
 	if (!IsDemoPlay())
 	{
 		LPCSTR pdemosave = strstr(op_client, "/mpdemosave=");
-		bool is_single = m_caServerOptions.size() != 0 ? (strstr(m_caServerOptions.c_str(), "single") != NULL) : false;
+		bool is_single = m_caServerOptions.size() != 0 ? (strstr(m_caServerOptions.c_str(), "single") != nullptr) : false;
 		int save_demo = g_cl_save_demo;
-		if (pdemosave != NULL)
+		if (pdemosave != nullptr)
 		{
 			sscanf(pdemosave, "/mpdemosave=%d", &save_demo);
 		}
@@ -279,8 +279,8 @@ bool CLevel::net_start6()
 		else if (!map_data.m_map_loaded && map_data.m_name.size() && m_bConnectResult)
 			//if (map_data.m_name == "") - level not loaded, see CLevel::net_start_client3
 		{
-			LPCSTR level_id_string = NULL;
-			LPCSTR dialog_string = NULL;
+			LPCSTR level_id_string = nullptr;
+			LPCSTR dialog_string = nullptr;
 			LPCSTR download_url = !!map_data.m_map_download_url ? map_data.m_map_download_url.c_str() : "";
 			CStringTable st;
 			LPCSTR tmp_map_ver = !!map_data.m_map_version ? map_data.m_map_version.c_str() : "";
@@ -300,8 +300,8 @@ bool CLevel::net_start6()
 		}
 		else if (map_data.IsInvalidClientChecksum())
 		{
-			LPCSTR level_id_string = NULL;
-			LPCSTR dialog_string = NULL;
+			LPCSTR level_id_string = nullptr;
+			LPCSTR dialog_string = nullptr;
 			LPCSTR download_url = !!map_data.m_map_download_url ? map_data.m_map_download_url.c_str() : "";
 			CStringTable st;
 			LPCSTR tmp_map_ver = !!map_data.m_map_version ? map_data.m_map_version.c_str() : "";

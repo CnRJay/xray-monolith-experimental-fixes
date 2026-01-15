@@ -316,7 +316,7 @@ void CActor::g_cl_CheckControls(u32 mstate_wf, Fvector& vControlAccel, float& Ju
 
 	if (IsGameTypeSingle() && cam_eff_factor > EPS)
 	{
-		LPCSTR state_anm = NULL;
+		LPCSTR state_anm = nullptr;
 
 		if (mstate_real & mcSprint && !(mstate_old & mcSprint))
 			state_anm = "sprint";
@@ -517,7 +517,7 @@ void CActor::g_cl_Orientate(u32 mstate_rl, float dt)
 
 	CWeaponMagazined* pWM = smart_cast<CWeaponMagazined*>(inventory().GetActiveSlot() != NO_ACTIVE_SLOT
 		                                                      ? inventory().ItemFromSlot(inventory().GetActiveSlot())
-		                                                      : NULL);
+		                                                      : nullptr);
 	if (pWM && pWM->GetCurrentFireMode() == 1 && eacFirstEye != cam_active)
 	{
 		Fvector dangle = weapon_recoil_last_delta();
@@ -562,7 +562,7 @@ void CActor::g_sv_Orientate(u32 /**mstate_rl/**/, float /**dt/**/)
 
 	CWeaponMagazined* pWM = smart_cast<CWeaponMagazined*>(inventory().GetActiveSlot() != NO_ACTIVE_SLOT
 		                                                      ? inventory().ItemFromSlot(inventory().GetActiveSlot())
-		                                                      : NULL);
+		                                                      : nullptr);
 	if (pWM && pWM->GetCurrentFireMode() == 1/* && eacFirstEye != cam_active*/)
 	{
 		Fvector dangle = weapon_recoil_last_delta();

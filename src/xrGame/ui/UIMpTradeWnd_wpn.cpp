@@ -27,7 +27,7 @@ void CUIMpTradeWnd::OnBtnPistolAmmoClicked(CUIWindow* w, void* d)
 		return;
 
 	SBuyItemInfo* pitem = CreateItem(ammo_name, SBuyItemInfo::e_undefined, false);
-	bool b_res = TryToBuyItem(pitem, bf_normal, NULL);
+	bool b_res = TryToBuyItem(pitem, bf_normal, nullptr);
 	if (!b_res)
 		DestroyItem(pitem);
 }
@@ -83,7 +83,7 @@ void CUIMpTradeWnd::OnBtnRifleAmmoClicked(CUIWindow* w, void* d)
 		return;
 
 	SBuyItemInfo* pitem = CreateItem(ammo_name, SBuyItemInfo::e_undefined, false);
-	bool b_res = TryToBuyItem(pitem, bf_normal, NULL);
+	bool b_res = TryToBuyItem(pitem, bf_normal, nullptr);
 	if (!b_res)
 		DestroyItem(pitem);
 }
@@ -199,7 +199,7 @@ void CUIMpTradeWnd::OnBtnRifleAmmo2Clicked(CUIWindow* w, void* d)
 		return;
 
 	SBuyItemInfo* pitem = CreateItem(ammo_name, SBuyItemInfo::e_undefined, false);
-	bool b_res = TryToBuyItem(pitem, bf_normal, NULL);
+	bool b_res = TryToBuyItem(pitem, bf_normal, nullptr);
 	if (!b_res)
 		DestroyItem(pitem);
 }
@@ -266,11 +266,11 @@ void CUIMpTradeWnd::SellItemAddons(SBuyItemInfo* sell_itm, item_addon_type addon
 			     ++ammo_idx)
 			{
 				const shared_str& ammo_name = wpn2->m_ammoTypes2[ammo_idx];
-				SBuyItemInfo* ammo = NULL;
+				SBuyItemInfo* ammo = nullptr;
 
-				while ((ammo = FindItem(ammo_name, SBuyItemInfo::e_bought)) != NULL)
+				while ((ammo = FindItem(ammo_name, SBuyItemInfo::e_bought)) != nullptr)
 				{
-					SBuyItemInfo* tempo = NULL;
+					SBuyItemInfo* tempo = nullptr;
 					TryToSellItem(ammo, true, tempo);
 				}
 			}
@@ -384,7 +384,7 @@ shared_str CUIMpTradeWnd::GetAddonNameSect(SBuyItemInfo* itm, item_addon_type at
 		}
 		break;
 	};
-	return NULL;
+	return nullptr;
 }
 
 bool CUIMpTradeWnd::AttachAddon(SBuyItemInfo* itm, item_addon_type at)

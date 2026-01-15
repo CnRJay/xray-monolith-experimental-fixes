@@ -107,7 +107,7 @@ void CPEDef::ExecuteCollision(PAPI::Particle *particles, u32 p_cnt, float dt,
                                CDB::OPT_ONLYNEAREST | CDB::OPT_CULL, RT);
           collide::rq_results results;
           if (g_pGameLevel->ObjectSpace.RayQueryParallel(
-                  results, RD, NULL, NULL, NULL, NULL, cctx->xrc, cctx->r_temp,
+                  results, RD, nullptr, NULL, nullptr, NULL, cctx->xrc, cctx->r_temp,
                   cctx->r_spatial)) {
             if (results.r_count()) {
               RQ = *results.r_begin();
@@ -116,7 +116,7 @@ void CPEDef::ExecuteCollision(PAPI::Particle *particles, u32 p_cnt, float dt,
           }
         } else {
           result = g_pGameLevel->ObjectSpace.RayPick(m.posB, dir, dist, RT, RQ,
-                                                     NULL);
+                                                     nullptr);
         }
 
         if (result) {

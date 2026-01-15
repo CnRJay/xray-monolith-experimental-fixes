@@ -1414,7 +1414,7 @@ bool CScriptGameObject::is_weapon_going_to_be_strapped(CScriptGameObject const* 
 	if (!object)
 	{
 		ai().script_engine().script_log(ScriptStorage::eLuaMessageTypeError,
-		                                "CGameObject : cannot access class member is_weapon_going_to_be_strapped (object passed is null)!");
+		                                "CGameObject : cannot access class member is_weapon_going_to_be_strapped (object passed is nullptr)!");
 		return false;
 	}
 
@@ -1607,7 +1607,7 @@ void CScriptGameObject::DetachVehicle(bool bForce)
 	CAI_Stalker *stalker = smart_cast<CAI_Stalker *>(&object());
 	if (stalker)
 	{
-		stalker->use_HolderEx(NULL);
+		stalker->use_HolderEx(nullptr);
 	}
 #endif
 }

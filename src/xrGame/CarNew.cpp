@@ -91,7 +91,7 @@ BOOL CCar::Fly_net_Spawn(CSE_Abstract *DC)
 	}
 	{
 		m_drive_bones.clear();
-		LPCSTR str = READ_IF_EXISTS(ini, r_string, fly_sec, "drive_bones", NULL);
+		LPCSTR str = READ_IF_EXISTS(ini, r_string, fly_sec, "drive_bones", nullptr);
 		int n = _GetItemCount(str);
 		string64 bone_name;
 		for (int k = 0; k < n; ++k)

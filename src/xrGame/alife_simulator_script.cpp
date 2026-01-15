@@ -318,7 +318,7 @@ LPCSTR get_level_name(const CALifeSimulator* self, int level_id)
 	GameGraph::LEVEL_MAP::const_iterator I = levels.find((GameGraph::_LEVEL_ID)level_id);
 	if (I == levels.end())
 	{
-		return NULL;
+		return nullptr;
 	}
 	LPCSTR result = *ai().game_graph().header().level((GameGraph::_LEVEL_ID)level_id).name();
 	return (result);

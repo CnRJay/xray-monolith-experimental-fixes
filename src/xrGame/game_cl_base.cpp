@@ -18,14 +18,14 @@ LPCSTR GameTypeToString(EGameIDs gt, bool bShort);
 
 game_cl_GameState::game_cl_GameState()
 {
-	local_player = createPlayerState(NULL); //initializing account info
-	m_WeaponUsageStatistic = NULL;
+	local_player = createPlayerState(nullptr); //initializing account info
+	m_WeaponUsageStatistic = nullptr;
 
 	m_game_type_name = 0;
 
 	shedule.t_min = 5;
 	shedule.t_max = 20;
-	m_game_ui_custom = NULL;
+	m_game_ui_custom = nullptr;
 	shedule_register();
 
 	m_u16VotingEnabled = 0;
@@ -240,7 +240,7 @@ void game_cl_GameState::TranslateGameMessage(u32 msg, NET_Packet& P)
 		{
 			ClientID newClientId;
 			P.r_clientID(newClientId);
-			game_PlayerState* PS = NULL;
+			game_PlayerState* PS = nullptr;
 			if (newClientId == local_svdpnid)
 			{
 				PS = local_player;
@@ -306,7 +306,7 @@ game_PlayerState* game_cl_GameState::lookat_player()
 	{
 		return GetPlayerByGameID(current_entity->ID());
 	}
-	return NULL;
+	return nullptr;
 }
 
 game_PlayerState* game_cl_GameState::GetPlayerByGameID(u32 GameID)
@@ -319,7 +319,7 @@ game_PlayerState* game_cl_GameState::GetPlayerByGameID(u32 GameID)
 		game_PlayerState* P = I->second;
 		if (P->GameID == GameID) return P;
 	};
-	return NULL;
+	return nullptr;
 };
 
 game_PlayerState* game_cl_GameState::GetPlayerByOrderID(u32 idx)

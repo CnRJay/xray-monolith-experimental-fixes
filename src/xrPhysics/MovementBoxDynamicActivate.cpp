@@ -318,7 +318,7 @@ bool ActivateBoxDynamic(IPHMovementControl* mov_control, bool character_exist, D
 	{
 		if(m_character)
 			return m_character->ObjectContactCallBack();
-		else return NULL; 
+		else return nullptr; 
 	}*/
 
 	saved_callback = mov_control->character()->ObjectContactCallBack();

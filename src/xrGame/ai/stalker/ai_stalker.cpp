@@ -82,15 +82,15 @@ CAI_Stalker::CAI_Stalker() :
 	m_death_sound_enabled(true)
 {
 	m_dwLastThinkTime = 0;
-	m_pPhysics_support = NULL;
-	m_animation_manager = NULL;
-	m_brain = NULL;
-	m_sight_manager = NULL;
-	m_weapon_shot_effector = NULL;
+	m_pPhysics_support = nullptr;
+	m_animation_manager = nullptr;
+	m_brain = nullptr;
+	m_sight_manager = nullptr;
+	m_weapon_shot_effector = nullptr;
 	m_sound_user_data_visitor = 0;
 	m_movement_manager = 0;
 	m_group_behaviour = true;
-	m_boneHitProtection = NULL;
+	m_boneHitProtection = nullptr;
 	m_power_fx_factor = flt_max;
 	m_wounded = false;
 #ifdef DEBUG
@@ -853,7 +853,7 @@ void CAI_Stalker::net_Save(NET_Packet& P)
 
 BOOL CAI_Stalker::net_SaveRelevant()
 {
-	return (inherited::net_SaveRelevant() || BOOL(PPhysicsShell() != NULL));
+	return (inherited::net_SaveRelevant() || BOOL(PPhysicsShell() != nullptr));
 }
 
 void CAI_Stalker::net_Export(NET_Packet& P)
@@ -1677,7 +1677,7 @@ void CAI_Stalker::ChangeVisual(shared_str NewVisual)
 		}
 
 		CDamageManager::reload(cNameSect_str(), "damage", pSettings);
-		ResetBoneProtections(NULL, NULL);
+		ResetBoneProtections(NULL, nullptr);
 		reattach_items();
 		m_pPhysics_support->in_ChangeVisual();
 		animation().reload();
@@ -1788,7 +1788,7 @@ void CAI_Stalker::LookAtActor(CBoneInstance* headBone) {
 #ifdef HOLDERCUSTOM_NEW
 bool CAI_Stalker::attach_Holder(CHolderCustom *holder)
 {
-	if (holder == NULL)
+	if (holder == nullptr)
 		return false;
 	if (m_holder)
 		return false;

@@ -14,7 +14,7 @@ CMonsterEnemyManager::CMonsterEnemyManager()
 	time_last_seen = 0;
 	expediency = false;
 	enemy_see_me = false;
-	m_script_enemy = NULL;
+	m_script_enemy = nullptr;
 	monster = 0;
 	enemy = 0;
 	flags.zero();
@@ -330,14 +330,14 @@ void CMonsterEnemyManager::remove_links(CObject* O)
 {
 	if (enemy == O)
 	{
-		enemy = NULL;
+		enemy = nullptr;
 	}
 	if (prev_enemy == O)
 	{
-		prev_enemy = NULL;
+		prev_enemy = nullptr;
 	}
 	if (m_script_enemy == O)
 	{
-		m_script_enemy = NULL;
+		m_script_enemy = nullptr;
 	}
 }

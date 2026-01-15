@@ -88,22 +88,22 @@ void R_xforms::apply_invw()
 
 void R_xforms::unmap()
 {
-	c_w = NULL;
-	c_invw = NULL;
-	c_v = NULL;
-	c_p = NULL;
-	c_wv = NULL;
-	c_vp = NULL;
-	c_wvp = NULL;
+	c_w = nullptr;
+	c_invw = nullptr;
+	c_v = nullptr;
+	c_p = nullptr;
+	c_wv = nullptr;
+	c_vp = nullptr;
+	c_wvp = nullptr;
 
 
 	for (auto i = 0; i < 2; i++) {
-		c_w_prev[i] = NULL;
-		c_v_prev[i] = NULL;
-		c_p_prev[i] = NULL;
-		c_wv_prev[i] = NULL;
-		c_vp_prev[i] = NULL;
-		c_wvp_prev[i] = NULL;
+		c_w_prev[i] = nullptr;
+		c_v_prev[i] = nullptr;
+		c_p_prev[i] = nullptr;
+		c_wv_prev[i] = nullptr;
+		c_vp_prev[i] = nullptr;
+		c_wvp_prev[i] = nullptr;
 	}
 }
 

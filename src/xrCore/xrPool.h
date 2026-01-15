@@ -25,7 +25,7 @@ private:
 			T* E = list + it;
 			*access(E) = E + 1;
 		}
-		*access(list + granularity - 1) = NULL;
+		*access(list + granularity - 1) = nullptr;
 	}
 
 public:
@@ -54,7 +54,7 @@ public:
 		P->~T();
 		*access(P) = list;
 		list = P;
-		P = NULL;
+		P = nullptr;
 	}
 
 	void clear()

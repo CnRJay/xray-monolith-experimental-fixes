@@ -534,10 +534,10 @@ void CRenderDevice::message_loop()
     }
 #endif
 	MSG msg;
-	PeekMessage(&msg, NULL, 0U, 0U, PM_NOREMOVE);
+	PeekMessage(&msg, nullptr, 0U, 0U, PM_NOREMOVE);
 	while (msg.message != WM_QUIT)
 	{
-		if (PeekMessage(&msg, NULL, 0U, 0U, PM_REMOVE))
+		if (PeekMessage(&msg, nullptr, 0U, 0U, PM_REMOVE))
 		{
 			TranslateMessage(&msg);
 			DispatchMessage(&msg);
@@ -750,7 +750,7 @@ void CRenderDevice::OnWM_Activate(WPARAM wParam, LPARAM lParam)
 			else
 			{
 				ShowCursor(TRUE);
-				ClipCursor(NULL);
+				ClipCursor(nullptr);
 				pInput->OnAppDeactivate();
 			}
 		}
@@ -786,7 +786,7 @@ void CRenderDevice::OnWM_Activate(WPARAM wParam, LPARAM lParam)
 			app_inactive_time_start = TimerMM.GetElapsed_ms();
 			Device.seqAppDeactivate.Process(rp_AppDeactivate);
 			ShowCursor(TRUE);
-			ClipCursor(NULL);
+			ClipCursor(nullptr);
 		}
 	}
 }
@@ -845,6 +845,6 @@ void CLoadScreenRenderer::OnRender()
 void CRenderDevice::CSecondVPParams::SetSVPActive(bool bState) //--#SM+#-- +SecondVP+
 {
 	isActive = bState;
-	if (g_pGamePersistent != NULL)
+	if (g_pGamePersistent != nullptr)
 		g_pGamePersistent->m_pGShaderConstants->m_blender_mode.z = (isActive ? 1.0f : 0.0f);
 }

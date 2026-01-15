@@ -204,11 +204,11 @@ CObject::CObject() :
 	Props.storage = 0;
 	setID((u16)-1);
 
-	Parent = NULL;
+	Parent = nullptr;
 
-	NameObject = NULL;
-	NameSection = NULL;
-	NameVisual = NULL;
+	NameObject = nullptr;
+	NameSection = nullptr;
+	NameVisual = nullptr;
 
 #ifdef DEBUG
     dbg_update_shedule = u32(-1) / 2;

@@ -14,8 +14,8 @@ namespace award_system
 	game_state_accumulator::game_state_accumulator()
 	{
 		m_last_player_spawn_time = 0;
-		m_local_player = NULL;
-		m_item_mngr = NULL;
+		m_local_player = nullptr;
+		m_item_mngr = nullptr;
 	}
 
 	game_state_accumulator::~game_state_accumulator()
@@ -45,7 +45,7 @@ namespace award_system
 		m_local_player = local_player;
 		init_player_accum_values(local_player);
 
-		CUIMpTradeWnd* tmp_trade_wnd = NULL;
+		CUIMpTradeWnd* tmp_trade_wnd = nullptr;
 		game_cl_Deathmatch* tmp_dm_game = smart_cast<game_cl_Deathmatch*>(&Game());
 		if (tmp_dm_game)
 		{
@@ -470,16 +470,16 @@ namespace award_system
 	CWeapon* game_state_accumulator::get_active_weapon(game_PlayerState* player)
 	{
 		if (!player)
-			return NULL;
+			return nullptr;
 
 		CObject* tmp_obj = Level().Objects.net_Find(player->GameID);
 		if (!tmp_obj)
-			return NULL;
+			return nullptr;
 
 		CActorMP const* tmp_actor = smart_cast<CActorMP const*>(tmp_obj);
 
 		if (!tmp_actor)
-			return NULL;
+			return nullptr;
 
 		u16 tmp_active_slot = tmp_actor->inventory().GetActiveSlot();
 		CInventoryItem* tmp_inv_item = tmp_active_slot != NO_ACTIVE_SLOT
@@ -487,7 +487,7 @@ namespace award_system
 			                               : NULL;
 
 		if (!tmp_inv_item)
-			return NULL;
+			return nullptr;
 
 		return smart_cast<CWeapon*>(tmp_inv_item);
 	}
@@ -496,7 +496,7 @@ namespace award_system
 	{
 		CObject* tmp_obj = Level().Objects.net_Find(game_id);
 		if (!tmp_obj)
-			return NULL;
+			return nullptr;
 
 		return smart_cast<CActor*>(tmp_obj);
 	}

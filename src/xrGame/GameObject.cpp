@@ -248,7 +248,7 @@ void CGameObject::OnEvent(NET_Packet& P, u16 type)
 				    H_Parent()->ID(), H_Parent()->cName().c_str(), Device.dwFrame);
 
 				// This object will be destroy on call function <H_Parent::Destroy>
-				// or it will be call <H_Parent::Reject>  ==>  H_Parent = NULL
+				// or it will be call <H_Parent::Reject>  ==>  H_Parent = nullptr
 				// !!! ___ it is necessary to be check!
 				break;
 			}
@@ -314,13 +314,13 @@ BOOL CGameObject::net_Spawn(CSE_Abstract* DC)
 	}
 	else
 	{
-		//R_ASSERT(Level().Objects.net_Find(E->ID) == NULL);
+		//R_ASSERT(Level().Objects.net_Find(E->ID) == nullptr);
 		CObject* o = Level().Objects.net_Find(E->ID);
-		if (o != NULL)
+		if (o != nullptr)
 		{
 			Msg("ERROR: CGameObject:net_spawn() Object with ID already exists! ID=%d self=%s other=%s", E->ID,
 			    *(cName()), *(o->cName()));
-			//ai().script_engine().script_log(eLuaMessageTypeError, "CGameObject:net_Spawn() | Level().Objects.net_Find(E->ID) != NULL (This mean object already exist on level by this ID) ID=%d s_name=%s", E->ID, *(E->s_name));
+			//ai().script_engine().script_log(eLuaMessageTypeError, "CGameObject:net_Spawn() | Level().Objects.net_Find(E->ID) != nullptr (This mean object already exist on level by this ID) ID=%d s_name=%s", E->ID, *(E->s_name));
 			return false;
 		}
 	}
@@ -1044,12 +1044,12 @@ void VisualCallback(IKinematics* tpKinematics)
 
 CScriptGameObject* CGameObject::lua_game_object() const
 {
-	if (!this) return NULL;
+	if (!this) return nullptr;
 	if (!m_spawned)
 	{
 		Msg("! you are trying to use a destroyed object [%i]", ID());
 		ai().script_engine().print_stack();
-		return NULL;
+		return nullptr;
 	}
 	if (!m_lua_game_object)
 		m_lua_game_object = xr_new<CScriptGameObject>(const_cast<CGameObject*>(this));

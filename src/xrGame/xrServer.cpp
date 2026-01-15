@@ -32,13 +32,13 @@ u32 g_sv_traffic_optimization_level = eto_none;
 xrClientData::xrClientData() :
 	IClient(Device.GetTimerGlobal())
 {
-	ps = NULL;
+	ps = nullptr;
 	Clear();
 }
 
 void xrClientData::Clear()
 {
-	owner = NULL;
+	owner = nullptr;
 	net_Ready = FALSE;
 	net_Accepted = FALSE;
 	net_PassUpdates = TRUE;
@@ -56,10 +56,10 @@ xrClientData::~xrClientData()
 
 xrServer::xrServer() : IPureServer(Device.GetTimerGlobal(), g_dedicated_server)
 {
-	m_file_transfers = NULL;
+	m_file_transfers = nullptr;
 	m_aDelayedPackets.clear();
-	m_server_logo = NULL;
-	m_server_rules = NULL;
+	m_server_logo = nullptr;
+	m_server_rules = nullptr;
 	m_last_updates_size = 0;
 	m_last_update_time = 0;
 }
@@ -422,7 +422,7 @@ u32 xrServer::OnDelayedMessage(NET_Packet& P, ClientID sender) // Non-Zero means
 				xr_sprintf(tmp_number_str, " raid:%u", CL->ID.value());
 				STRCONCAT(result_command, buff, tmp_number_str);
 				Console->Execute(result_command);
-				SetLogCB(NULL);
+				SetLogCB(nullptr);
 
 				NET_Packet P_answ;
 				for (u32 i = 0; i < _tmp_log.size(); ++i)
@@ -676,7 +676,7 @@ u32 xrServer::OnMessage(NET_Packet& P, ClientID sender) // Non-Zero means broadc
 					if (static_cast<IClient*>(CL) != GetServerClient())
 					{
 						game_PlayerState* tmp_ps = CL->ps;
-						u32 tmp_pid = tmp_ps != NULL ? tmp_ps->m_account.profile_id() : 0;
+						u32 tmp_pid = tmp_ps != nullptr ? tmp_ps->m_account.profile_id() : 0;
 						Game().m_WeaponUsageStatistic->OnUpdateRespond(&P, CL->m_cdkey_digest, tmp_pid);
 					}
 				}
@@ -873,9 +873,9 @@ if( dbg_net_Draw_Flags.test( dbg_destroy ) )
 	m_tID_Generator.vfFreeID(P->ID, Device.TimerAsync());
 
 	if (P->owner && P->owner->owner == P)
-		P->owner->owner = NULL;
+		P->owner->owner = nullptr;
 
-	P->owner = NULL;
+	P->owner = nullptr;
 	if (!ai().get_alife() || !P->m_bALifeControl)
 	{
 		F_entity_Destroy(P);
@@ -889,7 +889,7 @@ void xrServer::Server_Client_Check(IClient* CL)
 	{
 		if (!CL->flags.bConnected)
 		{
-			SV_Client = NULL;
+			SV_Client = nullptr;
 		};
 		return;
 	};
@@ -930,7 +930,7 @@ CSE_Abstract* xrServer::GetEntity(u32 Num)
 	{
 		if (C == Num) return I->second;
 	};
-	return NULL;
+	return nullptr;
 };
 
 

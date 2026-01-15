@@ -98,7 +98,7 @@ void game_cl_mp::UpdateSndMessages()
 	for (u32 i = 0; i < m_pSndMessagesInPlay.size();)
 	{
 		SND_Message* pSndMsg = m_pSndMessagesInPlay[i];
-		if (pSndMsg->pSound._feedback() == NULL)
+		if (pSndMsg->pSound._feedback() == nullptr)
 		{
 			m_pSndMessagesInPlay.erase(m_pSndMessagesInPlay.begin() + i);
 			continue;

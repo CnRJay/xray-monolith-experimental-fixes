@@ -121,7 +121,7 @@ CWeaponStatMgun::CWeaponStatMgun()
 	camera->Load("mounted_weapon_cam");
 #endif
 
-	p_overheat = NULL;
+	p_overheat = nullptr;
 }
 
 CWeaponStatMgun::~CWeaponStatMgun()

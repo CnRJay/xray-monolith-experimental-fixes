@@ -1,4 +1,4 @@
-﻿////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////
 //	Modified by Axel DominatoR
 //	Last updated: 13/08/2015
 ////////////////////////////////////////////////////////////////////////////
@@ -72,8 +72,8 @@ float CWeapon::SDS_Radius(bool alt) {
 			scope_tex_name = alt ? m_secondary_scope_tex_name : m_primary_scope_tex_name;
 
 			// demonized: ugly hack to fix stuck scope texture on old scopes system
-			if (!READ_IF_EXISTS(pSettings, r_string, cNameSect(), "scope_texture", NULL)) {
-				scope_tex_name = NULL;
+			if (!READ_IF_EXISTS(pSettings, r_string, cNameSect(), "scope_texture", nullptr)) {
+				scope_tex_name = nullptr;
 			}
 		}
 
@@ -120,17 +120,17 @@ CWeapon::CWeapon()
 
 	m_zoom_params.m_fCurrentZoomFactor = g_fov;
 	m_zoom_params.m_fZoomRotationFactor = 0.f;
-	m_zoom_params.m_pVision = NULL;
-	m_zoom_params.m_pNight_vision = NULL;
+	m_zoom_params.m_pVision = nullptr;
+	m_zoom_params.m_pNight_vision = nullptr;
 	m_zoom_params.m_fSecondVPFovFactor = 0.0f;
 
 	m_altAimPos = false;
 	m_zoomtype = 0;
 
-	m_pCurrentAmmo = NULL;
+	m_pCurrentAmmo = nullptr;
 
-	m_pFlameParticles2 = NULL;
-	m_sFlameParticles2 = NULL;
+	m_pFlameParticles2 = nullptr;
+	m_sFlameParticles2 = nullptr;
 
 	m_fCurrentCartirdgeDisp = 1.f;
 
@@ -141,7 +141,7 @@ CWeapon::CWeapon()
 	m_can_be_strapped = false;
 	m_ef_main_weapon_type = u32(-1);
 	m_ef_weapon_type = u32(-1);
-	m_UIScope = NULL;
+	m_UIScope = nullptr;
 	m_set_next_ammoType_on_reload = undefined_ammo_type;
 	m_crosshair_inertion = 0.f;
 	m_activation_speed_is_overriden = false;
@@ -328,7 +328,7 @@ void CWeapon::UpdateZoomParams() {
 	} else if (m_zoomtype == 1) //Alt
 	{
 		m_zoom_params.m_bUseDynamicZoom = m_zoom_params.m_bUseDynamicZoom_Alt || READ_IF_EXISTS(pSettings, r_bool, cNameSect(), "scope_dynamic_zoom_alt", false);
-		m_zoom_params.m_fScopeZoomFactor = (g_player_hud->m_adjust_mode ? g_player_hud->m_adjust_zoom_factor[2] : READ_IF_EXISTS(pSettings, r_float, cNameSect(), "scope_zoom_factor_alt", 0)) / (READ_IF_EXISTS(pSettings, r_string, cNameSect(), "scope_texture_alt", NULL) && zoomFlags.test(SDS_ZOOM) && (SDS_Radius(true) > 0.0) ? zoom_multiple : 1);
+		m_zoom_params.m_fScopeZoomFactor = (g_player_hud->m_adjust_mode ? g_player_hud->m_adjust_zoom_factor[2] : READ_IF_EXISTS(pSettings, r_float, cNameSect(), "scope_zoom_factor_alt", 0)) / (READ_IF_EXISTS(pSettings, r_string, cNameSect(), "scope_texture_alt", nullptr) && zoomFlags.test(SDS_ZOOM) && (SDS_Radius(true) > 0.0) ? zoom_multiple : 1);
 		m_zoom_params.m_fZoomStepCount = 0;
 	} else //Main Sight
 	{
@@ -387,20 +387,20 @@ void CWeapon::UpdateUIScope()
 		else
 		{
 			if (!m_primary_scope_tex_name) {
-				m_primary_scope_tex_name = READ_IF_EXISTS(pSettings, r_string, cNameSect(), "scope_texture", NULL);
+				m_primary_scope_tex_name = READ_IF_EXISTS(pSettings, r_string, cNameSect(), "scope_texture", nullptr);
 			}
 			scope_tex_name = m_primary_scope_tex_name;
 
 			// demonized: ugly hack to fix stuck scope texture on old scopes system
-			if (!READ_IF_EXISTS(pSettings, r_string, cNameSect(), "scope_texture", NULL)) {
-				scope_tex_name = NULL;
+			if (!READ_IF_EXISTS(pSettings, r_string, cNameSect(), "scope_texture", nullptr)) {
+				scope_tex_name = nullptr;
 			}
 		}
 	}
 	else if (m_zoomtype == 1)
 	{
 		if (!m_secondary_scope_tex_name) {
-			m_secondary_scope_tex_name = READ_IF_EXISTS(pSettings, r_string, cNameSect(), "scope_texture_alt", NULL);
+			m_secondary_scope_tex_name = READ_IF_EXISTS(pSettings, r_string, cNameSect(), "scope_texture_alt", nullptr);
 		}
 		scope_tex_name = m_secondary_scope_tex_name;
 	}
@@ -800,7 +800,7 @@ void CWeapon::Load(LPCSTR section)
 	}
 	else if (m_eScopeStatus == ALife::eAddonPermanent)
 	{
-		shared_str scope_tex_name = READ_IF_EXISTS(pSettings, r_string, cNameSect(), "scope_texture", NULL);
+		shared_str scope_tex_name = READ_IF_EXISTS(pSettings, r_string, cNameSect(), "scope_texture", nullptr);
 
 		if (!!scope_tex_name && !scope_tex_name.equal("none") && !g_player_hud->m_adjust_mode)
 		{
@@ -1353,7 +1353,7 @@ void CWeapon::UpdateCL()
 				GetState() == eIdle &&
 				(Device.dwTimeGlobal - m_dw_curr_substate_time > 20000) &&
 				!IsZoomed() &&
-				g_player_hud->attached_item(1) == NULL)
+				g_player_hud->attached_item(1) == nullptr)
 			{
 				if (AllowBore())
 					SwitchState(eBore);
@@ -2140,7 +2140,7 @@ CUIWindow* CWeapon::ZoomTexture()
 	else
 	{
 		scope_2dtexactive = 0; //crookr
-		return NULL;
+		return nullptr;
 	}
 }
 
@@ -2376,7 +2376,7 @@ bool CWeapon::ready_to_kill() const
 	if (!io)
 		return false;
 
-	if (io->inventory().ActiveItem() == NULL || io->inventory().ActiveItem()->object().ID() != ID())
+	if (io->inventory().ActiveItem() == nullptr || io->inventory().ActiveItem()->object().ID() != ID())
 		return false;
 	//-Alundaio
 	return (
@@ -3242,7 +3242,7 @@ u32 CWeapon::Cost() const
 
 void CWeapon::UpdateSecondVP()
 {
-	if (!(ParentIsActor() && (m_pInventory != NULL) && (m_pInventory->ActiveItem() == this)))
+	if (!(ParentIsActor() && (m_pInventory != nullptr) && (m_pInventory->ActiveItem() == this)))
 		return;
 
 	CActor* pActor = smart_cast<CActor*>(H_Parent());

@@ -237,7 +237,7 @@ void CBulletManager::PlayWhineSound(SBullet *bullet, CObject *object,
                                     const Fvector &pos) {
   if (m_WhineSounds.empty())
     return;
-  if (bullet->m_whine_snd._feedback() != NULL)
+  if (bullet->m_whine_snd._feedback() != nullptr)
     return;
   if (bullet->hit_type != ALife::eHitTypeFireWound)
     return;
@@ -284,7 +284,7 @@ void CBulletManager::AddBullet(
     populateBulletTable(table, position, direction,
                         starting_speed * cartridge.param_s.kBulletSpeed, 0,
                         bullet.catridgeSection, bullet.bulletId,
-                        bullet.weapon_id, bullet.parent_id, 65535, NULL,
+                        bullet.weapon_id, bullet.parent_id, 65535, nullptr,
                         bullet.life_time, -1);
     funct(table);
   }
@@ -786,7 +786,7 @@ bool CBulletManager::trajectory_check_error(Fvector &previous_position,
                        collide::rqtBoth);
   BOOL const result = Level().ObjectSpace.RayQuery(
       storage, RD, CBulletManager::firetrace_callback, &data,
-      CBulletManager::test_callback, NULL);
+      CBulletManager::test_callback, nullptr);
   if (!result || (data.collide_time == 0.f)) {
     add_bullet_point(bullet.start_position, previous_position,
                      bullet.start_velocity, gravity, air_resistance, high);
@@ -859,7 +859,7 @@ static bool try_update_bullet(SBullet &bullet, Fvector const &gravity,
       populateBulletTable(table, bullet.bullet_pos, bullet.dir, bullet.speed,
                           bullet.fly_dist, bullet.catridgeSection,
                           bullet.bulletId, bullet.weapon_id, bullet.parent_id,
-                          65535, NULL, bullet.life_time, -1);
+                          65535, nullptr, bullet.life_time, -1);
       funct(table);
 
       /*
@@ -1169,7 +1169,7 @@ void CBulletManager::CommitEvents() // @ the start of frame
                                 : bullet->bullet_pos,
                             bullet->dir, bullet->speed, bullet->fly_dist,
                             bullet->catridgeSection, bullet->bulletId,
-                            bullet->weapon_id, bullet->parent_id, 65535, NULL,
+                            bullet->weapon_id, bullet->parent_id, 65535, nullptr,
                             bullet->life_time, -1);
         funct(table);
       }

@@ -31,7 +31,7 @@
 #pragma warning(pop)
 
 #ifdef _EDITOR
-	log_fn_ptr_type* pLog = NULL;
+	log_fn_ptr_type* pLog = nullptr;
 
 void __cdecl al_log(char* msg)
 {
@@ -59,7 +59,7 @@ ALDeviceList::~ALDeviceList()
 		xr_free(snd_devices_token[i].name);
 	}
 	xr_free(snd_devices_token);
-	snd_devices_token = NULL;
+	snd_devices_token = nullptr;
 }
 
 

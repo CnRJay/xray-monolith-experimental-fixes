@@ -130,7 +130,7 @@ struct ECORE_API R_constant : public xr_resource
 	R_constant_load samp;
 	R_constant_setup* handler;
 
-	R_constant() : type(u16(-1)), destination(0), handler(NULL)
+	R_constant() : type(u16(-1)), destination(0), handler(nullptr)
 	{
 	};
 

@@ -70,7 +70,7 @@ public:
 	}
 };
 
-template <class T> T*	CSingleton<T>::_self			= NULL;
+template <class T> T*	CSingleton<T>::_self			= nullptr;
 template <class T> int	CSingleton<T>::_refcount		= 0;
 template <class T> bool CSingleton<T>::_on_self_delete	= true;
 */

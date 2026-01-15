@@ -48,7 +48,7 @@ CFontManager::CFontManager()
 	FONTS_VEC_IT it = m_all_fonts.begin();
 	FONTS_VEC_IT it_e = m_all_fonts.end();
 	for (; it != it_e; ++it)
-		(**it) = NULL;
+		(**it) = nullptr;
 
 	InitializeFonts();
 }
@@ -136,7 +136,7 @@ void CFontManager::OnDeviceReset()
 }
 
 //--------------------------------------------------------------------
-CHUDManager::CHUDManager() : pUIGame(NULL), m_pHUDTarget(xr_new<CHUDTarget>()), b_online(false)
+CHUDManager::CHUDManager() : pUIGame(nullptr), m_pHUDTarget(xr_new<CHUDTarget>()), b_online(false)
 {
 }
 
@@ -501,7 +501,7 @@ void CHUDManager::OnConnected()
 void CHUDManager::net_Relcase(CObject* obj)
 {
 	if (PP.result.O == obj)
-		PP.result.O = NULL;
+		PP.result.O = nullptr;
 
 	HitMarker.net_Relcase(obj);
 

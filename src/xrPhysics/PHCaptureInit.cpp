@@ -102,9 +102,9 @@ bool				b_character_feedback;
 
 CPHCapture::CPHCapture(CPHCharacter* a_character, IPhysicsShellHolder* a_taget_object,
                        NearestToPointCallback* cb /*=0*/):
-	m_joint(NULL),
-	m_ajoint(NULL),
-	m_body(NULL),
+	m_joint(nullptr),
+	m_ajoint(nullptr),
+	m_body(nullptr),
 	m_taget_object(a_taget_object),
 	m_character(a_character),
 	b_disabled(false),
@@ -141,9 +141,9 @@ CPHCapture::CPHCapture(CPHCharacter* a_character, IPhysicsShellHolder* a_taget_o
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 CPHCapture::CPHCapture(CPHCharacter* a_character, IPhysicsShellHolder* a_taget_object, u16 a_taget_element):
-	m_joint(NULL),
-	m_ajoint(NULL),
-	m_body(NULL),
+	m_joint(nullptr),
+	m_ajoint(nullptr),
+	m_body(nullptr),
 	b_disabled(false),
 	b_character_feedback(false),
 	m_taget_object(a_taget_object),
@@ -253,20 +253,20 @@ void CPHCapture::Release()
 		m_island.RemoveJoint(m_joint);
 		dJointDestroy(m_joint);
 	}
-	m_joint = NULL;
+	m_joint = nullptr;
 	if (m_ajoint)
 	{
 		m_island.RemoveJoint(m_ajoint);
 		dJointDestroy(m_ajoint);
 	}
-	m_ajoint = NULL;
+	m_ajoint = nullptr;
 
 	if (m_body)
 	{
 		m_island.RemoveBody(m_body);
 		dBodyDestroy(m_body);
 	}
-	m_body = NULL;
+	m_body = nullptr;
 
 	if (e_state == cstPulling && m_taget_element && !m_taget_object->ObjectGetDestroy() && m_taget_object->
 		ObjectPPhysicsShell() && m_taget_object->ObjectPPhysicsShell()->isActive())
@@ -307,7 +307,7 @@ void CPHCapture::Deactivate()
 		m_character->SetObjectContactCallback(0);
 	CPHUpdateObject::Deactivate();
 	e_state = cstFree;
-	m_character = NULL;
-	m_taget_object = NULL;
-	m_taget_element = NULL;
+	m_character = nullptr;
+	m_taget_object = nullptr;
+	m_taget_element = nullptr;
 }

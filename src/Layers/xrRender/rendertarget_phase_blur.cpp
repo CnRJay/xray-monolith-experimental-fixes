@@ -371,7 +371,7 @@ void CRenderTarget::phase_ssfx_volumetric_blur()
 	// BLUR ///////////////////////////////////////////////////////////////////
 	for (int b = 0; b < 4; b++)
 	{
-		u_setrt(*rt_VolBlur[b % 2], 0, 0, NULL);
+		u_setrt(*rt_VolBlur[b % 2], 0, 0, nullptr);
 		RCache.set_CullMode(CULL_NONE);
 		RCache.set_Stencil(FALSE);
 
@@ -394,7 +394,7 @@ void CRenderTarget::phase_ssfx_volumetric_blur()
 	set_viewport_size(HW.pContext, w, h);
 
 	// COMBINE ////////////////////////////////////////////////////////////////
-	u_setrt(rt_ssfx_accum, 0, 0, NULL);
+	u_setrt(rt_ssfx_accum, 0, 0, nullptr);
 	RCache.set_CullMode(CULL_NONE);
 	RCache.set_Stencil(FALSE);
 
@@ -434,7 +434,7 @@ void CRenderTarget::phase_ssfx_water_blur()
 	if (ps_ssfx_water.y > 0)
 	{
 		// BLUR PHASE 1 //////////////////////////////////////////////////////////
-		u_setrt(rt_ssfx_temp2, 0, 0, NULL);
+		u_setrt(rt_ssfx_temp2, 0, 0, nullptr);
 		RCache.set_CullMode(CULL_NONE);
 		RCache.set_Stencil(FALSE);
 
@@ -453,7 +453,7 @@ void CRenderTarget::phase_ssfx_water_blur()
 		RCache.Render(D3DPT_TRIANGLELIST, Offset, 0, 4, 0, 2);
 
 		// BLUR PHASE 2 //////////////////////////////////////////////////////////
-		u_setrt(rt_ssfx_temp, 0, 0, NULL);
+		u_setrt(rt_ssfx_temp, 0, 0, nullptr);
 		RCache.set_CullMode(CULL_NONE);
 		RCache.set_Stencil(FALSE);
 
@@ -476,7 +476,7 @@ void CRenderTarget::phase_ssfx_water_blur()
 	{
 		HW.pContext->CopyResource(rt_ssfx_temp2->pTexture->surface_get(), rt_ssfx_temp->pTexture->surface_get());
 
-		u_setrt(rt_ssfx_temp, 0, 0, NULL);
+		u_setrt(rt_ssfx_temp, 0, 0, nullptr);
 		RCache.set_CullMode(CULL_NONE);
 		RCache.set_Stencil(FALSE);
 
@@ -518,7 +518,7 @@ void CRenderTarget::phase_ssfx_water_waves()
 
 	set_viewport_size(HW.pContext, 512, 512);
 
-	u_setrt(rt_ssfx_water_waves, 0, 0, NULL);
+	u_setrt(rt_ssfx_water_waves, 0, 0, nullptr);
 	RCache.set_CullMode(CULL_NONE);
 	RCache.set_Stencil(FALSE);
 
@@ -814,7 +814,7 @@ void CRenderTarget::phase_ssfx_sss_ext(light_Package& LP)
 						LightSlot[slot]->sss_refresh = true;
 
 					LightSlot[slot]->sss_id = -1;
-					LightSlot[slot] = NULL;
+					LightSlot[slot] = nullptr;
 				}
 				else
 				{
@@ -913,7 +913,7 @@ void CRenderTarget::phase_ssfx_fog_scattering()
 
 		set_viewport_size(HW.pContext, w / SampleScale, h / SampleScale);
 
-		u_setrt(*rt_Blur[blurp], 0, 0, NULL);
+		u_setrt(*rt_Blur[blurp], 0, 0, nullptr);
 		RCache.set_CullMode(CULL_NONE);
 		RCache.set_Stencil(FALSE);
 

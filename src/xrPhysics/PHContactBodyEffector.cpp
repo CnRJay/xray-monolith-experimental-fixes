@@ -60,5 +60,5 @@ void CPHContactBodyEffector::Apply()
 			force[2]
 		);
 	}
-	dBodySetData(m_body,NULL);
+	dBodySetData(m_body,nullptr);
 }

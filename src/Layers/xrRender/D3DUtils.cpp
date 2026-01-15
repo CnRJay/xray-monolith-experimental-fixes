@@ -121,7 +121,7 @@ void SPrimitiveBuffer::CreateFromData(D3DPRIMITIVETYPE _pt, u32 _p_cnt, u32 FVF,
 	if (i_cnt)
 	{
 		R_CHK(HW.pDevice->CreateIndexBuffer (i_cnt*sizeof(u16),D3DUSAGE_WRITEONLY,D3DFMT_INDEX16,D3DPOOL_MANAGED,&pIB,
-			NULL));
+			nullptr));
 		HW.stats_manager.increment_stats_ib(pIB);
 		R_CHK(pIB->Lock(0,0,(LPVOID*)&bytes,0));
 		Memory.mem_copy(bytes, indices, i_cnt * sizeof(u16));

@@ -1,4 +1,4 @@
-﻿#include "pch_script.h"
+#include "pch_script.h"
 #include "pda.h"
 #include "../xrphysics/PhysicsShell.h"
 #include "Entity.h"
@@ -21,7 +21,7 @@
 CPda::CPda(void)
 {
 	m_idOriginalOwner = u16(-1);
-	m_SpecificChracterOwner = NULL;
+	m_SpecificChracterOwner = nullptr;
 	TurnOff();
 	m_bZoomed = false;
 	m_eDeferredEnable = eDefault;

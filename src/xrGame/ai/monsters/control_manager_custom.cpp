@@ -13,8 +13,8 @@
 
 CControlManagerCustom::CControlManagerCustom()
 {
-	m_critical_wound = NULL;
-	m_threaten_anim = NULL;
+	m_critical_wound = nullptr;
+	m_threaten_anim = nullptr;
 	m_threaten_time = 0.0f;
 	m_sequencer = 0;
 	m_triple_anim = 0;
@@ -528,7 +528,7 @@ void CControlManagerCustom::check_jump_over_physics()
 
 		// получить список объектов вокруг врага
 		m_nearest.clear_not_free();
-		Level().ObjectSpace.GetNearest(m_nearest, travel_point.position, m_object->Radius(), NULL);
+		Level().ObjectSpace.GetNearest(m_nearest, travel_point.position, m_object->Radius(), nullptr);
 
 		for (u32 k = 0; k < m_nearest.size(); k++)
 		{

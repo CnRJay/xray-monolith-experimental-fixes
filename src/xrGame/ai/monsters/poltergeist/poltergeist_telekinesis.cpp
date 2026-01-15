@@ -193,7 +193,7 @@ extern BOOL g_telekinetic_objects_include_corpses;
 void CPolterTele::tele_find_objects(xr_vector<CObject*>& objects, const Fvector& pos)
 {
 	m_nearest.clear_not_free();
-	Level().ObjectSpace.GetNearest(m_nearest, pos, m_pmt_radius, NULL);
+	Level().ObjectSpace.GetNearest(m_nearest, pos, m_pmt_radius, nullptr);
 
 	for (u32 i = 0; i < m_nearest.size(); i++)
 	{

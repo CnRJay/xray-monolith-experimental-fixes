@@ -41,7 +41,7 @@
 
 //---------------------------------------------------------------------
 #define XRAY_MONOLITH_VERSION "X-Ray Monolith v1.5.3"
-ENGINE_API CInifile *pGameIni = NULL;
+ENGINE_API CInifile *pGameIni = nullptr;
 BOOL g_bIntroFinished = FALSE;
 extern void Intro(void *fn);
 extern void Intro_DSHOW(void *fn);
@@ -181,8 +181,8 @@ struct _SoundProcessor : public pureFrame
 
 //////////////////////////////////////////////////////////////////////////
 // global variables
-ENGINE_API CApplication *pApp = NULL;
-static HWND logoWindow = NULL;
+ENGINE_API CApplication *pApp = nullptr;
+static HWND logoWindow = nullptr;
 
 int doLauncher();
 void doBenchmark(LPCSTR name);
@@ -621,7 +621,7 @@ void Startup() {
 
   // Destroy LOGO
   DestroyWindow(logoWindow);
-  logoWindow = NULL;
+  logoWindow = nullptr;
 
   // Discord Rich Presence - Rezy
   Init_Discord();
@@ -657,7 +657,7 @@ void Startup() {
   DEL_INSTANCE(g_pGamePersistent);
 
   xr_delete(pApp);
-  pApp = NULL;
+  pApp = nullptr;
 
   Engine.Event.Dump();
 
@@ -804,7 +804,7 @@ struct damn_keys_filter {
 
     if (bScreenSaverState)
       // Disable screensaver
-      SystemParametersInfo(SPI_SETSCREENSAVEACTIVE, FALSE, NULL, 0);
+      SystemParametersInfo(SPI_SETSCREENSAVEACTIVE, FALSE, nullptr, 0);
 
     dwStickyKeysFlags = 0;
     dwFilterKeysFlags = 0;
@@ -854,7 +854,7 @@ struct damn_keys_filter {
   ~damn_keys_filter() {
     if (bScreenSaverState)
       // Restoring screen saver
-      SystemParametersInfo(SPI_SETSCREENSAVEACTIVE, TRUE, NULL, 0);
+      SystemParametersInfo(SPI_SETSCREENSAVEACTIVE, TRUE, nullptr, 0);
 
     if (dwStickyKeysFlags) {
       // Restore StickyKeys feature
@@ -971,10 +971,10 @@ int APIENTRY WinMain_impl(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 
   HANDLE hCheckPresenceMutex = INVALID_HANDLE_VALUE;
   hCheckPresenceMutex = OpenMutex(READ_CONTROL, FALSE, STALKER_PRESENCE_MUTEX);
-  if (hCheckPresenceMutex == NULL) {
+  if (hCheckPresenceMutex == nullptr) {
     // New mutex
     hCheckPresenceMutex = CreateMutex(NULL, FALSE, STALKER_PRESENCE_MUTEX);
-    if (hCheckPresenceMutex == NULL)
+    if (hCheckPresenceMutex == nullptr)
       // Shit happens
       return 2;
   } else {
@@ -988,7 +988,7 @@ int APIENTRY WinMain_impl(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 #endif // DEDICATED_SERVER
 
   // Title window
-  logoWindow = CreateDialog(GetModuleHandle(NULL), MAKEINTRESOURCE(IDD_STARTUP),
+  logoWindow = CreateDialog(GetModuleHandle(nullptr), MAKEINTRESOURCE(IDD_STARTUP),
                             0, logDlgProc);
 
   HWND logoPicture = GetDlgItem(logoWindow, IDC_STATIC_LOGO);
@@ -1011,8 +1011,8 @@ int APIENTRY WinMain_impl(HINSTANCE hInstance, HINSTANCE hPrevInstance,
   // AVI
   g_bIntroFinished = TRUE;
 
-  g_sLaunchOnExit_app[0] = NULL;
-  g_sLaunchOnExit_params[0] = NULL;
+  g_sLaunchOnExit_app[0] = '\0';
+  g_sLaunchOnExit_params[0] = '\0';
 
   LPCSTR fsgame_ltx_name = "-fsltx ";
   string_path fsgame = "";
@@ -1026,7 +1026,7 @@ int APIENTRY WinMain_impl(HINSTANCE hInstance, HINSTANCE hPrevInstance,
   // g_temporary_stuff = &trivial_encryptor::decode;
 
   compute_build_id();
-  Core._initialize("xray", NULL, TRUE, fsgame[0] ? fsgame : NULL);
+  Core._initialize("xray", nullptr, TRUE, fsgame[0] ? fsgame : nullptr);
 
   // Process Affinity Masking to avoid Core 0 on CPU's with more that 4 cores
   unsigned int threads = std::thread::hardware_concurrency();
@@ -1147,8 +1147,8 @@ int APIENTRY WinMain_impl(HINSTANCE hInstance, HINSTANCE hPrevInstance,
       char const *temp_wf = (xr_strlen(g_sLaunchWorkingFolder) > 0)
                                 ? g_sLaunchWorkingFolder
                                 : NULL;
-      CreateProcess(g_sLaunchOnExit_app, g_sLaunchOnExit_params, NULL, NULL,
-                    FALSE, 0, NULL, temp_wf, &si, &pi);
+      CreateProcess(g_sLaunchOnExit_app, g_sLaunchOnExit_params, nullptr, NULL,
+                    FALSE, 0, nullptr, temp_wf, &si, &pi);
     }
 #ifndef DEDICATED_SERVER
 #ifdef NO_MULTI_INSTANCES
@@ -1191,11 +1191,11 @@ extern BOOL DllMainXrPhysics(HANDLE hModule, DWORD ul_reason_for_call,
 
 int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
                      char *lpCmdLine, int nCmdShow) {
-  // DllMainOpenAL32(NULL, DLL_PROCESS_ATTACH, NULL);
-  DllMainXrCore(NULL, DLL_PROCESS_ATTACH, NULL);
-  DllMainXrPhysics(NULL, DLL_PROCESS_ATTACH, NULL);
+  // DllMainOpenAL32(NULL, DLL_PROCESS_ATTACH, nullptr);
+  DllMainXrCore(NULL, DLL_PROCESS_ATTACH, nullptr);
+  DllMainXrPhysics(NULL, DLL_PROCESS_ATTACH, nullptr);
 
-  DllMainXrCore(NULL, DLL_THREAD_ATTACH, NULL);
+  DllMainXrCore(NULL, DLL_THREAD_ATTACH, nullptr);
 
   __try {
     WinMain_impl(hInstance, hPrevInstance, lpCmdLine, nCmdShow);
@@ -1204,9 +1204,9 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
     FATAL("stack overflow");
   }
 
-  DllMainXrPhysics(NULL, DLL_PROCESS_DETACH, NULL);
-  DllMainXrCore(NULL, DLL_PROCESS_DETACH, NULL);
-  // DllMainOpenAL32(NULL, DLL_PROCESS_DETACH, NULL);
+  DllMainXrPhysics(NULL, DLL_PROCESS_DETACH, nullptr);
+  DllMainXrCore(NULL, DLL_PROCESS_DETACH, nullptr);
+  // DllMainOpenAL32(NULL, DLL_PROCESS_DETACH, nullptr);
 
   return (0);
 }
@@ -1283,7 +1283,7 @@ CApplication::CApplication() {
   Level_Scan();
 
   // Font
-  pFontSystem = NULL;
+  pFontSystem = nullptr;
 
   // Register us
   Device.seqFrame.Add(this, REG_PRIORITY_HIGH + 1000);
@@ -1342,7 +1342,7 @@ void CApplication::OnEvent(EVENT E, u64 P1, u64 P2) {
 
 #ifdef NO_SINGLE
     Console->Execute("main_menu on");
-    if ((op_server == NULL) || (!xr_strlen(op_server)) ||
+    if ((op_server == nullptr) || (!xr_strlen(op_server)) ||
         ((strstr(op_server, "/dm") || strstr(op_server, "/deathmatch") ||
           strstr(op_server, "/tdm") || strstr(op_server, "/teamdeathmatch") ||
           strstr(op_server, "/ah") || strstr(op_server, "/artefacthunt") ||
@@ -1625,7 +1625,7 @@ int CApplication::Level_ID(LPCSTR name, LPCSTR ver, bool bSet) {
 
   for (; it != it_e; ++it) {
     CLocatorAPI::archive &A = *it;
-    if (A.hSrcFile == NULL) {
+    if (A.hSrcFile == nullptr) {
       LPCSTR ln = A.header->r_string("header", "level_name");
       LPCSTR lv = A.header->r_string("header", "level_ver");
       if (0 == stricmp(ln, name) && 0 == stricmp(lv, ver)) {
@@ -1673,7 +1673,7 @@ CInifile *CApplication::GetArchiveHeader(LPCSTR name, LPCSTR ver) {
       return A.header;
     }
   }
-  return NULL;
+  return nullptr;
 }
 
 void CApplication::LoadAllArchives() {
@@ -1690,8 +1690,8 @@ extern "C" {
 typedef int __cdecl LauncherFunc(int);
 }
 
-HMODULE hLauncher = NULL;
-LauncherFunc *pLauncher = NULL;
+HMODULE hLauncher = nullptr;
+LauncherFunc *pLauncher = nullptr;
 
 void InitLauncher() {
   if (hLauncher)
@@ -1710,8 +1710,8 @@ void InitLauncher() {
 void FreeLauncher() {
   if (hLauncher) {
     FreeLibrary(hLauncher);
-    hLauncher = NULL;
-    pLauncher = NULL;
+    hLauncher = nullptr;
+    pLauncher = nullptr;
   };
 }
 
@@ -1794,7 +1794,7 @@ void CApplication::load_draw_internal() {
   u32 C = 0xffffffff;
   u32 _w = Device.dwWidth;
   u32 _h = Device.dwHeight;
-  FVF::TL* pv = NULL;
+  FVF::TL* pv = nullptr;
 
   //progress
   float bw = 1024.0f;

@@ -195,7 +195,7 @@ void ui_core::PopScissor()
 	m_Scissors.pop();
 
 	if (m_Scissors.empty())
-		UIRender->SetScissor(NULL);
+		UIRender->SetScissor(nullptr);
 	else
 	{
 		const Frect& top = m_Scissors.top();
@@ -218,8 +218,8 @@ ui_core::ui_core()
 	}
 	else
 	{
-		m_pUICursor = NULL;
-		m_pFontManager = NULL;
+		m_pUICursor = nullptr;
+		m_pFontManager = nullptr;
 	}
 	m_bPostprocess = false;
 

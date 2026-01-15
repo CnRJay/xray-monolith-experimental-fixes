@@ -201,7 +201,7 @@ public:
 #ifdef STATIONARYMGUN_NEW
 	CInventory *GetInventory();
 #else
-	virtual CInventory* GetInventory() { return NULL; };
+	virtual CInventory* GetInventory() { return nullptr; };
 #endif
 	virtual void cam_Update(float dt, float fov = 90.0f);
 
@@ -470,7 +470,7 @@ protected:
 	int GetAmmoCount(u8 ammo_type);
 	int GetAmmoCount_allType();
 	virtual u16 AddCartridge(u16 cnt);
-	void SpawnAmmo(u32 boxCurr = 0xffffffff, LPCSTR ammoSect = NULL, u32 ParentID = 0xffffffff);
+	void SpawnAmmo(u32 boxCurr = 0xffffffff, LPCSTR ammoSect = nullptr, u32 ParentID = 0xffffffff);
 
 public:
 	IC int GetAmmoMagSize() const

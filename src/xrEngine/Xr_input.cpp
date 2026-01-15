@@ -8,7 +8,7 @@
 #ifndef _EDITOR
 # include "xr_input_xinput.h"
 #endif
-CInput* pInput = NULL;
+CInput* pInput = nullptr;
 IInputReceiver dummyController;
 
 ENGINE_API float psMouseSens = 1.f;
@@ -51,9 +51,9 @@ CInput::CInput(BOOL bExclusive, int deviceForInit)
 
 	Log("Starting INPUT device...");
 
-	pDI = NULL;
-	pMouse = NULL;
-	pKeyboard = NULL;
+	pDI = nullptr;
+	pMouse = nullptr;
+	pKeyboard = nullptr;
 
 	//=====================Mouse
 	mouse_property.mouse_dt = 25;
@@ -68,7 +68,7 @@ CInput::CInput(BOOL bExclusive, int deviceForInit)
 	iCapture(&dummyController);
 
 	if (!pDI)
-		CHK_DX(DirectInput8Create(GetModuleHandle(NULL), DIRECTINPUT_VERSION, IID_IDirectInput8, (void**)&pDI, NULL));
+		CHK_DX(DirectInput8Create(GetModuleHandle(nullptr), DIRECTINPUT_VERSION, IID_IDirectInput8, (void**)&pDI, nullptr));
 
 	//. u32 kb_input_flags = ((bExclusive)?DISCL_EXCLUSIVE:DISCL_NONEXCLUSIVE) | DISCL_FOREGROUND;
 	u32 kb_input_flags = ((bExclusive) ? DISCL_EXCLUSIVE : DISCL_NONEXCLUSIVE) | DISCL_FOREGROUND;
@@ -134,7 +134,7 @@ HRESULT CInput::CreateInputDevice(LPDIRECTINPUTDEVICE8* device, GUID guidDevice,
 {
 	// Obtain an interface to the input device
 	//. CHK_DX( pDI->CreateDeviceEx( guidDevice, IID_IDirectInputDevice8, (void**)device, NULL ) );
-	CHK_DX(pDI->CreateDevice(guidDevice, /*IID_IDirectInputDevice8,*/ device, NULL));
+	CHK_DX(pDI->CreateDevice(guidDevice, /*IID_IDirectInputDevice8,*/ device, nullptr));
 
 	// Set the device data format. Note: a data format specifies which
 	// controls on a device we are interested in, and how they should be
@@ -335,7 +335,7 @@ bool CInput::get_dik_name(int dik, LPSTR dest_str, int dest_sz)
 	if (0 == wcslen(wct))
 		return false;
 
-	int cnt = WideCharToMultiByte(CP_ACP, 0, keyname.wsz, -1, dest_str, dest_sz, NULL, NULL);
+	int cnt = WideCharToMultiByte(CP_ACP, 0, keyname.wsz, -1, dest_str, dest_sz, nullptr, nullptr);
 	if (cnt == -1)
 	{
 		Msg("! cant convert dik_name for dik[%d], prop=[%S]", dik, keyname.wsz);
@@ -668,7 +668,7 @@ IInputReceiver* CInput::CurrentIR()
 	if (cbStack.size())
 		return cbStack.back();
 	else
-		return NULL;
+		return nullptr;
 }
 
 void CInput::unacquire()

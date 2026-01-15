@@ -26,10 +26,10 @@ LPCSTR GameTypeToString(EGameIDs gt, bool bShort);
 
 CUIMapList::CUIMapList()
 {
-	m_pMapInfo = NULL;
-	m_pMapPic = NULL;
-	m_pModeSelector = NULL;
-	m_pWeatherSelector = NULL;
+	m_pMapInfo = nullptr;
+	m_pMapPic = nullptr;
+	m_pModeSelector = nullptr;
+	m_pWeatherSelector = nullptr;
 	m_pList1 = xr_new<CUIListBox>();
 	m_pList2 = xr_new<CUIListBox>();
 	m_pFrame1 = xr_new<CUIFrameWindow>();
@@ -73,7 +73,7 @@ void CUIMapList::StartDedicatedServer()
 	string_path ModuleFileName;
 	GetModuleFileName(NULL, ModuleFileName, sizeof(ModuleFileName));
 
-	char* ModuleName = NULL;
+	char* ModuleName = nullptr;
 	GetFullPathName(ModuleFileName, sizeof(g_sLaunchWorkingFolder), g_sLaunchWorkingFolder, &ModuleName);
 	//removing module name from WorkingDirectory that contain full path...
 	ModuleName[0] = 0;
@@ -201,7 +201,7 @@ const char* CUIMapList::GetCommandLine(LPCSTR player_name)
 {
 	CUIListBoxItem* itm = m_pList2->GetItemByIDX(0);
 	if (!itm)
-		return NULL;
+		return nullptr;
 
 	u32 _idx = (u32)(__int64)(itm->GetData());
 	const MPLevelDesc& M = GetMapNameInt(GetCurGameType(), _idx);
@@ -223,7 +223,7 @@ const char* CUIMapList::GetCommandLine(LPCSTR player_name)
 
 
 	m_command += " client(localhost/name=";
-	if (player_name == NULL || 0 == xr_strlen(player_name))
+	if (player_name == nullptr || 0 == xr_strlen(player_name))
 	{
 		string64 player_name2;
 		GetPlayerName_FromRegistry(player_name2, sizeof(player_name2));
@@ -318,7 +318,7 @@ void CUIMapList::SetServerParams(LPCSTR params)
 
 void CUIMapList::AddWeather(const shared_str& WeatherType, const shared_str& WeatherTime, u32 _id)
 {
-	R_ASSERT2(m_pWeatherSelector, "m_pWeatherSelector == NULL");
+	R_ASSERT2(m_pWeatherSelector, "m_pWeatherSelector == nullptr");
 	m_pWeatherSelector->AddItem_(*WeatherType, 0)->SetTAG(_id);
 
 	m_mapWeather.resize(m_mapWeather.size() + 1);
@@ -398,7 +398,7 @@ CUIListBoxItem* CUIMapList::GetMapItem_fromList1(shared_str const& map_name)
 			return smart_cast<CUIListBoxItem*>(m_pList1->GetItem(i));
 		}
 	}
-	return NULL;
+	return nullptr;
 }
 
 void CUIMapList::ClearList()

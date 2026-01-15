@@ -24,7 +24,7 @@
 
 CUITaskWnd::CUITaskWnd()
 {
-	hint_wnd = NULL;
+	hint_wnd = nullptr;
 }
 
 CUITaskWnd::~CUITaskWnd()
@@ -341,7 +341,7 @@ void CUITaskWnd::OnShowQuestNpcs(CUIWindow* ui, void* d)
 
 // --------------------------------------------------------------------------------------------------
 CUITaskItem::CUITaskItem() :
-	m_owner(NULL),
+	m_owner(nullptr),
 	m_hint_wt(500),
 	show_hint(false),
 	show_hint_can(false)
@@ -360,7 +360,7 @@ void CUITaskItem::Init(CUIXml& uiXml, LPCSTR path)
 	m_hint_wt = uiXml.ReadAttribInt(path, 0, "hint_wt", 500);
 
 	string256 buff;
-	CUIStatic* S = NULL;
+	CUIStatic* S = nullptr;
 
 	strconcat(sizeof(buff), buff, path, ":t_icon");
 	if (uiXml.NavigateToNode(buff))

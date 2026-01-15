@@ -60,10 +60,10 @@ BOOL g_draw_downloads = FALSE;
 game_cl_mp::game_cl_mp()
 {
 	m_bVotingActive = false;
-	m_pVoteStartWindow = NULL;
-	m_pAdminMenuWindow = NULL;
-	m_pVoteRespondWindow = NULL;
-	m_pMessageBox = NULL;
+	m_pVoteStartWindow = nullptr;
+	m_pAdminMenuWindow = nullptr;
+	m_pVoteRespondWindow = nullptr;
+	m_pMessageBox = nullptr;
 
 	m_pSndMessages.clear();
 	LoadSndMessages();
@@ -83,7 +83,7 @@ game_cl_mp::game_cl_mp()
 	//-------------------------------------
 	LoadBonuses();
 	//-------------------------------------	
-	buffer_for_compress = NULL;
+	buffer_for_compress = nullptr;
 	buffer_for_compress_size = 0;
 	//-----------------------------------------------------------
 	//-----------------------------------------------------------
@@ -96,9 +96,9 @@ game_cl_mp::game_cl_mp()
 			abs(m_iSpawn_Cost));
 		pBuySpawnMsgBox->SetText(BuySpawnText);
 	*/ //-----------------------------------------------------------
-	m_reward_generator = NULL;
+	m_reward_generator = nullptr;
 	m_ready_to_open_buy_menu = true;
-	m_reward_manager = NULL;
+	m_reward_manager = nullptr;
 	crypto::xr_crypto_init();
 };
 
@@ -149,7 +149,7 @@ game_cl_mp::~game_cl_mp()
 
 	xr_delete(m_reward_generator);
 	xr_delete(m_reward_manager);
-	local_player = NULL;
+	local_player = nullptr;
 };
 
 bool game_cl_mp::CanBeReady()
@@ -886,7 +886,7 @@ void game_cl_mp::OnPlayerKilled(NET_Packet& P)
 	KMS.m_victim.m_name = pPlayer->getName();
 	KMS.m_victim.m_color = Color_Teams_u32[ModifyTeam(pPlayer->team) + 1];
 
-	KMS.m_killer.m_name = NULL;
+	KMS.m_killer.m_name = nullptr;
 	KMS.m_killer.m_color = color_rgba(255, 255, 255, 255);
 
 	switch (KillType)
@@ -1030,7 +1030,7 @@ void game_cl_mp::OnPlayerKilled(NET_Packet& P)
 			//suicide
 			if (KilledID == KillerID)
 			{
-				KMS.m_victim.m_name = NULL;
+				KMS.m_victim.m_name = nullptr;
 
 				KMS.m_ext_info.m_shader = GetKillEventIconsShader();
 				KMS.m_ext_info.m_rect.x1 = 32;
@@ -1658,7 +1658,7 @@ void game_cl_mp::PrepareToReceiveFile(ClientID const& from_client, shared_str co
                                       clientdata_event_t response_event)
 {
 	string_path screen_shot_fn;
-	LPCSTR dest_file_name = NULL;
+	LPCSTR dest_file_name = nullptr;
 	STRCONCAT(dest_file_name,
 	          make_file_name(client_session_id.c_str(), screen_shot_fn)
 	);
@@ -1917,7 +1917,7 @@ game_cl_mp::fr_callback_binder* game_cl_mp::get_receiver_cb_binder()
 			return &m_client_receiver_cbs[i];
 		}
 	}
-	return NULL;
+	return nullptr;
 }
 
 void game_cl_mp::add_detected_cheater(shared_str const& file_name, string256 diff)

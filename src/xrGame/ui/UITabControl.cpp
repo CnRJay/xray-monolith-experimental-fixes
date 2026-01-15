@@ -148,12 +148,12 @@ void CUITabControl::OnTabChange(const shared_str& sCur, const shared_str& sPrev)
 	CUITabButton* tb_cur = GetButtonById(sCur);
 	CUITabButton* tb_prev = GetButtonById(sPrev);
 	if (tb_prev)
-		tb_prev->SendMessage(tb_cur, TAB_CHANGED, NULL);
+		tb_prev->SendMessage(tb_cur, TAB_CHANGED, nullptr);
 
-	tb_cur->SendMessage(tb_cur, TAB_CHANGED, NULL);
+	tb_cur->SendMessage(tb_cur, TAB_CHANGED, nullptr);
 
 	if (GetAcceleratorsMode())
-		GetMessageTarget()->SendMessage(this, TAB_CHANGED, NULL);
+		GetMessageTarget()->SendMessage(this, TAB_CHANGED, nullptr);
 }
 
 void CUITabControl::SetActiveTab(const shared_str& sNewTab)
@@ -194,7 +194,7 @@ CUITabButton* CUITabControl::GetButtonById(const shared_str& id)
 	if (it != m_TabsArr.end())
 		return *it;
 	else
-		return NULL;
+		return nullptr;
 }
 
 /*
@@ -212,7 +212,7 @@ CUIButton* CUITabControl::GetButtonByCommand(const shared_str& n)
 		if(m_TabsArr[i]->WindowName() == n)
 			return m_TabsArr[i];
 
-	return NULL;
+	return nullptr;
 }*/
 
 void CUITabControl::ResetTab()

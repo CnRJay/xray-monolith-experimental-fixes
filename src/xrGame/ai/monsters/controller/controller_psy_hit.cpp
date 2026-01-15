@@ -163,7 +163,7 @@ namespace detail
 
 
 		collide::rq_result l_rq;
-		l_rq.O = NULL;
+		l_rq.O = nullptr;
 		Level().ObjectSpace.RayPick(trace_from,
 		                            trace_dir,
 		                            dist,

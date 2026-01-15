@@ -38,7 +38,7 @@ public:
 		CInifile* header;
 		u32 vfs_idx;
 
-		archive() : hSrcFile(NULL), hSrcMap(NULL), header(NULL), size(0), vfs_idx(u32(-1))
+		archive() : hSrcFile(nullptr), hSrcMap(nullptr), header(nullptr), size(0), vfs_idx(u32(-1))
 		{
 		}
 
@@ -48,7 +48,7 @@ public:
 
 	DEFINE_VECTOR(archive, archives_vec, archives_it);
 	archives_vec m_archives;
-	void LoadArchive(archive& A, LPCSTR entrypoint = NULL);
+	void LoadArchive(archive& A, LPCSTR entrypoint = nullptr);
 
 private:
 	struct file_pred

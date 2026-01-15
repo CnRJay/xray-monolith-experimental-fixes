@@ -85,7 +85,7 @@ void TransformedGeometryExtensionLocalParams(dGeomID geom_transform, const dReal
 
 CODEGeom::CODEGeom()
 {
-	m_geom_transform = NULL;
+	m_geom_transform = nullptr;
 	m_bone_id = u16(-1);
 }
 
@@ -153,8 +153,8 @@ void CODEGeom::get_global_center_bt(Fvector& center)
 void CODEGeom::get_xform(Fmatrix& form) const
 {
 	VERIFY(m_geom_transform);
-	const dReal* rot = NULL;
-	const dReal* pos = NULL;
+	const dReal* rot = nullptr;
+	const dReal* pos = nullptr;
 	dVector3 p;
 	dMatrix3 r;
 	get_final_tx_bt(pos, rot, p, r);
@@ -336,7 +336,7 @@ void CODEGeom::set_callback_data(void* cd)
 
 void* CODEGeom::get_callback_data()
 {
-	if (!m_geom_transform) return NULL;
+	if (!m_geom_transform) return nullptr;
 	if (geom())
 	{
 		VERIFY(dGeomGetUserData(geom()));
@@ -416,7 +416,7 @@ void CODEGeom::destroy()
 	}
 	dGeomDestroyUserData(m_geom_transform);
 	dGeomDestroy(m_geom_transform);
-	m_geom_transform = NULL;
+	m_geom_transform = nullptr;
 }
 
 CBoxGeom::CBoxGeom(const Fobb& box)
@@ -477,8 +477,8 @@ void CODEGeom::set_local_form_bt(const Fmatrix& xform)
 void CBoxGeom::get_Extensions(const Fvector& axis, float center_prg, float& lo_ext, float& hi_ext) const
 {
 	VERIFY(m_geom_transform);
-	const dReal* rot = NULL;
-	const dReal* pos = NULL;
+	const dReal* rot = nullptr;
+	const dReal* pos = nullptr;
 	dVector3 p;
 	dMatrix3 r;
 	dGeomID g = geometry_bt();
@@ -636,8 +636,8 @@ float CSphereGeom::radius()
 void CSphereGeom::get_Extensions(const Fvector& axis, float center_prg, float& lo_ext, float& hi_ext) const
 {
 	VERIFY(m_geom_transform);
-	const dReal* rot = NULL;
-	const dReal* pos = NULL;
+	const dReal* rot = nullptr;
+	const dReal* pos = nullptr;
 	dVector3 p;
 	dMatrix3 r;
 	dGeomID g = geometry_bt();
@@ -707,8 +707,8 @@ float CCylinderGeom::radius()
 void CCylinderGeom::get_Extensions(const Fvector& axis, float center_prg, float& lo_ext, float& hi_ext) const
 {
 	VERIFY(m_geom_transform) ;
-	const dReal* rot = NULL;
-	const dReal* pos = NULL;
+	const dReal* rot = nullptr;
+	const dReal* pos = nullptr;
 	dVector3 p;
 	dMatrix3 r;
 	dGeomID g = geometry_bt();

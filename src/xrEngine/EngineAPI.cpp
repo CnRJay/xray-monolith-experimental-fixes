@@ -104,7 +104,7 @@ CEngineAPI::~CEngineAPI()
 	if (vid_quality_token)
 	{
 		xr_free(vid_quality_token);
-		vid_quality_token = NULL;
+		vid_quality_token = nullptr;
 	}
 }
 
@@ -151,7 +151,7 @@ void CEngineAPI::InitializeNotDedicated()
 		psDeviceFlags.set(rsR2, FALSE);
 		psDeviceFlags.set(rsR3, FALSE);
 		Log("Loading DLL:", r4_name);
-		DllMainXrRenderR4(NULL, DLL_PROCESS_ATTACH, NULL);
+		DllMainXrRenderR4(NULL, DLL_PROCESS_ATTACH, nullptr);
         //hRender = LoadLibrary(r4_name);
 	//if (0 == hRender)
 	//{
@@ -170,7 +170,7 @@ void CEngineAPI::InitializeNotDedicated()
 		psDeviceFlags.set(rsR2, FALSE);
 		psDeviceFlags.set(rsR4, FALSE);
 		Log("Loading DLL:", r3_name);
-		DllMainXrRenderR3(NULL, DLL_PROCESS_ATTACH, NULL);
+		DllMainXrRenderR3(NULL, DLL_PROCESS_ATTACH, nullptr);
 		//hRender = LoadLibrary(r3_name);
 		//if (0 == hRender)
 		//{
@@ -190,7 +190,7 @@ void CEngineAPI::InitializeNotDedicated()
         psDeviceFlags.set(rsR3, FALSE);
 		psDeviceFlags.set(rsR4, FALSE);
 		Log("Loading DLL:", r2_name);
-		DllMainXrRenderR2(NULL, DLL_PROCESS_ATTACH, NULL);
+		DllMainXrRenderR2(NULL, DLL_PROCESS_ATTACH, nullptr);
 		//hRender = LoadLibrary(r2_name);
 	//if (0 == hRender)
 	//{
@@ -232,7 +232,7 @@ void CEngineAPI::Initialize(void)
         renderer_value = 0; //con cmd
 
         Log("Loading DLL:", r1_name);
-		DllMainXrRenderR1(NULL, DLL_PROCESS_ATTACH, NULL);
+		DllMainXrRenderR1(NULL, DLL_PROCESS_ATTACH, nullptr);
 		//hRender = LoadLibrary(r1_name);
 	//if (0 == hRender) R_CHK(GetLastError());
         //R_ASSERT(hRender);
@@ -247,7 +247,7 @@ void CEngineAPI::Initialize(void)
 		LPCSTR g_name = "xrGame.dll";
 		Log("Loading DLL:", g_name);
 		//hGame = LoadLibrary(g_name);
-		DllMainXrGame(NULL, DLL_PROCESS_ATTACH, NULL);
+		DllMainXrGame(NULL, DLL_PROCESS_ATTACH, nullptr);
 		//if (0 == hGame) R_CHK(GetLastError());
 		//R_ASSERT2(hGame, "Game DLL raised exception during loading or there is no game DLL at all");
 		//pCreate = (Factory_Create*)GetProcAddress(hGame, "xrFactory_Create");
@@ -280,9 +280,9 @@ void CEngineAPI::Initialize(void)
 void CEngineAPI::Destroy(void)
 {
 	//if (hGame) { FreeLibrary(hGame); hGame = 0; }
-	DllMainXrGame(NULL, DLL_PROCESS_DETACH, NULL);
+	DllMainXrGame(NULL, DLL_PROCESS_DETACH, nullptr);
 	//if (hRender) { FreeLibrary(hRender); hRender = 0; }
-	DLL_MAIN_RENDERER(NULL, DLL_PROCESS_DETACH, NULL);
+	DLL_MAIN_RENDERER(NULL, DLL_PROCESS_DETACH, nullptr);
 	pCreate = 0;
 	pDestroy = 0;
 	Engine.Event._destroy();
@@ -318,11 +318,11 @@ void CEngineAPI::CreateRendererList()
     vid_quality_token[0].name = xr_strdup("renderer_r1");
 
     vid_quality_token[1].id = -1;
-    vid_quality_token[1].name = NULL;
+    vid_quality_token[1].name = nullptr;
 
 #else
 	// TODO: ask renderers if they are supported!
-	if (vid_quality_token != NULL) return;
+	if (vid_quality_token != nullptr) return;
 	bool bSupports_r2 = false;
 	bool bSupports_r2_5 = false;
 	bool bSupports_r3 = false;
@@ -345,7 +345,7 @@ void CEngineAPI::CreateRendererList()
 		// try to initialize R2
         Log("Loading DLL:", r2_name);
         //hRender = LoadLibrary(r2_name);
-		DllMainXrRenderR2(NULL, DLL_PROCESS_ATTACH, NULL);
+		DllMainXrRenderR2(NULL, DLL_PROCESS_ATTACH, nullptr);
         //if (hRender)
         {
             bSupports_r2 = true;
@@ -363,7 +363,7 @@ void CEngineAPI::CreateRendererList()
 		// Hide "d3d10.dll not found" message box for XP
 		SetErrorMode(SEM_FAILCRITICALERRORS);
 		//hRender = LoadLibrary(r3_name);
-		DllMainXrRenderR3(NULL, DLL_PROCESS_ATTACH, NULL);
+		DllMainXrRenderR3(NULL, DLL_PROCESS_ATTACH, nullptr);
 		// Restore error handling
 		SetErrorMode(0);
 		//if (hRender)
@@ -382,7 +382,7 @@ void CEngineAPI::CreateRendererList()
         // Hide "d3d10.dll not found" message box for XP
         SetErrorMode(SEM_FAILCRITICALERRORS);
         //hRender = LoadLibrary(r4_name);
-		DllMainXrRenderR4(NULL, DLL_PROCESS_ATTACH, NULL);
+		DllMainXrRenderR4(NULL, DLL_PROCESS_ATTACH, nullptr);
         // Restore error handling
         SetErrorMode(0);
         //if (hRender)
@@ -426,7 +426,7 @@ void CEngineAPI::CreateRendererList()
 	vid_quality_token = xr_alloc<xr_token>(_cnt);
 
 	vid_quality_token[_cnt - 1].id = -1;
-	vid_quality_token[_cnt - 1].name = NULL;
+	vid_quality_token[_cnt - 1].name = nullptr;
 
 	//#ifdef DEBUG
 	Msg("Available render modes[%d]:", _tmp.size());

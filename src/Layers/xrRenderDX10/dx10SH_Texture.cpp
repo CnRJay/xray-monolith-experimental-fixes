@@ -29,10 +29,10 @@ void resptrcode_texture::create(LPCSTR _name)
 //////////////////////////////////////////////////////////////////////
 CTexture::CTexture()
 {
-	pSurface = NULL;
-	m_pSRView = NULL;
-	pAVI = NULL;
-	pTheora = NULL;
+	pSurface = nullptr;
+	m_pSRView = nullptr;
+	pAVI = nullptr;
+	pTheora = nullptr;
 	desc_cache = 0;
 	seqMSPF = 0;
 	flags.MemoryUsage = 0;
@@ -112,7 +112,7 @@ void CTexture::surface_set(ID3DBaseTexture* surf)
 				m_pSRView = 0;
 		}
 		else
-			CHK_DX(HW.pDevice->CreateShaderResourceView(pSurface, NULL, &m_pSRView));
+			CHK_DX(HW.pDevice->CreateShaderResourceView(pSurface, nullptr, &m_pSRView));
 	}
 }
 
@@ -529,7 +529,7 @@ void CTexture::Load()
 					// pSurface->SetPriority	(PRIORITY_LOW);
 					seqDATA.push_back(pSurface);
 					m_seqSRView.push_back(0);
-					HW.pDevice->CreateShaderResourceView(seqDATA.back(), NULL, &m_seqSRView.back());
+					HW.pDevice->CreateShaderResourceView(seqDATA.back(), nullptr, &m_seqSRView.back());
 					flags.MemoryUsage += mem;
 				}
 			}
@@ -558,7 +558,7 @@ void CTexture::Load()
 		}
 		
 		if (pSurface && bCreateView)
-			CHK_DX(HW.pDevice->CreateShaderResourceView(pSurface, NULL, &m_pSRView));
+			CHK_DX(HW.pDevice->CreateShaderResourceView(pSurface, nullptr, &m_pSRView));
 	}
 	PostLoad();
 }

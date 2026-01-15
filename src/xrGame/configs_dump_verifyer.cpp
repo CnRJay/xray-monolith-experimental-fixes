@@ -43,7 +43,7 @@ namespace mp_anticheat
 			--r_size;
 		}
 		while (r_size > 0);
-		return NULL;
+		return nullptr;
 	}
 
 	bool const configs_verifyer::verify_dsign(u8* data,
@@ -73,7 +73,7 @@ namespace mp_anticheat
 			(data + data_size) - (u8*)dst_buffer);
 		u32 src_data_size = data_size - dst_size;
 
-		LPCSTR add_str = NULL;
+		LPCSTR add_str = nullptr;
 		STRCONCAT(add_str,
 		          tmp_ini.r_string(cd_info_secion, cd_player_name_key),
 		          tmp_ini.r_string(cd_info_secion, cd_player_digest_key),
@@ -98,7 +98,7 @@ namespace mp_anticheat
 
 	LPCSTR configs_verifyer::get_section_diff(CInifile::Sect* sect_ptr, CInifile& active_params, string256& dst_diff)
 	{
-		LPCSTR diff_str = NULL;
+		LPCSTR diff_str = nullptr;
 		bool tmp_active_param = false;
 		if (!strncmp(sect_ptr->Name.c_str(), "ap_", 3))
 		{
@@ -117,7 +117,7 @@ namespace mp_anticheat
 					real_value = active_params.r_string(sect_ptr->Name.c_str(), cit->first.c_str());
 					if (tmp_value != real_value)
 					{
-						LPCSTR tmp_key_str = NULL;
+						LPCSTR tmp_key_str = nullptr;
 						STRCONCAT(tmp_key_str,
 						          sect_ptr->Name.c_str(), "::", cit->first.c_str());
 						STRCONCAT(diff_str,
@@ -148,7 +148,7 @@ namespace mp_anticheat
 			real_value = pSettings->r_string(sect_ptr->Name.c_str(), cit->first.c_str());
 			if (tmp_value != real_value)
 			{
-				LPCSTR tmp_key_str = NULL;
+				LPCSTR tmp_key_str = nullptr;
 				STRCONCAT(tmp_key_str,
 				          sect_ptr->Name.c_str(), "::", cit->first.c_str());
 				STRCONCAT(diff_str,
@@ -162,14 +162,14 @@ namespace mp_anticheat
 				return dst_diff;
 			}
 		}
-		return NULL;
+		return nullptr;
 	}
 
 	LPCSTR configs_verifyer::get_diff(CInifile& received,
 	                                  CInifile& active_params,
 	                                  string256& dst_diff)
 	{
-		LPCSTR diff_str = NULL;
+		LPCSTR diff_str = nullptr;
 		for (CInifile::RootIt sit = received.sections().begin(),
 		                      siet = received.sections().end(); sit != siet; ++sit)
 		{
@@ -231,7 +231,7 @@ namespace mp_anticheat
 			return false;
 		}
 
-		LPCSTR add_str = NULL;
+		LPCSTR add_str = nullptr;
 		STRCONCAT(add_str,
 		          tmp_ini.r_string(cd_info_secion, cd_player_name_key),
 		          tmp_ini.r_string(cd_info_secion, cd_player_digest_key),

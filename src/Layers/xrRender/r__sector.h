@@ -77,7 +77,7 @@ public:
 	void traverse(CFrustum& F, _scissor& R);
 	void load(IReader& fs);
 
-	CSector() { m_root = NULL; }
+	CSector() { m_root = nullptr; }
 	virtual ~CSector();
 };
 

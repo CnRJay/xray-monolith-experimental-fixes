@@ -33,5 +33,5 @@ UITeamState* UIPanelsClassFactory::CreateTeamPanel(shared_str const& teamName, U
 	{
 		return xr_new<UITeamState>(etBlueTeam, teamPanels);
 	}
-	return NULL;
+	return nullptr;
 }

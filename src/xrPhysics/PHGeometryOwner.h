@@ -32,7 +32,7 @@ public:
 	void add_Shape(const SBoneShape& shape, const Fmatrix& offset); //aux
 	CODEGeom* last_geom()
 	{
-		if (m_geoms.empty())return NULL;
+		if (m_geoms.empty())return nullptr;
 		return m_geoms.back();
 	} //aux
 	bool has_geoms() { return !m_geoms.empty(); }

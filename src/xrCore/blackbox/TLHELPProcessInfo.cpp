@@ -29,13 +29,13 @@ typedef HANDLE (WINAPI *CREATESNAPSHOT)(DWORD dwFlags,
 // Has the function stuff here been initialized?  This is only to be
 // used by the InitPSAPI function and nothing else.
 static BOOL g_bInitialized = FALSE;
-static CREATESNAPSHOT g_pCreateToolhelp32Snapshot = NULL;
-static MODULEWALK g_pModule32First = NULL;
-static MODULEWALK g_pModule32Next = NULL;
-static PROCESSWALK g_pProcess32First = NULL;
-static PROCESSWALK g_pProcess32Next = NULL;
-static THREADWALK g_pThread32First = NULL;
-static THREADWALK g_pThread32Next = NULL;
+static CREATESNAPSHOT g_pCreateToolhelp32Snapshot = nullptr;
+static MODULEWALK g_pModule32First = nullptr;
+static MODULEWALK g_pModule32Next = nullptr;
+static PROCESSWALK g_pProcess32First = nullptr;
+static PROCESSWALK g_pProcess32Next = nullptr;
+static THREADWALK g_pThread32First = nullptr;
+static THREADWALK g_pThread32Next = nullptr;
 
 /*----------------------------------------------------------------------
 FUNCTION        :   InitTOOLHELP32
@@ -58,7 +58,7 @@ static BOOL InitTOOLHELP32(void)
 	}
 
 	BOOL bRet = FALSE;
-	HINSTANCE hKernel = NULL;
+	HINSTANCE hKernel = nullptr;
 
 	// Obtain the module handle of the kernel to retrieve addresses of
 	// the tool helper functions.
@@ -167,7 +167,7 @@ BOOL __stdcall TLHELPGetLoadedModules(DWORD dwPID,
 	}
 
 	// The snapshot handle.
-	HANDLE hModSnap = NULL;
+	HANDLE hModSnap = nullptr;
 	// The module structure.
 	MODULEENTRY32 stME32;
 	// A flag kept to report if the buffer was too small.
@@ -184,7 +184,7 @@ BOOL __stdcall TLHELPGetLoadedModules(DWORD dwPID,
 		return (FALSE);
 	}
 
-	FillMemory(&stME32, sizeof ( MODULEENTRY32 ), NULL);
+	FillMemory(&stME32, sizeof ( MODULEENTRY32 ), 0);
 	stME32.dwSize = sizeof(MODULEENTRY32);
 
 	// Start getting the module values.
@@ -255,7 +255,7 @@ DWORD __stdcall TLHELPGetModuleFileNameEx(DWORD dwPID,
 	}
 
 	// The snapshot handle.
-	HANDLE hModSnap = NULL;
+	HANDLE hModSnap = nullptr;
 	// The module structure.
 	MODULEENTRY32 stME32;
 
@@ -269,7 +269,7 @@ DWORD __stdcall TLHELPGetModuleFileNameEx(DWORD dwPID,
 		return (0);
 	}
 
-	FillMemory(&stME32, sizeof ( MODULEENTRY32 ), NULL);
+	FillMemory(&stME32, sizeof ( MODULEENTRY32 ), 0);
 	stME32.dwSize = sizeof(MODULEENTRY32);
 
 	DWORD dwRet = 0;

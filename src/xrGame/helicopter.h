@@ -303,7 +303,7 @@ public:
 
 	virtual BOOL net_SaveRelevant()
 	{
-		return (inherited::net_SaveRelevant() && BOOL(PPhysicsShell() != NULL)) || m_exploded;
+		return (inherited::net_SaveRelevant() && BOOL(PPhysicsShell() != nullptr)) || m_exploded;
 	};
 
 	virtual void renderable_Render() { inherited::renderable_Render(); };

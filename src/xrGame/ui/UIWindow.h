@@ -130,7 +130,7 @@ public:
 	//получить окно самого верхнего уровня
 	CUIWindow* GetTop()
 	{
-		if (m_pParentWnd == NULL) return this;
+		if (m_pParentWnd == nullptr) return this;
 		else return m_pParentWnd->GetTop();
 	}
 
@@ -182,7 +182,7 @@ public:
 	//ф-ция должна переопределяться
 	//pWnd - указатель на окно, которое послало сообщение
 	//pData - указатель на дополнительные данные, которые могут понадобиться
-	virtual void SendMessage(CUIWindow* pWnd, s16 msg, void* pData = NULL);
+	virtual void SendMessage(CUIWindow* pWnd, s16 msg, void* pData = nullptr);
 
 
 	virtual void Enable(bool status) { m_bIsEnabled = status; }

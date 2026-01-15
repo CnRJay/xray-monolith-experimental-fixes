@@ -235,7 +235,7 @@ CEnvDescriptor::CEnvDescriptor(shared_str const &identifier)
   lens_flare_id = "";
   tb_id = "";
 
-  env_ambient = NULL;
+  env_ambient = nullptr;
 }
 
 #define C_CHECK(C)                                                             \

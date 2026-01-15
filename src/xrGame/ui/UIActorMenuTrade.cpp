@@ -120,7 +120,7 @@ void CUIActorMenu::FilterActorTradeBagList(int mode)
 					string256 kind;
 					_GetItem(m_sort_kinds[mode], i, kind);
 
-					if (iitm->m_kind != NULL && iitm->m_kind.equal(kind))
+					if (iitm->m_kind != nullptr && iitm->m_kind.equal(kind))
 					{
 						CUICellItem* itm = create_cell_item(iitm);
 						m_pTradeActorBagList->SetItem(itm);
@@ -183,7 +183,7 @@ void CUIActorMenu::FilterTraderList(int mode)
 					string256 kind;
 					_GetItem(m_sort_kinds[mode], i, kind);
 
-					if (iitm->m_kind != NULL && iitm->m_kind.equal(kind))
+					if (iitm->m_kind != nullptr && iitm->m_kind.equal(kind))
 					{
 						CUICellItem* itm = create_cell_item(*itb);
 						m_pTradePartnerBagList->SetItem(itm);
@@ -263,7 +263,7 @@ bool CUIActorMenu::ToActorTrade(CUICellItem* itm, bool b_use_cursor_pos)
 	//	if(m_pActorInvOwner->inventory().CanPutInRuck(iitem))
 	{
 		CUIDragDropListEx* old_owner = itm->OwnerList();
-		CUIDragDropListEx* new_owner = NULL;
+		CUIDragDropListEx* new_owner = nullptr;
 		EDDListType old_owner_type = GetListType(old_owner);
 		if (old_owner_type == iQuickSlot)
 			return false;
@@ -306,7 +306,7 @@ bool CUIActorMenu::ToPartnerTrade(CUICellItem* itm, bool b_use_cursor_pos)
 	}
 
 	CUIDragDropListEx* old_owner = itm->OwnerList();
-	CUIDragDropListEx* new_owner = NULL;
+	CUIDragDropListEx* new_owner = nullptr;
 
 	if (b_use_cursor_pos)
 	{
@@ -330,7 +330,7 @@ bool CUIActorMenu::ToPartnerTrade(CUICellItem* itm, bool b_use_cursor_pos)
 bool CUIActorMenu::ToPartnerTradeBag(CUICellItem* itm, bool b_use_cursor_pos)
 {
 	CUIDragDropListEx* old_owner = itm->OwnerList();
-	CUIDragDropListEx* new_owner = NULL;
+	CUIDragDropListEx* new_owner = nullptr;
 
 	if (b_use_cursor_pos)
 	{
@@ -360,7 +360,7 @@ bool CUIActorMenu::ToPartnerTradeBag(CUICellItem* itm, bool b_use_cursor_pos)
 			string256 kind;
 			_GetItem(m_sort_kinds[current_sort_mode()], i, kind);
 
-			if (iitm->m_kind != NULL && iitm->m_kind.equal(kind))
+			if (iitm->m_kind != nullptr && iitm->m_kind.equal(kind))
 			{
 				if (b_use_cursor_pos)
 					new_owner->SetItem(citm, old_owner->GetDragItemPosition());
@@ -581,7 +581,7 @@ void CUIActorMenu::OnBtnPerformTradeBuy(CUIWindow* w, void* d)
 			CallMessageBoxOK("trade_dont_make");
 		}
 	}
-	SetCurrentItem(NULL);
+	SetCurrentItem(nullptr);
 
 	if (xr_strcmp(m_sort_kinds[current_sort_mode()], "s_all"))
 	{
@@ -644,7 +644,7 @@ void CUIActorMenu::OnBtnPerformTradeSell(CUIWindow* w, void* d)
 			CallMessageBoxOK("trade_dont_make");
 		}
 	}
-	SetCurrentItem(NULL);
+	SetCurrentItem(nullptr);
 
 	if (xr_strcmp(m_sort_kinds[current_sort_mode()], "s_all"))
 	{
@@ -723,7 +723,7 @@ void CUIActorMenu::DonateCurrentItem(CUICellItem* cell_item)
 
 	m_pTradePartnerList->SetItem(itm);
 
-	SetCurrentItem(NULL);
+	SetCurrentItem(nullptr);
 	UpdateItemsPlace();
 }
 

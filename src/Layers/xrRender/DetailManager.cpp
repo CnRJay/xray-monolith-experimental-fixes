@@ -186,7 +186,7 @@ lst[i]._M_end_of_storage._M_data);
 void CDetailManager::Load() {
   // Open file stream
   if (!FS.exist("$level$", "level.details")) {
-    dtFS = NULL;
+    dtFS = nullptr;
     return;
   }
 

@@ -32,9 +32,9 @@ CPhraseDialog::CPhraseDialog()
 	m_bFirstIsSpeaking = false;
 	m_SaidPhraseID = "";
 	m_bFinished = false;
-	m_pSpeakerFirst = NULL;
-	m_pSpeakerSecond = NULL;
-	m_DialogId = NULL;
+	m_pSpeakerFirst = nullptr;
+	m_pSpeakerSecond = nullptr;
+	m_DialogId = nullptr;
 }
 
 CPhraseDialog::~CPhraseDialog()
@@ -171,7 +171,7 @@ LPCSTR CPhraseDialog::GetPhraseText(const shared_str& phrase_id, bool current_sp
 
 	CGameObject* pSpeakerGO1 = (current_speaking) ? smart_cast<CGameObject*>(FirstSpeaker()) : NULL;
 	CGameObject* pSpeakerGO2 = (current_speaking) ? smart_cast<CGameObject*>(SecondSpeaker()) : NULL;
-	CGameObject* pSpeakerGO = NULL;
+	CGameObject* pSpeakerGO = nullptr;
 
 	if (smart_cast<CActor*>(pSpeakerGO1))
 		pSpeakerGO = pSpeakerGO2;
@@ -234,7 +234,7 @@ int CPhraseDialog::Priority()
 void CPhraseDialog::Load(shared_str dialog_id)
 {
 	m_DialogId = dialog_id;
-	inherited_shared::load_shared(m_DialogId, NULL);
+	inherited_shared::load_shared(m_DialogId, nullptr);
 }
 
 void CPhraseDialog::load_shared(LPCSTR)
@@ -253,7 +253,7 @@ void CPhraseDialog::load_shared(LPCSTR)
 	SetPriority(pXML->ReadAttribInt(dialog_node, "priority", 0));
 
 	//заголовок 
-	SetCaption(pXML->Read(dialog_node, "caption", 0, NULL));
+	SetCaption(pXML->Read(dialog_node, "caption", 0, nullptr));
 
 	//предикаты начала диалога
 	data()->m_ScriptDialogHelper.Load(pXML, dialog_node);
@@ -280,7 +280,7 @@ void CPhraseDialog::load_shared(LPCSTR)
 
 #ifdef DEBUG
 	LPCSTR wrong_phrase_id = pXML->CheckUniqueAttrib(phrase_list_node, "phrase", "id");
-	THROW3(wrong_phrase_id == NULL, *item_data.id, wrong_phrase_id);
+	THROW3(wrong_phrase_id == nullptr, *item_data.id, wrong_phrase_id);
 #endif
 
 	//ищем стартовую фразу
@@ -301,7 +301,7 @@ void CPhraseDialog::SetPriority(int val)
 
 CPhrase* CPhraseDialog::AddPhrase(LPCSTR text, const shared_str& phrase_id, const shared_str& prev_phrase_id, int goodwil_level)
 {
-	CPhrase* phrase = NULL;
+	CPhrase* phrase = nullptr;
 	CPhraseGraph::CVertex* _vertex = data()->m_PhraseGraph.vertex(phrase_id);
 	if (!_vertex)
 	{

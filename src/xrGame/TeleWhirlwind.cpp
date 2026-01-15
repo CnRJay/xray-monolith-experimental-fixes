@@ -124,7 +124,7 @@ void CTeleWhirlwind::clear_notrelevant()
 CTeleWhirlwindObject::CTeleWhirlwindObject()
 {
 	m_bDestroyable = false;
-	m_pTelekinesis = NULL;
+	m_pTelekinesis = nullptr;
 	m_fThrowPower = 0.f;
 }
 
@@ -422,7 +422,7 @@ void CTeleWhirlwindObject::switch_state(ETelekineticState new_state)
 
 bool CTeleWhirlwindObject::can_activate(CPhysicsShellHolder* obj)
 {
-	return (obj != NULL);
+	return (obj != nullptr);
 }
 
 
@@ -436,7 +436,7 @@ static float clampF(float x, float a, float b)
 CTeleTrampolinObject::CTeleTrampolinObject()
 {
 	m_bDestroyable = false;
-	m_pTelekinesis = NULL;
+	m_pTelekinesis = nullptr;
 	m_fThrowPower = 0.f;
 }
 
@@ -470,7 +470,7 @@ void CTeleTrampolinObject::set_throw_power(float throw_pow)
 
 bool CTeleTrampolinObject::can_activate(CPhysicsShellHolder* obj)
 {
-	return (obj != NULL);
+	return (obj != nullptr);
 }
 
 void CTeleTrampolinObject::raise(float step)

@@ -17,7 +17,7 @@ public:
 	{
 	}
 
-	virtual ~CSingleton() { _self = NULL; }
+	virtual ~CSingleton() { _self = nullptr; }
 
 	static void DestroySingleton()
 	{
@@ -49,7 +49,7 @@ public:
 };
 
 template <class T>
-T* CSingleton<T>::_self = NULL;
+T* CSingleton<T>::_self = nullptr;
 template <class T>
 int CSingleton<T>::_refcount = 0;
 template <class T>
@@ -111,7 +111,7 @@ class CSharedClass
 	SHARED_TYPE* _sd;
 	CSharedObj<SHARED_TYPE, KEY_TYPE>* pSharedObj;
 public:
-	CSharedClass(): _sd(NULL)
+	CSharedClass(): _sd(nullptr)
 	{
 		pSharedObj = CSharedObj<SHARED_TYPE, KEY_TYPE>::Instance();
 		pSharedObj->_on_self_delete = auto_delete;

@@ -436,7 +436,7 @@ void dx103DFluidManager::AdvectColorBFECC(float timestep, bool bTeperature)
 	//SetRenderTarget( RENDER_TARGET_TEMPVECTOR );	
 	//TechniqueAdvect->GetPassByIndex(0)->Apply(0);
 	m_pGrid->DrawSlices();
-	//m_pD3DDevice->OMSetRenderTargets(0, NULL, NULL);
+	//m_pD3DDevice->OMSetRenderTargets(0, nullptr, nullptr);
 	//pShaderResourceVariables[RENDER_TARGET_TEMPVECTOR]->SetResource( pRenderTargetShaderViews[RENDER_TARGET_TEMPVECTOR] );
 
 
@@ -469,7 +469,7 @@ void dx103DFluidManager::AdvectColorBFECC(float timestep, bool bTeperature)
 	//SetRenderTarget( RENDER_TARGET_TEMPSCALAR );
 	//TechniqueAdvect->GetPassByIndex(0)->Apply(0);
 	m_pGrid->DrawSlices();
-	//m_pD3DDevice->OMSetRenderTargets(0, NULL, NULL);
+	//m_pD3DDevice->OMSetRenderTargets(0, nullptr, nullptr);
 	//pShaderResourceVariables[RENDER_TARGET_TEMPSCALAR]->SetResource( pRenderTargetShaderViews[RENDER_TARGET_TEMPSCALAR] );
 
 
@@ -503,7 +503,7 @@ void dx103DFluidManager::AdvectColorBFECC(float timestep, bool bTeperature)
 	RCache.set_c(strForward, 1.0f);
 	//TechniqueAdvectBFECC->GetPassByIndex(0)->Apply(0);
 	m_pGrid->DrawSlices();
-	//m_pD3DDevice->OMSetRenderTargets(0, NULL, NULL);
+	//m_pD3DDevice->OMSetRenderTargets(0, nullptr, nullptr);
 	//pShaderResourceVariables[RENDER_TARGET_TEMPSCALAR]->SetResource( NULL );
 	// Apply the technique again so that the RENDER_TARGET_TEMPSCALAR shader resource is unbound
 	//TechniqueAdvectBFECC->GetPassByIndex(0)->Apply(0);*/
@@ -568,7 +568,7 @@ void dx103DFluidManager::AdvectVelocity(float timestep, float fGravity)
 	RCache.set_c(strForward, 1.0f);
 	//TechniqueAdvectVel->GetPassByIndex(0)->Apply(0);
 	m_pGrid->DrawSlices();
-	//m_pD3DDevice->OMSetRenderTargets(0, NULL, NULL);
+	//m_pD3DDevice->OMSetRenderTargets(0, nullptr, nullptr);
 	//pShaderResourceVariables[RENDER_TARGET_VELOCITY1]->SetResource( pRenderTargetShaderViews[RENDER_TARGET_VELOCITY1] );
 }
 
@@ -586,7 +586,7 @@ void dx103DFluidManager::ApplyVorticityConfinement(float timestep)
 	//TechniqueVorticity->GetPassByIndex(0)->Apply(0);
 	RCache.set_Element(m_SimulationTechnique[SS_Vorticity]);
 	m_pGrid->DrawSlices();
-	//m_pD3DDevice->OMSetRenderTargets(0, NULL, NULL);
+	//m_pD3DDevice->OMSetRenderTargets(0, nullptr, nullptr);
 	//pShaderResourceVariables[RENDER_TARGET_TEMPVECTOR]->SetResource( pRenderTargetShaderViews[RENDER_TARGET_TEMPVECTOR] );
 
 	// Compute and apply vorticity confinement force
@@ -601,7 +601,7 @@ void dx103DFluidManager::ApplyVorticityConfinement(float timestep)
 	//SetRenderTarget( RENDER_TARGET_VELOCITY1 );
 	// Add the confinement force to the rest of the forces
 	m_pGrid->DrawSlices();
-	//m_pD3DDevice->OMSetRenderTargets(0, NULL, NULL);
+	//m_pD3DDevice->OMSetRenderTargets(0, nullptr, nullptr);
 	//pShaderResourceVariables[RENDER_TARGET_VELOCITY1]->SetResource( pRenderTargetShaderViews[RENDER_TARGET_VELOCITY1] );
 }
 
@@ -630,7 +630,7 @@ void dx103DFluidManager::ComputeVelocityDivergence(float timestep)
 	//SetRenderTarget( RENDER_TARGET_TEMPVECTOR );
 	//TechniqueDivergence->GetPassByIndex(0)->Apply(0);
 	m_pGrid->DrawSlices();
-	//m_pD3DDevice->OMSetRenderTargets(0, NULL, NULL);
+	//m_pD3DDevice->OMSetRenderTargets(0, nullptr, nullptr);
 	//pShaderResourceVariables[RENDER_TARGET_TEMPVECTOR]->SetResource( pRenderTargetShaderViews[RENDER_TARGET_TEMPVECTOR] );
 }
 
@@ -687,7 +687,7 @@ void dx103DFluidManager::ComputePressure(float timestep)
 		RCache.set_RT(pRenderTargetViews[RENDER_TARGET_TEMPSCALAR]);
 		pRTTextures[RENDER_TARGET_PRESSURE]->bind(dwTextureStage);
 		m_pGrid->DrawSlices();
-		//m_pD3DDevice->OMSetRenderTargets(0, NULL, NULL);
+		//m_pD3DDevice->OMSetRenderTargets(0, nullptr, nullptr);
 		//RCache.set_RT(0);
 
 		//pShaderResourceVariables[RENDER_TARGET_PRESSURE]->SetResource( pRenderTargetShaderViews[RENDER_TARGET_TEMPSCALAR] );
@@ -696,7 +696,7 @@ void dx103DFluidManager::ComputePressure(float timestep)
 		RCache.set_RT(pRenderTargetViews[RENDER_TARGET_PRESSURE]);
 		pRTTextures[RENDER_TARGET_TEMPSCALAR]->bind(dwTextureStage);
 		m_pGrid->DrawSlices();
-		//m_pD3DDevice->OMSetRenderTargets(0, NULL, NULL);
+		//m_pD3DDevice->OMSetRenderTargets(0, nullptr, nullptr);
 		//RCache.set_RT(0);
 	}
 
@@ -716,7 +716,7 @@ void dx103DFluidManager::ProjectVelocity(float timestep)
 	RCache.set_c(strModulate, 1.0f);
 	//TechniqueProject->GetPassByIndex(0)->Apply(0);
 	m_pGrid->DrawSlices();
-	//m_pD3DDevice->OMSetRenderTargets(0, NULL, NULL);
+	//m_pD3DDevice->OMSetRenderTargets(0, nullptr, nullptr);
 	//pShaderResourceVariables[RENDER_TARGET_VELOCITY0]->SetResource( pRenderTargetShaderViews[RENDER_TARGET_VELOCITY0] );
 }
 

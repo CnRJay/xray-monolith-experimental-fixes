@@ -108,7 +108,7 @@ inline HANDLE CreateMailSlotByName(LPSTR slotName)
 	HANDLE hSlot = CreateMailslot(slotName,
 	                              0, // no maximum message size 
 	                              MAILSLOT_WAIT_FOREVER, // no time-out for operations 
-	                              (LPSECURITY_ATTRIBUTES)NULL); // no security attributes 
+	                              (LPSECURITY_ATTRIBUTES)nullptr); // no security attributes 
 
 	return hSlot;
 }
@@ -123,7 +123,7 @@ inline BOOL CheckExisting(LPSTR slotName)
 	                   (LPSECURITY_ATTRIBUTES)NULL,
 	                   OPEN_EXISTING,
 	                   FILE_ATTRIBUTE_NORMAL,
-	                   (HANDLE)NULL);
+	                   (HANDLE)nullptr);
 
 	res = (hFile != INVALID_HANDLE_VALUE);
 
@@ -145,7 +145,7 @@ inline BOOL SendMailslotMessage(LPSTR slotName, CMailSlotMsg& msg)
 	                   (LPSECURITY_ATTRIBUTES)NULL,
 	                   OPEN_EXISTING,
 	                   FILE_ATTRIBUTE_NORMAL,
-	                   (HANDLE)NULL);
+	                   (HANDLE)nullptr);
 
 	R_ASSERT(hFile != INVALID_HANDLE_VALUE);
 
@@ -157,7 +157,7 @@ inline BOOL SendMailslotMessage(LPSTR slotName, CMailSlotMsg& msg)
 	                    msg.GetBuffer(),
 	                    msg.GetLen(),
 	                    &cbWritten,
-	                    (LPOVERLAPPED)NULL);
+	                    (LPOVERLAPPED)nullptr);
 
 	R_ASSERT(fResult);
 	fResult = CloseHandle(hFile);
@@ -186,7 +186,7 @@ inline BOOL CheckMailslotMessage(HANDLE hSlot, CMailSlotMsg& msg)
 	                          (LPDWORD)NULL, // no maximum message size 
 	                          &cbMessage, // size of next message 
 	                          &cMessage, // number of messages 
-	                          (LPDWORD)NULL); // no read time-out 
+	                          (LPDWORD)nullptr); // no read time-out 
 
 	R_ASSERT(fResult);
 

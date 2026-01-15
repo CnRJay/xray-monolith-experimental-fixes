@@ -145,7 +145,7 @@ public:
 	virtual bool OnKeyboardAction(int dik, EUIMessages keyboard_action);
 	virtual bool OnKeyboardHold(int dik);
 
-	virtual void SendMessage(CUIWindow* pWnd, s16 msg, void* pData = NULL);
+	virtual void SendMessage(CUIWindow* pWnd, s16 msg, void* pData = nullptr);
 
 	Fvector2 GetGlobalMapCoordsForMouse();
 

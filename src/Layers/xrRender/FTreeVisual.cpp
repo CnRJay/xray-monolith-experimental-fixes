@@ -43,7 +43,7 @@ void FTreeVisual::Load(const char* N, IReader* data, u32 dwFlags)
 {
 	dxRender_Visual::Load(N, data, dwFlags);
 
-	D3DVERTEXELEMENT9* vFormat = NULL;
+	D3DVERTEXELEMENT9* vFormat = nullptr;
 
 	// read vertices
 	R_ASSERT(data->find_chunk(OGF_GCONTAINER));

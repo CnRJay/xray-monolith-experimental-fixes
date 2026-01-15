@@ -2,8 +2,8 @@
 #include "script_lua_helper.h"
 #include "script_debugger.h"
 
-CDbgLuaHelper* CDbgLuaHelper::m_pThis = NULL;
-lua_State* CDbgLuaHelper::L = NULL;
+CDbgLuaHelper* CDbgLuaHelper::m_pThis = nullptr;
+lua_State* CDbgLuaHelper::L = nullptr;
 
 CDbgLuaHelper::CDbgLuaHelper(CScriptDebugger* d)
 	: m_debugger(d)
@@ -13,7 +13,7 @@ CDbgLuaHelper::CDbgLuaHelper(CScriptDebugger* d)
 
 CDbgLuaHelper::~CDbgLuaHelper()
 {
-	m_pThis = NULL;
+	m_pThis = nullptr;
 }
 
 void CDbgLuaHelper::UnPrepareLua(lua_State* l, int idx)
@@ -132,7 +132,7 @@ int CDbgLuaHelper::errormessageLua(lua_State* l)
 	lua_concat(L, lua_gettop(L));
 
 	OutputTop(L);
-	const char* szSource = NULL;
+	const char* szSource = nullptr;
 	if (ar.source[0] == '@')
 		szSource = ar.source + 1;
 	m_pThis->debugger()->ErrorBreak(szSource, ar.currentline);
@@ -165,7 +165,7 @@ void CDbgLuaHelper::func_hook(lua_State* l, lua_Debug* ar)
 	lua_getinfo(L, "lnuS", ar);
 	m_pThis->m_pAr = ar;
 
-	const char* szSource = NULL;
+	const char* szSource = nullptr;
 	if (ar->source[0] == '@')
 	{
 		szSource = ar->source + 1;
@@ -297,7 +297,7 @@ void CDbgLuaHelper::DrawLocalVariables()
 	{
 		int i = 1;
 		const char* name;
-		while ((name = lua_getlocal(L, &ar, i++)) != NULL)
+		while ((name = lua_getlocal(L, &ar, i++)) != nullptr)
 		{
 			DrawVariable(L, name, true);
 
@@ -333,7 +333,7 @@ bool CDbgLuaHelper::GetCalltip(const char* szWord, char* szCalltip, int sz_callt
 	{
 		int i = 1;
 		const char* name;
-		while ((name = lua_getlocal(L, &ar, i++)) != NULL)
+		while ((name = lua_getlocal(L, &ar, i++)) != nullptr)
 		{
 			if (xr_strcmp(name, szWord) == 0)
 			{
@@ -435,7 +435,7 @@ void CDbgLuaHelper::CoverGlobals()
 	{
 		int i = 1;
 		const char* name;
-		while ((name = lua_getlocal(L, &ar, i++)) != NULL)
+		while ((name = lua_getlocal(L, &ar, i++)) != nullptr)
 		{
 			/* SAVE lvalue */
 			lua_pushstring(L, name); /* SAVE lvalue name */
@@ -512,7 +512,7 @@ void CDbgLuaHelper::DrawVariable(lua_State* l, const char* name, bool bOpenTable
 		/*	case LUA_TUSERDATA:{
 					::luabind::detail::object_rep* obj = static_cast<::luabind::detail::object_rep*>(lua_touserdata(L, -1));
 					::luabind::detail::lua_reference& r = obj->get_lua_table();
-					lua_State * ls = NULL;
+					lua_State * ls = nullptr;
 					r.get(ls);
 					DrawTable(ls, name);
 					return;

@@ -28,7 +28,7 @@ void CRenderDevice::Destroy(void)
 	Log("Destroying Direct3D...");
 
 	ShowCursor(TRUE);
-	ClipCursor(NULL);
+	ClipCursor(nullptr);
 	m_pRender->ValidateHW();
 
 	_Destroy(FALSE);

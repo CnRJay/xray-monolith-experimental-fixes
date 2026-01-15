@@ -11,7 +11,7 @@ class CStoreHierarchy
 public:
 	struct item : public IPureDestroyableObject
 	{
-		item(): m_parent(NULL), m_button(NULL)
+		item(): m_parent(nullptr), m_button(nullptr)
 		{
 		}
 
@@ -45,7 +45,7 @@ public:
 	~CStoreHierarchy();
 
 	void Init(CUIXml& xml, LPCSTR path);
-	void InitItemsInGroup(const shared_str& sect, item* = NULL);
+	void InitItemsInGroup(const shared_str& sect, item* = nullptr);
 
 	const item& GetRoot()
 	{
@@ -67,6 +67,6 @@ public:
 	};
 	bool MoveUp();
 	bool MoveDown(const shared_str& name);
-	item* FindItem(const shared_str& name_sect, item* recurse_from = NULL);
+	item* FindItem(const shared_str& name_sect, item* recurse_from = nullptr);
 	int TeamIdx() const { return m_team_idx; }
 };

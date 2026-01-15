@@ -369,9 +369,9 @@ public:
 
 	void detach_all_items()
 	{
-		m_attached_items[0] = NULL;
-		m_attached_items[1] = NULL;
-		m_attached_items[SCOPE_ATTACH_IDX] = NULL;
+		m_attached_items[0] = nullptr;
+		m_attached_items[1] = nullptr;
+		m_attached_items[SCOPE_ATTACH_IDX] = nullptr;
 	};
 
 	Fmatrix m_transform;

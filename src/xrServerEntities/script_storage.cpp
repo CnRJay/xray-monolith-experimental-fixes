@@ -97,7 +97,7 @@ static void* lua_alloc(void* ud, void* ptr, size_t osize, size_t nsize)
 	if (nsize == 0)
 	{
 		xr_free(ptr);
-		return NULL;
+		return nullptr;
 	}
 	else
 #ifdef DEBUG_MEMORY_NAME
@@ -209,7 +209,7 @@ static int report(lua_State *L, int status)
     if (status && !lua_isnil(L, -1))
     {
         const char *msg = lua_tostring(L, -1);
-        if (msg == NULL) msg = "(error object is not a string)";
+        if (msg == nullptr) msg = "(error object is not a string)";
         l_message(L, msg);
         lua_pop(L, 1);
     }
@@ -394,7 +394,7 @@ void CScriptStorage::reinit()
 		lua_close(m_virtual_machine);
 
 #ifdef USE_GSC_MEM_ALLOC
-    m_virtual_machine = lua_newstate(lua_alloc, NULL);
+    m_virtual_machine = lua_newstate(lua_alloc, nullptr);
 #else
 	m_virtual_machine = luaL_newstate();
 #endif //-USE_GSC_MEM_ALLOC

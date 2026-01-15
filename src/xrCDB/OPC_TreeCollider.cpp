@@ -52,13 +52,13 @@ AABBTreeCollider::AABBTreeCollider() :
 #ifdef OPC_USE_CALLBACKS
 	mUserData0			(0),
 	mUserData1			(0),
-	mObjCallback0		(null),
-	mObjCallback1		(null)
+	mObjCallback0		(nullptr),
+	mObjCallback1		(nullptr)
 #else
-	mFaces0(null),
-	mFaces1(null),
-	mVerts0(null),
-	mVerts1(null)
+	mFaces0(nullptr),
+	mFaces1(nullptr),
+	mVerts0(nullptr),
+	mVerts1(nullptr)
 #endif
 {
 }
@@ -89,7 +89,7 @@ const char* AABBTreeCollider::ValidateSettings()
 #endif
 	if (TemporalCoherenceEnabled() && !FirstContactEnabled()) return "Temporal coherence only works with "
 		"First contact"" mode!";
-	return null;
+	return nullptr;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

@@ -87,7 +87,7 @@ void CUIActorMenu::FilterDeadBodyList(int mode)
 				string256 kind;
 				_GetItem(m_sort_kinds[mode], i, kind);
 
-				if (iitm->m_kind != NULL && iitm->m_kind.equal(kind))
+				if (iitm->m_kind != nullptr && iitm->m_kind.equal(kind))
 				{
 					CUICellItem* itm = create_cell_item(*it);
 					m_pDeadBodyBagList->SetItem(itm);
@@ -203,7 +203,7 @@ bool CUIActorMenu::ToDeadBodyBag(CUICellItem* itm, bool b_use_cursor_pos)
 		return false;
 
 	CUIDragDropListEx* old_owner = itm->OwnerList();
-	CUIDragDropListEx* new_owner = NULL;
+	CUIDragDropListEx* new_owner = nullptr;
 
 	if (b_use_cursor_pos)
 	{

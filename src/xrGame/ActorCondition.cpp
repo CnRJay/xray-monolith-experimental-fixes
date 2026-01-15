@@ -56,7 +56,7 @@ CActorCondition::CActorCondition(CActor* object) :
 	VERIFY(object);
 	m_object = object;
 	m_condition_flags.zero();
-	m_death_effector = NULL;
+	m_death_effector = nullptr;
 
 	m_zone_max_power[ALife::infl_rad] = 1.0f;
 	m_zone_max_power[ALife::infl_fire] = 1.0f;
@@ -305,7 +305,7 @@ void CActorCondition::UpdateCondition()
 	if (IsGameTypeSingle())
 		UpdateTutorialThresholds();
 
-	if (GetHealth() < 0.05f && m_death_effector == NULL && IsGameTypeSingle())
+	if (GetHealth() < 0.05f && m_death_effector == nullptr && IsGameTypeSingle())
 	{
 		if (pSettings->section_exist("actor_death_effector"))
 			m_death_effector = xr_new<CActorDeathEffector>(this, "actor_death_effector");
@@ -512,7 +512,7 @@ void CActorCondition::UpdateSatiety()
 
 CWound* CActorCondition::ConditionHit(SHit* pHDS)
 {
-	if (GodMode()) return NULL;
+	if (GodMode()) return nullptr;
 	return inherited::ConditionHit(pHDS);
 }
 

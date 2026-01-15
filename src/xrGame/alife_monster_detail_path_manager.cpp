@@ -61,7 +61,7 @@ void CALifeMonsterDetailPathManager::target(const GameGraph::_GRAPH_ID& game_ver
 
 void CALifeMonsterDetailPathManager::target(const CALifeSmartTerrainTask& task)
 {
-	if (&task == NULL)
+	if (&task == nullptr)
 	{
 		return;
 	}

@@ -645,7 +645,7 @@ void CUIHudStatesWnd::UpdateZones()
 			if (ai().script_engine().functor("_G.CZone_Touch", funct))
 			{
 				if (funct(pZone->lua_game_object()))
-					HUD_SOUND_ITEM::PlaySound(zone_type->detect_snds, Fvector().set(0, 0, 0), NULL, true, false);
+					HUD_SOUND_ITEM::PlaySound(zone_type->detect_snds, Fvector().set(0, 0, 0), nullptr, true, false);
 			}
 		}
 		else

@@ -127,7 +127,7 @@ PHDynamicData * PHDynamicData::GetChild(unsigned int ChildNum)
 {
 	if(ChildNum<numOfChilds)
 		return &Childs[ChildNum];
-	else return NULL;
+	else return nullptr;
 }
 
 

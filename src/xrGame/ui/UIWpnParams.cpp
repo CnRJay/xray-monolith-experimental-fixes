@@ -1,4 +1,4 @@
-﻿#include "pch_script.h"
+#include "pch_script.h"
 #include "UIWpnParams.h"
 #include "UIXmlInit.h"
 #include "../level.h"
@@ -42,7 +42,7 @@ SLuaWpnParams::~SLuaWpnParams()
 {
 }
 
-SLuaWpnParams* g_lua_wpn_params = NULL;
+SLuaWpnParams* g_lua_wpn_params = nullptr;
 
 void destroy_lua_wpn_params()
 {
@@ -248,7 +248,7 @@ void CUIWpnParams::SetInfo(CInventoryItem* slot_wpn, CInventoryItem& cur_wpn)
 		xr_vector<shared_str> good_ammo;
 		std::copy_if(ammo_types.begin(), ammo_types.end(), std::back_inserter(good_ammo), [](const shared_str& ammo_type)
 		{
-			return ammo_type != NULL && !strstr(ammo_type.c_str(), "_bad") && !strstr(ammo_type.c_str(), "_verybad");
+			return ammo_type != nullptr && !strstr(ammo_type.c_str(), "_bad") && !strstr(ammo_type.c_str(), "_verybad");
 		});
 
 		// Выводим иконки патронов --#SM+#--

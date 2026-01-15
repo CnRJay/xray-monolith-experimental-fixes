@@ -10,7 +10,7 @@ BOOL g_telekinetic_objects_include_corpses = 0;
 template <typename Object>
 CStateBurerAttackTele<Object>::CStateBurerAttackTele(Object* obj) : inherited(obj), m_action()
 {
-	selected_object = NULL;
+	selected_object = nullptr;
 	time_started = 0;
 	m_end_tick = 0;
 	m_initial_health = 0.0f;
@@ -118,7 +118,7 @@ void CStateBurerAttackTele<Object>::deactivate()
 			}
 			if (CGrenade* grenade = smart_cast<CGrenade*>(cur_object))
 			{
-				grenade->set_destroy_callback(NULL);
+				grenade->set_destroy_callback(nullptr);
 			}
 		}
 	}
@@ -197,7 +197,7 @@ bool CStateBurerAttackTele<Object>::check_completion()
 template <typename Object>
 void CStateBurerAttackTele<Object>::FindFreeObjects(xr_vector<CObject*>& tpObjects, const Fvector& pos)
 {
-	Level().ObjectSpace.GetNearest(tpObjects, pos, object->m_tele_find_radius, NULL);
+	Level().ObjectSpace.GetNearest(tpObjects, pos, object->m_tele_find_radius, nullptr);
 
 	for (u32 i = 0; i < tpObjects.size(); i++)
 	{
@@ -488,7 +488,7 @@ void CStateBurerAttackTele<Object>::HandleGrenades()
 	}
 
 	m_nearest.clear_not_free();
-	Level().ObjectSpace.GetNearest(m_nearest, object->Position(), object->m_tele_find_radius, NULL);
+	Level().ObjectSpace.GetNearest(m_nearest, object->Position(), object->m_tele_find_radius, nullptr);
 
 	for (u32 i = 0; i < m_nearest.size(); ++i)
 	{

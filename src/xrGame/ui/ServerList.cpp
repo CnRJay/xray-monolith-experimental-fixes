@@ -12,7 +12,7 @@
 
 
 LPCSTR GameTypeToString(EGameIDs gt, bool bShort);
-CGameSpy_Browser* g_gs_browser = NULL;
+CGameSpy_Browser* g_gs_browser = nullptr;
 
 CServerList::CServerList()
 {
@@ -207,7 +207,7 @@ void CServerList::FillUpDetailedServerInfo()
 
 	//	if (2 == teams)
 	//	{
-	//		LPSTR _buff = NULL;
+	//		LPSTR _buff = nullptr;
 
 	//		CUIListBoxItem* pItemAdv;
 

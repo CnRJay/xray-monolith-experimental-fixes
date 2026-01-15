@@ -24,7 +24,7 @@ bool g_dedicated_server = false;
 
 extern Fvector4 ps_ssfx_grass_interactive;
 
-ENGINE_API IGame_Persistent* g_pGamePersistent = NULL;
+ENGINE_API IGame_Persistent* g_pGamePersistent = nullptr;
 
 bool IsMainMenuActive()
 {
@@ -40,7 +40,7 @@ IGame_Persistent::IGame_Persistent()
 	RDEVICE.seqAppDeactivate.Add(this);
 	m_pGShaderConstants = new ShadersExternalData(); //--#SM+#--
 
-	m_pMainMenu = NULL;
+	m_pMainMenu = nullptr;
 
 	PerlinNoise1D = xr_new<CPerlinNoise1D>(Random.randI(0, 0xFFFF));
 	PerlinNoise1D->SetOctaves(2);
@@ -354,12 +354,12 @@ void IGame_Persistent::GrassBendersUpdate(u16 id, u8& data_idx, u32& data_frame,
 		return;
 
 	// Just update position if not NULL
-	if (data_idx != NULL)
+	if (data_idx != 0)
 	{
 		// Explosions can take the mem spot, unassign and try to get a spot later.
 		if (grass_shader_data.id[data_idx] != id)
 		{
-			data_idx = NULL;
+			data_idx = 0;
 			data_frame = RDEVICE.dwFrame + Random.randI(10, 35);
 		}
 		else
@@ -386,7 +386,7 @@ void IGame_Persistent::GrassBendersUpdate(u16 id, u8& data_idx, u32& data_frame,
 
 	CFrustum& view_frust = ::Render->ViewBase;
 	u32 mask = 0xff;
-	float rad = data_idx == NULL ? 1.0 : std::max(1.0f, grass_shader_data.radius_curr[data_idx] + 0.5f);
+	float rad = data_idx == 0 ? 1.0 : std::max(1.0f, grass_shader_data.radius_curr[data_idx] + 0.5f);
 
 	// In view frustum?
 	if (!view_frust.testSphere(position, rad, mask))
@@ -396,12 +396,12 @@ void IGame_Persistent::GrassBendersUpdate(u16 id, u8& data_idx, u32& data_frame,
 	}
 
 	// Empty slot, let's use this
-	if (data_idx == NULL)
+	if (data_idx == 0)
 	{
 		u8 idx = grass_shader_data.index + 1;
 
 		// Add to grass blenders array
-		if (grass_shader_data.id[idx] == NULL)
+		if (grass_shader_data.id[idx] == 0)
 		{
 			data_idx = idx;
 			GrassBendersSet(idx, id, position, Fvector3().set(0, -99, 0), 0, 0, 0.0f, init_radius, BENDER_ANIM_DEFAULT, true);
@@ -465,7 +465,7 @@ void IGame_Persistent::GrassBendersAddShot(u16 id, Fvector position, Fvector3 di
 		else
 		{
 			// Check all indexes and keep usable index to use later if needed...
-			if (AddAt == -1 && grass_shader_data.radius[idx] == NULL)
+			if (AddAt == -1 && grass_shader_data.radius[idx] == 0.f)
 				AddAt = idx;
 		}
 	}
@@ -482,7 +482,7 @@ void IGame_Persistent::GrassBendersUpdateAnimations()
 {
 	for (int idx = 1; idx < ps_ssfx_grass_interactive.y + 1; idx++)
 	{
-		if (grass_shader_data.id[idx] != NULL)
+		if (grass_shader_data.id[idx] != 0)
 		{
 			switch (grass_shader_data.anim[idx])
 			{
@@ -593,10 +593,10 @@ void IGame_Persistent::GrassBendersUpdateAnimations()
 
 void IGame_Persistent::GrassBendersRemoveByIndex(u8& idx)
 {
-	if (idx != NULL)
+	if (idx != 0)
 	{
 		GrassBendersReset(idx);
-		idx = NULL;
+		idx = 0;
 	}
 }
 
@@ -611,7 +611,7 @@ void IGame_Persistent::GrassBendersRemoveById(u16 id)
 void IGame_Persistent::GrassBendersReset(u8 idx)
 {
 	// Reset Everything
-	GrassBendersSet(idx, NULL, Fvector3().set(0, 0, 0), Fvector3().set(0, -99, 0), 0, 0, 0, 0, BENDER_ANIM_DEFAULT, true);
+	GrassBendersSet(idx, 0, Fvector3().set(0, 0, 0), Fvector3().set(0, -99, 0), 0, 0, 0, 0, BENDER_ANIM_DEFAULT, true);
 	grass_shader_data.str_target[idx] = 0;
 }
 

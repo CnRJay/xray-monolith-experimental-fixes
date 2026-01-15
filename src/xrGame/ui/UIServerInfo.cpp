@@ -138,7 +138,7 @@ void CUIServerInfo::SetServerRules(u8 const* data_ptr, u32 const data_size)
 	//std::replace(tmp_string, tmp_string + new_size, '\r', '\\');
 	//std::replace(tmp_string, tmp_string + new_size, '\n', 'n');
 	char* tmp_iter = strstr(tmp_string, "\r\n");
-	while (tmp_iter != NULL)
+	while (tmp_iter != nullptr)
 	{
 		*tmp_iter = '\\';
 		*(tmp_iter + 1) = 'n';

@@ -23,8 +23,8 @@ extern class CPHWorld* ph_world;
 CElevatorState::CElevatorState()
 {
 	m_state = clbNoLadder;
-	m_ladder = NULL;
-	m_character = NULL;
+	m_ladder = nullptr;
+	m_character = nullptr;
 }
 
 float CElevatorState::ClimbDirection()
@@ -51,7 +51,7 @@ void CElevatorState::PhTune(float step)
 		else
 		{
 			m_state = clbNoLadder;
-			m_ladder = NULL;
+			m_ladder = nullptr;
 		}
 
 		return;
@@ -71,7 +71,7 @@ void CElevatorState::PhTune(float step)
 		break;
 	case clbDepart: UpdateDepart();
 		break;
-	case clbNoLadder: m_ladder = NULL;
+	case clbNoLadder: m_ladder = nullptr;
 		break;
 	}
 }
@@ -400,8 +400,8 @@ void CElevatorState::Deactivate()
 {
 	SwitchState(clbNoLadder);
 	m_state = clbNoLadder;
-	m_ladder = NULL;
-	m_character = NULL;
+	m_ladder = nullptr;
+	m_character = nullptr;
 }
 
 
@@ -443,5 +443,5 @@ void CElevatorState::NetRelcase(IPhysicsShellHolder* O)
 		return;
 
 	m_state = clbNoLadder;
-	m_ladder = NULL;
+	m_ladder = nullptr;
 }

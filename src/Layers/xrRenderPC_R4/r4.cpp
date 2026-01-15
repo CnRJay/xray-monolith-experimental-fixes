@@ -724,7 +724,7 @@ void CRender::model_Delete(IRender_DetailModel* & F)
 		CDetail* D = (CDetail*)F;
 		D->Unload();
 		xr_delete(D);
-		F = NULL;
+		F = nullptr;
 	}
 }
 
@@ -2061,8 +2061,8 @@ HRESULT CRender::shader_compile(
 	if (FAILED(_result))
 	{
 		includer Includer;
-		LPD3DBLOB pShaderBuf = NULL;
-		LPD3DBLOB pErrorBuf = NULL;
+		LPD3DBLOB pShaderBuf = nullptr;
+		LPD3DBLOB pErrorBuf = nullptr;
 		_result =
 			D3DCompile(
 				pSrcData,

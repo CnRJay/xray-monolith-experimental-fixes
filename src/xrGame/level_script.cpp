@@ -1100,8 +1100,8 @@ u32 render_get_dx_level()
 	return ::Render->get_dx_level();
 }
 
-CUISequencer* g_tutorial = NULL;
-CUISequencer* g_tutorial2 = NULL;
+CUISequencer* g_tutorial = nullptr;
+CUISequencer* g_tutorial2 = nullptr;
 
 void start_tutorial(LPCSTR name)
 {
@@ -1130,7 +1130,7 @@ LPCSTR translate_string(LPCSTR str)
 
 bool has_active_tutotial()
 {
-	return (g_tutorial != NULL);
+	return (g_tutorial != nullptr);
 }
 
 float get_weather_value_numric(LPCSTR name)
@@ -1810,7 +1810,7 @@ static SPickParam* get_pick(ETraceTarget tt)
 {
 	R_ASSERT(tt >= 0, tt < TT_MAX);
 
-	const attachable_hud_item* item = NULL;
+	const attachable_hud_item* item = nullptr;
 	switch (tt)
 	{
 	case TT_CAMERA:
@@ -1837,7 +1837,7 @@ static collide::rq_result* get_rq(ETraceTarget tt)
 	if (pp)
 		return &pp->result;
 
-	return NULL;
+	return nullptr;
 }
 
 //ability to get the target game_object at crosshair
@@ -1978,7 +1978,7 @@ bool ray_pick(const Fvector& start, const Fvector& dir, float range, collide::rq
               CScriptGameObject* ignore_object)
 {
 	collide::rq_result R;
-	CObject* ignore = NULL;
+	CObject* ignore = nullptr;
 	if (ignore_object)
 		ignore = smart_cast<CObject *>(&(ignore_object->object()));
 	if (Level().ObjectSpace.RayPick(start, dir, range, tgt, R, ignore))
@@ -2014,7 +2014,7 @@ xrTime get_start_time()
 void iterate_nearest(const Fvector& pos, float radius, const ::luabind::functor<bool>& functor)
 {
 	xr_vector<CObject*> m_nearest;
-	Level().ObjectSpace.GetNearest(m_nearest, pos, radius, NULL);
+	Level().ObjectSpace.GetNearest(m_nearest, pos, radius, nullptr);
 
 	if (!m_nearest.size()) return;
 

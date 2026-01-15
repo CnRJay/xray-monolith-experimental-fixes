@@ -5,7 +5,7 @@
 
 #include "FS_impl.h"
 
-XRCORE_API extern str_container* g_pStringContainer = NULL;
+XRCORE_API extern str_container* g_pStringContainer = nullptr;
 #define HEADER (12 + sizeof(void*)) // ref + len + crc + next
 
 #if 1
@@ -37,7 +37,7 @@ struct str_container_impl
 			candidate = candidate->next;
 		}
 
-		return NULL;
+		return nullptr;
 	}
 
 	void insert(str_value* value)
@@ -53,7 +53,7 @@ struct str_container_impl
 		{
 			str_value** current = &buffer[i];
 
-			while (*current != NULL)
+			while (*current != nullptr)
 			{
 				str_value* value = *current;
 				if (!value->dwReference)
@@ -306,7 +306,7 @@ str_value* str_container::dock(str_c value)
     sv->dwReference = 0;
     sv->dwLength = s_len;
     sv->dwCRC = crc32(value, s_len);
-    sv->next = NULL;
+    sv->next = nullptr;
 
     // search
     str_container_impl::cdb::iterator I = impl->container.find(sv); // only integer compares :)
@@ -351,7 +351,7 @@ str_value* str_container::dock(str_c value)
         result->dwReference = 0;
         result->dwLength = sv->dwLength;
         result->dwCRC = sv->dwCRC;
-        result->next = NULL;
+        result->next = nullptr;
 
         CopyMemory(result->value, value, s_len_with_zero);
 

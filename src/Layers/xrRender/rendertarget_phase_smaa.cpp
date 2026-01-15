@@ -30,7 +30,7 @@ void CRenderTarget::phase_smaa()
 #if defined(USE_DX10) || defined(USE_DX11)	
 	HW.pContext->ClearRenderTargetView(rt_smaa_edgetex->pRT, ColorRGBA);
 #else
-	CHK_DX( HW.pDevice->Clear(0L, NULL, D3DCLEAR_TARGET, D3DCOLOR_ARGB(0, 0, 0, 0), 1.0f, 0L) );
+	CHK_DX( HW.pDevice->Clear(0L, nullptr, D3DCLEAR_TARGET, D3DCOLOR_ARGB(0, 0, 0, 0), 1.0f, 0L) );
 #endif
 
 	// Fill vertex buffer
@@ -54,7 +54,7 @@ void CRenderTarget::phase_smaa()
 #if defined(USE_DX10) || defined(USE_DX11)	
 	HW.pContext->ClearRenderTargetView(rt_smaa_blendtex->pRT, ColorRGBA);
 #else
-	CHK_DX( HW.pDevice->Clear(0L, NULL, D3DCLEAR_TARGET, D3DCOLOR_ARGB(0, 0, 0, 0), 1.0f, 0L) );	
+	CHK_DX( HW.pDevice->Clear(0L, nullptr, D3DCLEAR_TARGET, D3DCOLOR_ARGB(0, 0, 0, 0), 1.0f, 0L) );	
 #endif
 
 	// Fill vertex buffer

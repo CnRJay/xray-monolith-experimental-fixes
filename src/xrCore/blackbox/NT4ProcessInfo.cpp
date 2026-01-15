@@ -32,11 +32,11 @@ typedef DWORD (WINAPI *GETMODULEFILENAMEEX)(HANDLE hProcess,
 // used by the InitPSAPI function and nothing else.
 static BOOL g_bInitialized = FALSE;
 // The pointer to EnumProcessModules.
-static ENUMPROCESSMODULES g_pEnumProcessModules = NULL;
+static ENUMPROCESSMODULES g_pEnumProcessModules = nullptr;
 // The pointer to GetModuleBaseName.
-static GETMODULEBASENAME g_pGetModuleBaseName = NULL;
+static GETMODULEBASENAME g_pGetModuleBaseName = nullptr;
 // The pointer to GetModuleFileNameEx.
-static GETMODULEFILENAMEEX g_pGetModuleFileNameEx = NULL;
+static GETMODULEFILENAMEEX g_pGetModuleFileNameEx = nullptr;
 
 /*----------------------------------------------------------------------
 FUNCTION        :   InitPSAPI

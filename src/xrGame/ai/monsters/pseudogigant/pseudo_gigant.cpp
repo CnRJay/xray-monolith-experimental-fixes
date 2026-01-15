@@ -272,7 +272,7 @@ void CPseudoGigant::on_activate_control(ControlCom::EControlType type)
 
 		// callback for start animation, will be triggered by everyone in radius
 		m_nearest.clear_not_free();
-		Level().ObjectSpace.GetNearest(m_nearest, Position(), 15.f, NULL);
+		Level().ObjectSpace.GetNearest(m_nearest, Position(), 15.f, nullptr);
 		for (u32 i = 0; i < m_nearest.size(); i++)
 		{
 			CPhysicsShellHolder* obj = smart_cast<CPhysicsShellHolder*>(m_nearest[i]);
@@ -291,7 +291,7 @@ void CPseudoGigant::on_threaten_execute()
 {
 	// разбросить объекты
 	m_nearest.clear_not_free();
-	Level().ObjectSpace.GetNearest(m_nearest, Position(), 15.f, NULL);
+	Level().ObjectSpace.GetNearest(m_nearest, Position(), 15.f, nullptr);
 	for (u32 i = 0; i < m_nearest.size(); i++)
 	{
 		CPhysicsShellHolder* obj = smart_cast<CPhysicsShellHolder *>(m_nearest[i]);

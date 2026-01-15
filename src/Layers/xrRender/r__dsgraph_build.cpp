@@ -1,4 +1,4 @@
-﻿#include "stdafx.h"
+#include "stdafx.h"
 
 #include "fhierrarhyvisual.h"
 #include "SkeletonCustom.h"
@@ -338,7 +338,7 @@ void R_dsgraph_structure::r_dsgraph_insert_static(dxRender_Visual* pVisual)
 	{
 		mapSorted_Node* N = mapDistort.insertInAnyWay(distSQ);
 		N->val.ssa = SSA;
-		N->val.pObject = NULL;
+		N->val.pObject = nullptr;
 		N->val.pVisual = pVisual;
 		N->val.Matrix = Fidentity;
 		N->val.se = &*pVisual->shader->E[4]; // 4=L_special
@@ -355,7 +355,7 @@ void R_dsgraph_structure::r_dsgraph_insert_static(dxRender_Visual* pVisual)
 	{
 		mapWater_Node* N = mapWater[Device.m_SecondViewport.IsSVPFrame()].insertInAnyWay(distSQ);
 		N->val.ssa = SSA;
-		N->val.pObject = NULL;
+		N->val.pObject = nullptr;
 		N->val.pVisual = pVisual;
 		N->val.Matrix = Fidentity;
 		N->val.se = sh;
@@ -367,7 +367,7 @@ void R_dsgraph_structure::r_dsgraph_insert_static(dxRender_Visual* pVisual)
 	if (sh->flags.bStrictB2F)
 	{
 		mapSorted_Node* N = mapSorted.insertInAnyWay(distSQ);
-		N->val.pObject = NULL;
+		N->val.pObject = nullptr;
 		N->val.pVisual = pVisual;
 		N->val.Matrix = Fidentity;
 		N->val.se = sh;
@@ -384,7 +384,7 @@ void R_dsgraph_structure::r_dsgraph_insert_static(dxRender_Visual* pVisual)
 	{
 		mapSorted_Node* N = mapEmissive.insertInAnyWay(distSQ);
 		N->val.ssa = SSA;
-		N->val.pObject = NULL;
+		N->val.pObject = nullptr;
 		N->val.pVisual = pVisual;
 		N->val.Matrix = Fidentity;
 		N->val.se = &*pVisual->shader->E[4]; // 4=L_special
@@ -393,7 +393,7 @@ void R_dsgraph_structure::r_dsgraph_insert_static(dxRender_Visual* pVisual)
 	{
 		mapSorted_Node* N = mapWmark.insertInAnyWay(distSQ);
 		N->val.ssa = SSA;
-		N->val.pObject = NULL;
+		N->val.pObject = nullptr;
 		N->val.pVisual = pVisual;
 		N->val.Matrix = Fidentity;
 		N->val.se = sh;
@@ -409,7 +409,7 @@ void R_dsgraph_structure::r_dsgraph_insert_static(dxRender_Visual* pVisual)
 	{
 		mapLandscape_Node* N = mapLandscape.insertInAnyWay(distSQ);
 		N->val.ssa = SSA;
-		N->val.pObject = NULL;
+		N->val.pObject = nullptr;
 		N->val.pVisual = pVisual;
 		N->val.Matrix = Fidentity;
 		N->val.se = sh;

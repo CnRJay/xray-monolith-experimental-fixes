@@ -519,7 +519,7 @@ IC const CSound_params* ref_sound::get_params()
 {
 	VERIFY(!::Sound->i_locked());
 	if (_feedback()) return _feedback()->get_params();
-	else return NULL;
+	else return nullptr;
 }
 
 IC void ref_sound::set_params(CSound_params* p)

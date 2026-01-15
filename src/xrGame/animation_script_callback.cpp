@@ -29,7 +29,7 @@ CBlend* anim_script_callback::play_cycle(IKinematicsAnimated* sa, const shared_s
 {
 	MotionID m = sa->LL_MotionID(*anim);
 	if(!m.valid( ))
-		return NULL;
+		return nullptr;
 	if (sa->LL_GetMotionDef(m)->StopAtEnd())
 	{
 		on_end = false;

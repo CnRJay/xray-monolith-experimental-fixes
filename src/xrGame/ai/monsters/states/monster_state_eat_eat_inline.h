@@ -10,7 +10,7 @@
 TEMPLATE_SPECIALIZATION
 CStateMonsterEatingAbstract::CStateMonsterEating(_Object* obj) : inherited(obj)
 {
-	corpse = NULL;
+	corpse = nullptr;
 	time_last_eat = 0;
 }
 
@@ -50,7 +50,7 @@ bool CStateMonsterEatingAbstract::check_start_conditions()
 	VERIFY(corpse);
 
 	Fvector nearest_bone_pos;
-	if ((corpse->m_pPhysicsShell == NULL) || (!corpse->m_pPhysicsShell->isActive()))
+	if ((corpse->m_pPhysicsShell == nullptr) || (!corpse->m_pPhysicsShell->isActive()))
 	{
 		nearest_bone_pos = corpse->Position();
 	}
@@ -71,7 +71,7 @@ bool CStateMonsterEatingAbstract::check_completion()
 	if (object->CorpseMan.get_corpse() != corpse) return true;
 
 	Fvector nearest_bone_pos;
-	if ((corpse->m_pPhysicsShell == NULL) || (!corpse->m_pPhysicsShell->isActive()))
+	if ((corpse->m_pPhysicsShell == nullptr) || (!corpse->m_pPhysicsShell->isActive()))
 	{
 		nearest_bone_pos = corpse->Position();
 	}

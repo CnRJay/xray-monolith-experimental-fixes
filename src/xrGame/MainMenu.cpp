@@ -69,24 +69,24 @@ CMainMenu *MainMenu() { return (CMainMenu *)g_pGamePersistent->m_pMainMenu; };
 
 CMainMenu::CMainMenu() {
   m_Flags.zero();
-  m_startDialog = NULL;
+  m_startDialog = nullptr;
   m_screenshotFrame = u32(-1);
   g_pGamePersistent->m_pMainMenu = this;
   if (Device.b_is_Ready)
     OnDeviceCreate();
   ReadTextureInfo();
   CUIXmlInit::InitColorDefs();
-  g_btnHint = NULL;
-  g_statHint = NULL;
+  g_btnHint = nullptr;
+  g_statHint = nullptr;
   m_deactivated_frame = 0;
 
   m_sPatchURL = "";
-  // m_pGameSpyFull					= NULL;
-  // m_account_mngr					= NULL;
-  // m_login_mngr					= NULL;
-  // m_profile_store					= NULL;
-  // m_stats_submitter				= NULL;
-  // m_atlas_submit_queue			= NULL;
+  // m_pGameSpyFull					= nullptr;
+  // m_account_mngr					= nullptr;
+  // m_login_mngr					= nullptr;
+  // m_profile_store					= nullptr;
+  // m_stats_submitter				= nullptr;
+  // m_atlas_submit_queue			= nullptr;
 
   m_sPDProgress.IsInProgress = false;
   m_downloaded_mp_map_url._set("");
@@ -98,7 +98,7 @@ CMainMenu::CMainMenu() {
 
   GetPlayerName();
   GetCDKeyFromRegistry();
-  m_demo_info_loader = NULL;
+  m_demo_info_loader = nullptr;
 
   if (!g_dedicated_server) {
     g_btnHint = xr_new<CUIButtonHint>();
@@ -146,7 +146,7 @@ CMainMenu::~CMainMenu() {
   xr_delete(g_btnHint);
   xr_delete(g_statHint);
   xr_delete(m_startDialog);
-  g_pGamePersistent->m_pMainMenu = NULL;
+  g_pGamePersistent->m_pMainMenu = nullptr;
 
   // xr_delete						(m_account_mngr);
   // xr_delete						(m_login_mngr);
@@ -506,7 +506,7 @@ void CMainMenu::OnFrame() {
                      (UI_BASE_WIDTH / UI_BASE_HEIGHT + 0.01f);
     if (b_is_16_9 != m_activatedScreenRatio) {
       ReloadUI();
-      m_startDialog->SendMessage(m_startDialog, MAIN_MENU_RELOADED, NULL);
+      m_startDialog->SendMessage(m_startDialog, MAIN_MENU_RELOADED, nullptr);
     }
   }
 }
@@ -571,7 +571,7 @@ void CMainMenu::OnNewPatchFound(LPCSTR VersionName, LPCSTR URL) {
 
   if (m_pMB_ErrDlgs[NewPatchFound]) {
     delete_data(m_pMB_ErrDlgs[NewPatchFound]);
-    m_pMB_ErrDlgs[NewPatchFound] = NULL;
+    m_pMB_ErrDlgs[NewPatchFound] = nullptr;
   }
   if (!m_pMB_ErrDlgs[NewPatchFound]) {
     INIT_MSGBOX(m_pMB_ErrDlgs[NewPatchFound], "msg_box_new_patch");
@@ -606,7 +606,7 @@ void CMainMenu::OnDownloadPatch(CUIWindow *, void *) {
   // if (!fileName) return;
 
   // string4096 FilePath = "";
-  // char* FileName = NULL;
+  // char* FileName = nullptr;
   // GetFullPathName(fileName, 4096, FilePath, &FileName);
 
   // string_path		fname;
@@ -836,9 +836,9 @@ void CMainMenu::OnDownloadMPMap_CopyURL(CUIWindow *w, void *d) {
 
 void CMainMenu::OnDownloadMPMap(CUIWindow *w, void *d) {
   LPCSTR url = m_downloaded_mp_map_url.c_str();
-  LPCSTR params = NULL;
+  LPCSTR params = nullptr;
   STRCONCAT(params, "/C start ", url);
-  // ShellExecute(0, "open", "cmd.exe", params, NULL, SW_SHOW);
+  // ShellExecute(0, "open", "cmd.exe", params, nullptr, SW_SHOW);
 }
 
 demo_info const *CMainMenu::GetDemoInfo(LPCSTR file_name) {
@@ -850,5 +850,5 @@ demo_info const *CMainMenu::GetDemoInfo(LPCSTR file_name) {
 
 void open_originals_link() {
   LPCSTR params = "/C start https://www.stalker-game.com/en/available-on";
-  ShellExecute(0, "open", "cmd.exe", params, NULL, SW_SHOW);
+  ShellExecute(0, "open", "cmd.exe", params, nullptr, SW_SHOW);
 }

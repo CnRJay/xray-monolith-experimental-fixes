@@ -71,7 +71,7 @@ void CRenderTarget::phase_bloom()
 	u32 Offset;
 
 	// Targets
-	u_setrt(rt_Bloom_1,NULL,NULL,NULL); // No need for ZBuffer at all
+	u_setrt(rt_Bloom_1,NULL,NULL,nullptr); // No need for ZBuffer at all
 	//RImplementation.rmNormal();
 
 	// Clear	- don't clear - it's stupid here :)
@@ -190,12 +190,12 @@ void CRenderTarget::phase_bloom()
 		RCache.set_Geometry(g_bloom_build);
 
 		// P0
-		u_setrt(rt_Bloom_2,NULL,NULL,NULL); // No need for ZBuffer at all
+		u_setrt(rt_Bloom_2,NULL,NULL,nullptr); // No need for ZBuffer at all
 		RCache.set_Element(s_bloom->E[3]);
 		RCache.Render(D3DPT_TRIANGLELIST, Offset, 0, 4, 0, 2);
 
 		// P1
-		u_setrt(rt_Bloom_1,NULL,NULL,NULL); // No need for ZBuffer at all
+		u_setrt(rt_Bloom_1,NULL,NULL,nullptr); // No need for ZBuffer at all
 		RCache.set_Element(s_bloom->E[4]);
 		RCache.Render(D3DPT_TRIANGLELIST, Offset, 0, 4, 0, 2);
 	}
@@ -274,7 +274,7 @@ void CRenderTarget::phase_bloom()
 			Fvector4 w0, w1;
 			float kernel = ps_r2_ls_bloom_kernel_g;
 			CalcGauss_wave(w0, w1, kernel, kernel / 3.f, ps_r2_ls_bloom_kernel_scale);
-			u_setrt(rt_Bloom_2,NULL,NULL,NULL); // No need for ZBuffer at all
+			u_setrt(rt_Bloom_2,NULL,NULL,nullptr); // No need for ZBuffer at all
 			RCache.set_Element(s_bloom->E[1]);
 			RCache.set_ca("weight", 0, w0);
 			RCache.set_ca("weight", 1, w1);
@@ -354,7 +354,7 @@ void CRenderTarget::phase_bloom()
 			Fvector4 w0, w1;
 			float kernel = ps_r2_ls_bloom_kernel_g * float(Device.dwHeight) / float(Device.dwWidth);
 			CalcGauss_wave(w0, w1, kernel, kernel / 3.f, ps_r2_ls_bloom_kernel_scale);
-			u_setrt(rt_Bloom_1,NULL,NULL,NULL); // No need for ZBuffer at all
+			u_setrt(rt_Bloom_1,NULL,NULL,nullptr); // No need for ZBuffer at all
 			RCache.set_Element(s_bloom->E[2]);
 			RCache.set_ca("weight", 0, w0);
 			RCache.set_ca("weight", 1, w1);
@@ -369,7 +369,7 @@ void CRenderTarget::phase_bloom()
 	bool _menu_pp = g_pGamePersistent ? g_pGamePersistent->OnRenderPPUI_query() : false;
 	if (_menu_pp)
 	{
-		//CHK_DX				(HW.pDevice->Clear( 0L, NULL, D3DCLEAR_TARGET,	0,	1.0f, 0L));
+		//CHK_DX				(HW.pDevice->Clear( 0L, nullptr, D3DCLEAR_TARGET,	0,	1.0f, 0L));
 		FLOAT ColorRGBA[4] = {0.0f, 0.0f, 0.0f, 0.0f};
 		HW.pContext->ClearRenderTargetView(RCache.get_RT(), ColorRGBA);
 	};
@@ -393,7 +393,7 @@ void CRenderTarget::phase_ssfx_bloom()
 	// Half resolution is the max size for everything
 	set_viewport_size(HW.pContext, w / 2.0f, h / 2.0f);
 
-	u_setrt(rt_ssfx_bloom1, 0, 0, NULL);
+	u_setrt(rt_ssfx_bloom1, 0, 0, nullptr);
 	RCache.set_CullMode(CULL_NONE);
 	RCache.set_Stencil(FALSE);
 
@@ -415,7 +415,7 @@ void CRenderTarget::phase_ssfx_bloom()
 	{
 		set_viewport_size(HW.pContext, w / 4.0f, h / 4.0f);
 
-		u_setrt(rt_ssfx_bloom_tmp4, 0, 0, NULL);
+		u_setrt(rt_ssfx_bloom_tmp4, 0, 0, nullptr);
 		RCache.set_CullMode(CULL_NONE);
 		RCache.set_Stencil(FALSE);
 
@@ -437,7 +437,7 @@ void CRenderTarget::phase_ssfx_bloom()
 
 		for (int lensblur = 0; lensblur < 2; lensblur++)
 		{
-			u_setrt(*rt_LensBlur[lensblur], 0, 0, NULL);
+			u_setrt(*rt_LensBlur[lensblur], 0, 0, nullptr);
 			RCache.set_CullMode(CULL_NONE);
 			RCache.set_Stencil(FALSE);
 
@@ -471,7 +471,7 @@ void CRenderTarget::phase_ssfx_bloom()
 
 		set_viewport_size(HW.pContext, w / SampleScale, h / SampleScale);
 
-		u_setrt(*rt_Down[downsample], 0, 0, NULL);
+		u_setrt(*rt_Down[downsample], 0, 0, nullptr);
 		RCache.set_CullMode(CULL_NONE);
 		RCache.set_Stencil(FALSE);
 
@@ -502,7 +502,7 @@ void CRenderTarget::phase_ssfx_bloom()
 
 		set_viewport_size(HW.pContext, w / SampleScale, h / SampleScale);
 
-		u_setrt(*rt_Up[upsample], 0, 0, NULL);
+		u_setrt(*rt_Up[upsample], 0, 0, nullptr);
 		RCache.set_CullMode(CULL_NONE);
 		RCache.set_Stencil(FALSE);
 
@@ -524,7 +524,7 @@ void CRenderTarget::phase_ssfx_bloom()
 	// The Upsample ends with `Half Res`
 
 	// BLOOM COMBINE ///////////////////////////////////////////////
-	u_setrt(rt_ssfx_bloom1, 0, 0, NULL);
+	u_setrt(rt_ssfx_bloom1, 0, 0, nullptr);
 	RCache.set_CullMode(CULL_NONE);
 	RCache.set_Stencil(FALSE);
 

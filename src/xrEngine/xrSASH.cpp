@@ -407,7 +407,7 @@ void xrSASH::SetOptions()
 
 	//oaNamedOption* Option;
 
-	//while ((Option = oaGetNextOption()) != NULL)
+	//while ((Option = oaGetNextOption()) != nullptr)
 	//    SetOption(Option);
 
 	////Console->Save();

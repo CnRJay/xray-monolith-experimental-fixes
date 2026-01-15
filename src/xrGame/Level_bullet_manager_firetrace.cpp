@@ -325,7 +325,7 @@ void CBulletManager::DynamicObjectHit(CBulletManager::_event &E) {
              ? hit_param.power * hit_modifier
              : hit_param
                    .power), // Make sure only damage dealt by actor is modified
-        original_dir, NULL, u16(E.R.element), position_in_bone_space,
+        original_dir, nullptr, u16(E.R.element), position_in_bone_space,
         hit_param.impulse, E.bullet.hit_type, E.bullet.armor_piercing,
         E.bullet.flags.aim_bullet);
 

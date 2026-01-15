@@ -182,7 +182,7 @@ IC void xr_delete(T*& ptr)
 	if (ptr)
 	{
 		xr_special_free<is_polymorphic<T>::result, T>()(ptr);
-		ptr = NULL;
+		ptr = nullptr;
 	}
 }
 
@@ -192,7 +192,7 @@ IC void xr_delete(T* const& ptr)
 	if (ptr)
 	{
 		xr_special_free<is_polymorphic<T>::result, T> (ptr);
-		const_cast<T*&>(ptr) = NULL;
+		const_cast<T*&>(ptr) = nullptr;
 	}
 }
 

@@ -69,9 +69,9 @@ CGamePersistent::CGamePersistent(void)
 	ZeroMemory(ambient_sound_next_time, sizeof(ambient_sound_next_time));
 
 
-	m_pUI_core = NULL;
-	m_pMainMenu = NULL;
-	m_intro = NULL;
+	m_pUI_core = nullptr;
+	m_pMainMenu = nullptr;
+	m_intro = nullptr;
 	m_intro_event.bind(this, &CGamePersistent::start_logo_intro);
 #ifdef DEBUG
     m_frame_counter = 0;
@@ -98,8 +98,8 @@ CGamePersistent::CGamePersistent(void)
 	}
 	else
 	{
-		pDemoFile = NULL;
-		eDemoStart = NULL;
+		pDemoFile = nullptr;
+		eDemoStart = nullptr;
 	}
 
 	eQuickLoad = Engine.Event.Handler_Attach("Game:QuickLoad", this);
@@ -681,7 +681,7 @@ void CGamePersistent::OnFrame()
             }
             else
             {
-                CCameraBase* C = NULL;
+                CCameraBase* C = nullptr;
                 if (g_actor)
                 {
                     if (!Actor()->Holder())
@@ -729,7 +729,7 @@ void CGamePersistent::OnFrame()
 #else // MASTER_GOLD
 		if (g_actor && IsGameTypeSingle())
 		{
-			CCameraBase* C = NULL;
+			CCameraBase* C = nullptr;
 			if (!Actor()->Holder())
 				C = Actor()->cam_Active();
 			else

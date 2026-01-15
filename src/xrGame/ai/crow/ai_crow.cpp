@@ -400,7 +400,7 @@ void CAI_Crow::shedule_Update(u32 DT)
 		{
 			fGoalChangeTime += fGoalChangeDelta + fGoalChangeDelta * Random.randF(-0.5f, 0.5f);
 
-			Level().ObjectSpace.GetNearest(nearbyObjects, Position(), 300.0f, NULL);
+			Level().ObjectSpace.GetNearest(nearbyObjects, Position(), 300.0f, nullptr);
 			for (CObject* obj : nearbyObjects) 
 			{
 				if (CEntityAlive* entity = smart_cast<CEntityAlive*>(obj); entity && !entity->g_Alive()) 

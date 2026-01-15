@@ -148,22 +148,22 @@ bool test_sides(const Fvector& center, const Fvector& side_dir, const Fvector& f
 CPHSimpleCharacter::CPHSimpleCharacter(): m_last_environment_update(Fvector().set(-FLT_MAX, -FLT_MAX, -FLT_MAX)),
                                           m_last_picked_material(GAMEMTL_NONE_IDX)
 {
-	m_object_contact_callback = NULL;
+	m_object_contact_callback = nullptr;
 
-	m_geom_shell = NULL;
-	m_wheel = NULL;
+	m_geom_shell = nullptr;
+	m_wheel = nullptr;
 
-	m_space = NULL;
-	m_wheel_transform = NULL;
-	m_shell_transform = NULL;
+	m_space = nullptr;
+	m_wheel_transform = nullptr;
+	m_shell_transform = nullptr;
 
-	m_hat = NULL;
-	m_hat_transform = NULL;
+	m_hat = nullptr;
+	m_hat_transform = nullptr;
 	m_acceleration.set(0, 0, 0);
 	b_external_impulse = false;
 	m_ext_impuls_stop_step = u64(-1);
 	m_ext_imulse.set(0, 0, 0);
-	m_phys_ref_object = NULL;
+	m_phys_ref_object = nullptr;
 	b_on_object = false;
 	m_friction_factor = 1.f;
 	dVectorSetZero(m_control_force);
@@ -194,8 +194,8 @@ CPHSimpleCharacter::CPHSimpleCharacter(): m_last_environment_update(Fvector().se
 	jump_up_velocity = 6.f;
 	m_air_control_factor = 0;
 	//m_capture_joint=NULL;
-	m_cap = NULL;
-	m_cap_transform = NULL;
+	m_cap = nullptr;
+	m_cap_transform = nullptr;
 	dVectorSetZero(m_safe_velocity);
 	m_collision_damage_factor = 1.f;
 	b_collision_restrictor_touch = false;
@@ -208,7 +208,7 @@ void CPHSimpleCharacter::TestPathCallback(bool& do_colide, bool bo1, dContact& c
                                           SGameMtl* /*material_2*/)
 {
 	do_colide = false;
-	CPHSimpleCharacter* ch = NULL;
+	CPHSimpleCharacter* ch = nullptr;
 	if (bo1)
 	{
 		ch = static_cast<CPHSimpleCharacter*>(retrieveGeomUserData(c.geom.g1)->ph_object);
@@ -250,8 +250,8 @@ void CPHSimpleCharacter::get_Box(Fvector& sz, Fvector& c) const
 	float r, h;
 	dGeomCylinderGetParams(m_geom_shell, &r, &h);
 	sz.set(2 * r, 2 * r + h, 2 * r);
-	const dReal* rot = NULL;
-	const dReal* pos = NULL;
+	const dReal* rot = nullptr;
+	const dReal* pos = nullptr;
 	dMatrix3 rr;
 	CODEGeom::get_final_tx(m_shell_transform, pos, rot, cast_fp(c), rr);
 }
@@ -412,35 +412,35 @@ void CPHSimpleCharacter::Destroy()
 	{
 		dGeomDestroyUserData(m_cap);
 		dGeomDestroy(m_cap);
-		m_cap = NULL;
+		m_cap = nullptr;
 	}
 
 	if (m_cap_transform)
 	{
 		dGeomDestroyUserData(m_cap_transform);
 		dGeomDestroy(m_cap_transform);
-		m_cap_transform = NULL;
+		m_cap_transform = nullptr;
 	}
 
 	if (m_geom_shell)
 	{
 		dGeomDestroyUserData(m_geom_shell);
 		dGeomDestroy(m_geom_shell);
-		m_geom_shell = NULL;
+		m_geom_shell = nullptr;
 	}
 
 	if (m_wheel)
 	{
 		dGeomDestroyUserData(m_wheel);
 		dGeomDestroy(m_wheel);
-		m_wheel = NULL;
+		m_wheel = nullptr;
 	}
 
 	if (m_shell_transform)
 	{
 		dGeomDestroyUserData(m_shell_transform);
 		dGeomDestroy(m_shell_transform);
-		m_shell_transform = NULL;
+		m_shell_transform = nullptr;
 	}
 
 
@@ -448,7 +448,7 @@ void CPHSimpleCharacter::Destroy()
 	{
 		dGeomDestroyUserData(m_wheel_transform);
 		dGeomDestroy(m_wheel_transform);
-		m_wheel_transform = NULL;
+		m_wheel_transform = nullptr;
 	}
 
 
@@ -456,26 +456,26 @@ void CPHSimpleCharacter::Destroy()
 	{
 		dGeomDestroyUserData(m_hat);
 		dGeomDestroy(m_hat);
-		m_hat = NULL;
+		m_hat = nullptr;
 	}
 	if (m_hat_transform)
 	{
 		dGeomDestroyUserData(m_hat_transform);
 		dGeomDestroy(m_hat_transform);
-		m_hat_transform = NULL;
+		m_hat_transform = nullptr;
 	}
 
 	if (m_space)
 	{
 		dSpaceDestroy(m_space);
-		m_space = NULL;
+		m_space = nullptr;
 	}
 
 	if (m_body)
 	{
 		Island().RemoveBody(m_body);
 		dBodyDestroy(m_body);
-		m_body = NULL;
+		m_body = nullptr;
 	}
 }
 
@@ -1906,7 +1906,7 @@ void CPHSimpleCharacter::SCollisionDamageInfo::Reinit()
 	//m_damege_contact;
 
 	m_obj_id = u16(-1);
-	m_hit_callback = NULL;
+	m_hit_callback = nullptr;
 	m_contact_velocity = 0;
 	is_initiated = false;
 
@@ -1957,8 +1957,8 @@ static float restrictor_depth = 0.f;
 void CPHSimpleCharacter::TestRestrictorContactCallbackFun(bool& do_colide, bool bo1, dContact& c, SGameMtl* material_1,
                                                           SGameMtl* material_2)
 {
-	dGeomID g_this = NULL;
-	dGeomID g_obj = NULL;
+	dGeomID g_this = nullptr;
+	dGeomID g_obj = nullptr;
 	if (bo1)
 	{
 		g_this = c.geom.g1;

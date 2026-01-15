@@ -506,7 +506,7 @@ void CRenderTarget::phase_combine()
 			RCache.set_CullMode(CULL_CCW);
 			RCache.set_Stencil(FALSE);
 			RCache.set_ColorWriteEnable();
-			//CHK_DX(HW.pDevice->Clear	( 0L, NULL, D3DCLEAR_TARGET, color_rgba(127,127,0,127), 1.0f, 0L));
+			//CHK_DX(HW.pDevice->Clear	( 0L, nullptr, D3DCLEAR_TARGET, color_rgba(127,127,0,127), 1.0f, 0L));
 			RImplementation.r_dsgraph_render_distort();
 			if (g_pGamePersistent) g_pGamePersistent->OnRenderPPUI_PP(); // PP-UI
 		}
@@ -637,7 +637,7 @@ void CRenderTarget::phase_combine()
 	else
 	{
 		if (PP_Complex) u_setrt(rt_Color, 0, 0, baseZB); // LDR RT
-		else u_setrt(Device.dwWidth, Device.dwHeight, baseRT, NULL, NULL, baseZB);
+		else u_setrt(Device.dwWidth, Device.dwHeight, baseRT, nullptr, NULL, baseZB);
 	}
 	//. u_setrt				( Device.dwWidth,Device.dwHeight,HW.pBaseRT,NULL,NULL,HW.pBaseZB);
 	RCache.set_CullMode(CULL_NONE);
@@ -781,8 +781,8 @@ void CRenderTarget::phase_combine()
 	//*** exposure-pipeline-clear
 	{
 		std::swap(rt_LUM_pool[gpu_id * 2 + 0], rt_LUM_pool[gpu_id * 2 + 1]);
-		t_LUM_src->surface_set(NULL);
-		t_LUM_dest->surface_set(NULL);
+		t_LUM_src->surface_set(nullptr);
+		t_LUM_dest->surface_set(nullptr);
 	}
 
 

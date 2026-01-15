@@ -11,7 +11,7 @@
 #include <malloc.h>
 #pragma warning(pop)
 
-static INetLog* pSvNetLog = NULL;
+static INetLog* pSvNetLog = nullptr;
 
 #define NET_BANNED_STR                "Player banned by server!"
 #define NET_PROTECTED_SERVER_STR      "Access denied by protected server for this player!"
@@ -99,7 +99,7 @@ xr_string IBannedClient::BannedTimeTo() const
 
 IClient::IClient(CTimer* timer)
 	: stats(timer),
-	  server(NULL)
+	  server(nullptr)
 {
 	dwTime_LastUpdate = 0;
 	flags.bLocal = FALSE;
@@ -162,12 +162,12 @@ IClient::_SendTo_LL(const void* data, u32 size, u32 flags, u32 timeout)
 //------------------------------------------------------------------------------
 IClient* IPureServer::ID_to_client(ClientID ID, bool ScanAll)
 {
-	if (0 == ID.value()) return NULL;
+	if (0 == ID.value()) return nullptr;
 	IClient* ret_client = GetClientByID(ID);
 	if (ret_client || !ScanAll)
 		return ret_client;
 
-	return NULL;
+	return nullptr;
 }
 
 void
@@ -219,10 +219,10 @@ IPureServer::IPureServer(CTimer* timer, BOOL Dedicated)
 	device_timer = timer;
 	stats.clear();
 	stats.dwSendTime = TimeGlobal(device_timer);
-	SV_Client = NULL;
-	NET = NULL;
-	net_Address_device = NULL;
-	pSvNetLog = NULL; //xr_new<INetLog>("logs\\net_sv_log.log", TimeGlobal(device_timer));
+	SV_Client = nullptr;
+	NET = nullptr;
+	net_Address_device = nullptr;
+	pSvNetLog = nullptr; //xr_new<INetLog>("logs\\net_sv_log.log", TimeGlobal(device_timer));
 #ifdef DEBUG
 	sender_functor_invoked = false;
 #endif
@@ -235,7 +235,7 @@ IPureServer::~IPureServer()
 
 	BannedAddresses.clear();
 
-	SV_Client = NULL;
+	SV_Client = nullptr;
 
 	xr_delete(pSvNetLog);
 
@@ -315,7 +315,7 @@ IPureServer::EConnect IPureServer::Connect(LPCSTR options, GameDescriptionData& 
 		//	};	
 		//---------------------------
 		// Create the IDirectPlay8Client object.
-		HRESULT CoCreateInstanceRes = CoCreateInstance(XR_GUID(CLSID_DirectPlay8Server), NULL, CLSCTX_INPROC_SERVER,
+		HRESULT CoCreateInstanceRes = CoCreateInstance(XR_GUID(CLSID_DirectPlay8Server), nullptr, CLSCTX_INPROC_SERVER,
 		                                               XR_GUID(IID_IDirectPlay8Server), (LPVOID*)&NET);
 		//---------------------------	
 		if (CoCreateInstanceRes != S_OK)
@@ -347,11 +347,11 @@ IPureServer::EConnect IPureServer::Connect(LPCSTR options, GameDescriptionData& 
 		dpPlayerInfo.dwSize = sizeof(DPN_PLAYER_INFO);
 		dpPlayerInfo.dwInfoFlags = DPNINFO_NAME;
 		dpPlayerInfo.pwszName = wszName;
-		dpPlayerInfo.pvData = NULL;
-		dpPlayerInfo.dwDataSize = NULL;
+		dpPlayerInfo.pvData = nullptr;
+		dpPlayerInfo.dwDataSize = 0;
 		dpPlayerInfo.dwPlayerFlags = 0;
 
-		CHK_DX(NET->SetServerInfo( &dpPlayerInfo, NULL, NULL, DPNSETSERVERINFO_SYNC ));
+		CHK_DX(NET->SetServerInfo( &dpPlayerInfo, nullptr, NULL, DPNSETSERVERINFO_SYNC ));
 
 		// Set server/session description
 		WCHAR SessionNameUNICODE[4096];
@@ -377,7 +377,7 @@ IPureServer::EConnect IPureServer::Connect(LPCSTR options, GameDescriptionData& 
 		};
 
 		// Create our IDirectPlay8Address Device Address, --- Set the SP for our Device Address
-		net_Address_device = NULL;
+		net_Address_device = nullptr;
 		CHK_DX(
 			CoCreateInstance (XR_GUID(CLSID_DirectPlay8Address),NULL, CLSCTX_INPROC_SERVER, XR_GUID(IID_IDirectPlay8Address),(LPVOID*) &
 				net_Address_device ));
@@ -401,7 +401,7 @@ IPureServer::EConnect IPureServer::Connect(LPCSTR options, GameDescriptionData& 
 			(
 				&dpAppDesc, // AppDesc
 				&net_Address_device, 1, // Device Address
-				NULL, NULL, // Reserved
+				NULL, nullptr, // Reserved
 				NULL, // Player Context
 				0); // dwFlags
 			if (HostSuccess != S_OK)
@@ -878,7 +878,7 @@ bool IPureServer::GetClientAddress(IDirectPlay8Address* pClientAddress, ip_addre
 
 	Address.set(HostName);
 
-	if (pPort != NULL)
+	if (pPort != nullptr)
 	{
 		DWORD dwPort = 0;
 		DWORD dwPortSize = sizeof(dwPort);
@@ -892,7 +892,7 @@ bool IPureServer::GetClientAddress(IDirectPlay8Address* pClientAddress, ip_addre
 
 bool IPureServer::GetClientAddress(ClientID ID, ip_address& Address, DWORD* pPort)
 {
-	IDirectPlay8Address* pClAddr = NULL;
+	IDirectPlay8Address* pClAddr = nullptr;
 	CHK_DX(NET->GetClientAddress (ID.value(), &pClAddr, 0));
 
 	return GetClientAddress(pClAddr, Address, pPort);
@@ -906,7 +906,7 @@ IBannedClient* IPureServer::GetBannedClient(const ip_address& Address)
 		if (pBClient->HAddr == Address)
 			return pBClient;
 	}
-	return NULL;
+	return nullptr;
 };
 
 void IPureServer::BanClient(IClient* C, u32 BanTime)

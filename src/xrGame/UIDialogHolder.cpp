@@ -110,7 +110,7 @@ void CDialogHolder::StopMenu(CUIDialogWnd* pDialog)
 		SetMainInputReceiver(pDialog, true);
 
 	RemoveDialogToRender(pDialog);
-	pDialog->SetHolder(NULL);
+	pDialog->SetHolder(nullptr);
 
 	if (!TopInputReceiver() || !TopInputReceiver()->NeedCursor())
 		GetUICursor().Hide();
@@ -189,7 +189,7 @@ CUIDialogWnd* CDialogHolder::TopInputReceiver()
 {
 	if (!m_input_receivers.empty())
 		return m_input_receivers.back().m_item;
-	return NULL;
+	return nullptr;
 };
 
 void CDialogHolder::SetMainInputReceiver(CUIDialogWnd* ir, bool _find_remove)

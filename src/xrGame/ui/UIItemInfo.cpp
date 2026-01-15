@@ -36,20 +36,20 @@ CUIItemInfo::CUIItemInfo()
 {
 	UIItemImageSize.set(0.0f, 0.0f);
 
-	UICost = NULL;
-	UITradeTip = NULL;
-	UIWeight = NULL;
-	UIItemImage = NULL;
-	UIDesc = NULL;
-	//	UIConditionWnd				= NULL;
-	UIWpnParams = NULL;
-	UIProperties = NULL;
-	UIOutfitInfo = NULL;
-	UIBoosterInfo = NULL;
-	UIArtefactParams = NULL;
-	UIName = NULL;
-	UIBackground = NULL;
-	m_pInvItem = NULL;
+	UICost = nullptr;
+	UITradeTip = nullptr;
+	UIWeight = nullptr;
+	UIItemImage = nullptr;
+	UIDesc = nullptr;
+	//	UIConditionWnd				= nullptr;
+	UIWpnParams = nullptr;
+	UIProperties = nullptr;
+	UIOutfitInfo = nullptr;
+	UIBoosterInfo = nullptr;
+	UIArtefactParams = nullptr;
+	UIName = nullptr;
+	UIBackground = nullptr;
+	m_pInvItem = nullptr;
 	m_b_FitToHeight = false;
 	m_complex_desc = false;
 }
@@ -229,7 +229,7 @@ void CUIItemInfo::InitItem(CUICellItem* pCellItem, CInventoryItem* pCompareItem,
 {
 	if (!pCellItem)
 	{
-		m_pInvItem = NULL;
+		m_pInvItem = nullptr;
 		Enable(false);
 		return;
 	}
@@ -305,7 +305,7 @@ void CUIItemInfo::InitItem(CUICellItem* pCellItem, CInventoryItem* pCompareItem,
 			pos.y = UIWeight->GetWndPos().y + UIWeight->GetHeight() + 4.0f;
 		}
 
-		if (trade_tip == NULL)
+		if (trade_tip == nullptr)
 			UITradeTip->Show(false);
 		else
 		{
@@ -322,7 +322,7 @@ void CUIItemInfo::InitItem(CUICellItem* pCellItem, CInventoryItem* pCompareItem,
 		if (UIWeight)
 			pos.y = UIWeight->GetWndPos().y + UIWeight->GetHeight() + 4.0f;
 
-		if (UITradeTip && trade_tip != NULL)
+		if (UITradeTip && trade_tip != nullptr)
 			pos.y = UITradeTip->GetWndPos().y + UITradeTip->GetHeight() + 4.0f;
 
 		UIDesc->SetWndPos(pos);

@@ -29,7 +29,7 @@
 
 dxRender_Visual* CModelPool::Instance_Create(u32 type)
 {
-	dxRender_Visual* V = NULL;
+	dxRender_Visual* V = nullptr;
 
 	// Check types
 	switch (type)
@@ -335,7 +335,7 @@ void CModelPool::DeleteInternal(dxRender_Visual* & V, BOOL bDiscard)
 			xr_delete(V);
 		}
 	}
-	V = NULL;
+	V = nullptr;
 }
 
 void CModelPool::Delete(dxRender_Visual* & V, BOOL bDiscard)
@@ -350,7 +350,7 @@ void CModelPool::Delete(dxRender_Visual* & V, BOOL bDiscard)
 	{
 		DeleteInternal(V, bDiscard);
 	}
-	V = NULL;
+	V = nullptr;
 }
 
 void CModelPool::DeleteQueue()
@@ -406,7 +406,7 @@ void CModelPool::Discard(dxRender_Visual* & V, BOOL b_complete)
 		// Registry entry not-found - just special type of visual / particles / etc.
 		xr_delete(V);
 	}
-	V = NULL;
+	V = nullptr;
 }
 
 void CModelPool::Prefetch()
@@ -537,7 +537,7 @@ void CModelPool::memory_stats(u32& vb_mem_video, u32& vb_mem_system, u32& ib_mem
 		dxRender_Visual* ptr = it->model;
 		Fvisual* vis_ptr = fast_dynamic_cast<Fvisual*>(ptr);
 
-		if (vis_ptr == NULL)
+		if (vis_ptr == nullptr)
 			continue;
 #if !defined(USE_DX10) && !defined(USE_DX11)
 		D3DINDEXBUFFER_DESC IB_desc;

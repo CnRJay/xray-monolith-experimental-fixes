@@ -44,18 +44,18 @@ IDirect3DStateBlock9*	dwDebugSB = 0;
 LPCSTR dxgiOld = "--dxgi-old";
 
 CHW::CHW() :
-    //	hD3D(NULL),
-	//pD3D(NULL),
+    //	hD3D(nullptr),
+	//pD3D(nullptr),
 	m_pAdapter(0),
-	pDevice(NULL),
+	pDevice(nullptr),
 #if defined(USE_DX11)
 	m_move_window(true),
 	pAnnotation(nullptr)
 #else
     m_move_window(true)
 #endif
-//SECRET_P_BASE_RT(NULL),
-//SECRET_P_BASE_ZB(NULL)
+//SECRET_P_BASE_RT(nullptr),
+//SECRET_P_BASE_ZB(nullptr)
 {
     Device.seqAppActivate.Add(this);
     Device.seqAppDeactivate.Add(this);
@@ -480,7 +480,7 @@ void CHW::CreateDevice(HWND hwnd, bool move_window)
     _RELEASE(context);
 
     // create swapchain
-    R_CHK(m_pFactory->CreateSwapChainForHwnd(pDevice, m_hWnd, &sd, &sd_fullscreen, NULL, &m_pSwapChain));
+    R_CHK(m_pFactory->CreateSwapChainForHwnd(pDevice, m_hWnd, &sd, &sd_fullscreen, nullptr, &m_pSwapChain));
 
     // setup colorspace
     // HDR10 (U10 output) -> DXGI_COLOR_SPACE_RGB_FULL_G2084_NONE_P2020
@@ -634,7 +634,7 @@ void CHW::DestroyDevice()
 #endif
 
     if (!is_windowed) {
-        m_pSwapChain->SetFullscreenState(FALSE, NULL);
+        m_pSwapChain->SetFullscreenState(FALSE, nullptr);
 
         if (strstr(Core.Params, dxgiOld)) {
 #ifdef USE_DX11
@@ -694,7 +694,7 @@ void CHW::Reset(HWND hwnd)
     cd.Windowed = bWindowed;
 #endif
 
-    m_pSwapChain->SetFullscreenState(!bWindowed, NULL);
+    m_pSwapChain->SetFullscreenState(!bWindowed, nullptr);
 
 #if defined(USE_DX11)
     selectResolution(cd.Width, cd.Height, bWindowed);
@@ -982,7 +982,7 @@ void CHW::OnAppActivate()
 #elif defined(USE_DX10)
         ShowWindow(m_ChainDesc.OutputWindow, SW_RESTORE);
 #endif
-        m_pSwapChain->SetFullscreenState(TRUE, NULL);
+        m_pSwapChain->SetFullscreenState(TRUE, nullptr);
 
 #ifdef USE_DX11
         if (!strstr(Core.Params, dxgiOld)) {
@@ -1028,7 +1028,7 @@ void CHW::OnAppDeactivate()
 		if (use_reshade)
             unregister_reshade();
 		
-        m_pSwapChain->SetFullscreenState(FALSE, NULL);
+        m_pSwapChain->SetFullscreenState(FALSE, nullptr);
 
 #ifdef USE_DX11
         if (!strstr(Core.Params, dxgiOld)) {
@@ -1165,13 +1165,13 @@ for( int i=0; vid_quality_token[i].name; i++ )
 xr_free					(vid_quality_token[i].name);
 }
 xr_free						(vid_quality_token);
-vid_quality_token			= NULL;
+vid_quality_token			= nullptr;
 }
 */
 /*
 void	fill_render_mode_list()
 {
-if(vid_quality_token != NULL)		return;
+if(vid_quality_token != nullptr)		return;
 
 D3DCAPS9					caps;
 CHW							_HW;
@@ -1199,8 +1199,8 @@ default:	;
 
 if (bBreakLoop) break;
 
-_tmp.push_back				(NULL);
-LPCSTR val					= NULL;
+_tmp.push_back				(nullptr);
+LPCSTR val					= nullptr;
 switch (i)
 {
 case 0: val ="renderer_r1";			break;
@@ -1215,7 +1215,7 @@ u32 _cnt								= _tmp.size()+1;
 vid_quality_token						= xr_alloc<xr_token>(_cnt);
 
 vid_quality_token[_cnt-1].id			= -1;
-vid_quality_token[_cnt-1].name			= NULL;
+vid_quality_token[_cnt-1].name			= nullptr;
 
 #ifdef DEBUG
 Msg("Available render modes[%d]:",_tmp.size());
@@ -1237,12 +1237,12 @@ void free_vid_mode_list()
         xr_free(vid_mode_token[i].name);
     }
     xr_free(vid_mode_token);
-    vid_mode_token = NULL;
+    vid_mode_token = nullptr;
 }
 
 void fill_vid_mode_list(CHW* _hw)
 {
-	if (vid_mode_token != NULL) return;
+	if (vid_mode_token != nullptr) return;
 	xr_vector<LPCSTR> _tmp;
     xr_vector<DXGI_MODE_DESC> modes;
 
@@ -1277,12 +1277,12 @@ void fill_vid_mode_list(CHW* _hw)
         if (_tmp.end() != std::find_if(_tmp.begin(), _tmp.end(), _uniq_mode(str)))
             continue;
 
-        _tmp.push_back(NULL);
+        _tmp.push_back(nullptr);
         _tmp.back() = xr_strdup(str);
     }
 
 
-    //	_tmp.push_back				(NULL);
+    //	_tmp.push_back				(nullptr);
     //	_tmp.back()					= xr_strdup("1024x768");
 
     u32 _cnt = _tmp.size() + 1;
@@ -1290,7 +1290,7 @@ void fill_vid_mode_list(CHW* _hw)
     vid_mode_token = xr_alloc<xr_token>(_cnt);
 
 	vid_mode_token[_cnt - 1].id = -1;
-    vid_mode_token[_cnt - 1].name = NULL;
+    vid_mode_token[_cnt - 1].name = nullptr;
 
 #ifdef DEBUG
 	Msg("Available video modes[%d]:",_tmp.size());
@@ -1305,7 +1305,7 @@ void fill_vid_mode_list(CHW* _hw)
     }
 
     /*	Old code
-    if(vid_mode_token != NULL)		return;
+    if(vid_mode_token != nullptr)		return;
     xr_vector<LPCSTR>	_tmp;
     u32 cnt = _hw->pD3D->GetAdapterModeCount	(_hw->DevAdapter, _hw->Caps.fTarget);
 
@@ -1323,7 +1323,7 @@ void fill_vid_mode_list(CHW* _hw)
         if(_tmp.end() != std::find_if(_tmp.begin(), _tmp.end(), _uniq_mode(str)))
             continue;
 
-        _tmp.push_back				(NULL);
+        _tmp.push_back				(nullptr);
         _tmp.back()					= xr_strdup(str);
     }
 
@@ -1332,7 +1332,7 @@ void fill_vid_mode_list(CHW* _hw)
     vid_mode_token					= xr_alloc<xr_token>(_cnt);
 
     vid_mode_token[_cnt-1].id			= -1;
-    vid_mode_token[_cnt-1].name		= NULL;
+    vid_mode_token[_cnt-1].name		= nullptr;
 
 #ifdef DEBUG
     Msg("Available video modes[%d]:",_tmp.size());
@@ -1363,7 +1363,7 @@ void CHW::UpdateViews()
 	R = m_pSwapChain->GetBuffer(0, __uuidof( ID3DTexture2D), (LPVOID*)&pBuffer);
     R_CHK(R);
 
-    R = pDevice->CreateRenderTargetView(pBuffer, NULL, &SECRET_P_BASE_RT);
+    R = pDevice->CreateRenderTargetView(pBuffer, nullptr, &SECRET_P_BASE_RT);
     pBaseRT = SECRET_P_BASE_RT;
     pBuffer->Release();
     R_CHK(R);
@@ -1371,7 +1371,7 @@ void CHW::UpdateViews()
     //	Create Depth/stencil buffer
     //	HACK: DX10: hard depth buffer format
 	//R_CHK	(pDevice->GetDepthStencilSurface	(&SECRET_P_BASE_ZB));
-	ID3DTexture2D* pDepthStencil = NULL;
+	ID3DTexture2D* pDepthStencil = nullptr;
 
     D3D_TEXTURE2D_DESC descDepth;
 #if defined(USE_DX11)
@@ -1399,7 +1399,7 @@ void CHW::UpdateViews()
     R_CHK(R);
 
     //	Create Depth/stencil view
-    R = pDevice->CreateDepthStencilView(pDepthStencil, NULL, &SECRET_P_BASE_ZB);
+    R = pDevice->CreateDepthStencilView(pDepthStencil, nullptr, &SECRET_P_BASE_ZB);
     pBaseZB = SECRET_P_BASE_ZB;
     R_CHK(R);
 

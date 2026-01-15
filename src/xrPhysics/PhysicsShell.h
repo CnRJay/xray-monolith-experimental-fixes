@@ -41,8 +41,8 @@ struct physicsBone
 
 	physicsBone()
 	{
-		joint = NULL;
-		element = NULL;
+		joint = nullptr;
+		element = nullptr;
 	}
 };
 
@@ -163,7 +163,7 @@ public:
 #endif
 	virtual bool has_geoms() = 0;
 	virtual void add_Mass(const SBoneShape& shape, const Fmatrix& offset, const Fvector& mass_center, float mass,
-	                      CPHFracture* fracture = NULL) = 0;
+	                      CPHFracture* fracture = nullptr) = 0;
 	virtual void set_ParentElement(CPhysicsElement* p) = 0;
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	virtual void set_BoxMass(const Fobb& box, float mass) = 0;
@@ -405,8 +405,8 @@ public:
 	virtual void SetGlTransformDynamic(const Fmatrix& form) = 0;
 	virtual void CollideAll() = 0;
 	virtual CPhysicsElement* NearestToPoint(const Fvector& point, NearestToPointCallback* cb = 0) = 0;
-	virtual void build_FromKinematics(IKinematics* K, BONE_P_MAP* p_geting_map = NULL) = 0;
-	virtual void preBuild_FromKinematics(IKinematics* K, BONE_P_MAP* p_geting_map = NULL) = 0;
+	virtual void build_FromKinematics(IKinematics* K, BONE_P_MAP* p_geting_map = nullptr) = 0;
+	virtual void preBuild_FromKinematics(IKinematics* K, BONE_P_MAP* p_geting_map = nullptr) = 0;
 	virtual void Build(bool disable = false) = 0;
 	virtual void _BCL ActivatingBonePoses(IKinematics& K) = 0;
 

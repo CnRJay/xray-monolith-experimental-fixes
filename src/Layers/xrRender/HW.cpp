@@ -30,11 +30,11 @@ IDirect3DStateBlock9*	dwDebugSB = 0;
 #endif
 
 CHW::CHW() :
-	hD3D(NULL),
-	pD3D(NULL),
-	pDevice(NULL),
-	pBaseRT(NULL),
-	pBaseZB(NULL),
+	hD3D(nullptr),
+	pD3D(nullptr),
+	pDevice(nullptr),
+	pBaseRT(nullptr),
+	pBaseZB(nullptr),
 	m_move_window(true),
 	maxRefreshRate(265) //ECO_RENDER
 {
@@ -106,10 +106,10 @@ void CHW::Reset(HWND hwnd)
 #endif
 }
 
-//xr_token*				vid_mode_token = NULL;
+//xr_token*				vid_mode_token = nullptr;
 //extern xr_token*		vid_mode_token;
 #include "../../Include/xrAPI/xrAPI.h"
-//xr_token*				vid_quality_token = NULL;
+//xr_token*				vid_quality_token = nullptr;
 
 void CHW::CreateD3D()
 {
@@ -672,13 +672,13 @@ void free_render_mode_list()
         xr_free					(vid_quality_token[i].name);
     }
     xr_free						(vid_quality_token);
-    vid_quality_token			= NULL;
+    vid_quality_token			= nullptr;
 }
 */
 /*
 void	fill_render_mode_list()
 {
-    if(vid_quality_token != NULL)		return;
+    if(vid_quality_token != nullptr)		return;
 
     D3DCAPS9					caps;
     CHW							_HW;
@@ -706,8 +706,8 @@ void	fill_render_mode_list()
 
         if (bBreakLoop) break;
 
-        _tmp.push_back				(NULL);
-        LPCSTR val					= NULL;
+        _tmp.push_back				(nullptr);
+        LPCSTR val					= nullptr;
         switch (i)
         {
             case 0: val ="renderer_r1";			break;
@@ -722,7 +722,7 @@ void	fill_render_mode_list()
     vid_quality_token						= xr_alloc<xr_token>(_cnt);
 
     vid_quality_token[_cnt-1].id			= -1;
-    vid_quality_token[_cnt-1].name			= NULL;
+    vid_quality_token[_cnt-1].name			= nullptr;
 
 #ifdef DEBUG
     Msg("Available render modes[%d]:",_tmp.size());
@@ -744,12 +744,12 @@ void free_vid_mode_list()
 		xr_free(vid_mode_token[i].name);
 	}
 	xr_free(vid_mode_token);
-	vid_mode_token = NULL;
+	vid_mode_token = nullptr;
 }
 
 void fill_vid_mode_list(CHW* _hw)
 {
-	if (vid_mode_token != NULL) return;
+	if (vid_mode_token != nullptr) return;
 	xr_vector<LPCSTR> _tmp;
 	u32 cnt = _hw->pD3D->GetAdapterModeCount(_hw->DevAdapter, _hw->Caps.fTarget);
 
@@ -767,7 +767,7 @@ void fill_vid_mode_list(CHW* _hw)
 		if (_tmp.end() != std::find_if(_tmp.begin(), _tmp.end(), _uniq_mode(str)))
 			continue;
 
-		_tmp.push_back(NULL);
+		_tmp.push_back(nullptr);
 		_tmp.back() = xr_strdup(str);
 	}
 
@@ -776,7 +776,7 @@ void fill_vid_mode_list(CHW* _hw)
 	vid_mode_token = xr_alloc<xr_token>(_cnt);
 
 	vid_mode_token[_cnt - 1].id = -1;
-	vid_mode_token[_cnt - 1].name = NULL;
+	vid_mode_token[_cnt - 1].name = nullptr;
 
 #ifdef DEBUG
     Msg("Available video modes[%d]:",_tmp.size());

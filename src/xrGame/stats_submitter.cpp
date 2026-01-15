@@ -21,9 +21,9 @@ namespace gamespy_profile
 		//m_fullgs_obj				= fullgs;
 		//m_atlas_obj					= fullgs->GetGameSpyATLAS();
 		//VERIFY(m_atlas_obj);
-		m_last_operation_profile = NULL;
-		//m_atlas_report				= NULL;
-		m_last_best_scores = NULL;
+		m_last_operation_profile = nullptr;
+		//m_atlas_report				= nullptr;
+		m_last_best_scores = nullptr;
 		//ZeroMemory					(m_atlas_connection_id, sizeof(m_atlas_connection_id));
 	}
 
@@ -414,9 +414,9 @@ namespace gamespy_profile
 	void stats_submitter::terminate_session()
 	{
 		m_last_operation_cb.clear();
-		m_last_operation_profile = NULL;
-		//m_atlas_report				= NULL;
-		m_last_best_scores = NULL;
+		m_last_operation_profile = nullptr;
+		//m_atlas_report				= nullptr;
+		m_last_best_scores = nullptr;
 		//ZeroMemory					(m_atlas_connection_id, sizeof(m_atlas_connection_id));
 	}
 

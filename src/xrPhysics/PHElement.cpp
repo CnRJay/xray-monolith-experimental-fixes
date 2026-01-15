@@ -51,18 +51,18 @@ CPHElement::CPHElement() //aux
 
 	//temp_for_push_out=NULL;
 
-	m_body = NULL;
+	m_body = nullptr;
 	//bActive=false;
 	//bActivating=false;
 	m_flags.set(flActive,FALSE);
 	m_flags.set(flActivating,FALSE);
-	m_parent_element = NULL;
-	m_shell = NULL;
+	m_parent_element = nullptr;
+	m_shell = nullptr;
 
 
 	k_w = default_k_w;
 	k_l = default_k_l; //1.8f;
-	m_fratures_holder = NULL;
+	m_fratures_holder = nullptr;
 	//b_enabled_onstep=false;
 	//m_flags.set(flEnabledOnStep,FALSE);
 	m_flags.assign(0);
@@ -143,7 +143,7 @@ void CPHElement::destroy()
 	{
 		if (m_body->world)m_shell->Island().RemoveBody(m_body);
 		dBodyDestroy(m_body);
-		m_body = NULL;
+		m_body = nullptr;
 	}
 	DestroyGroupSpace();
 }

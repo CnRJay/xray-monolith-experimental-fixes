@@ -334,7 +334,7 @@ void xrDebug::backend(const char* expression, const char* description, const cha
     ShowWindow(GetActiveWindow(), SW_FORCEMINIMIZE);
     int result =
         MessageBox(
-        GetTopWindow(NULL),
+        GetTopWindow(nullptr),
         assertion_info,
         "Fatal Error",
         /*MB_CANCELTRYCONTINUE*/MB_OK | MB_ICONERROR | /*MB_SYSTEMMODAL |*/ MB_DEFBUTTON1 | MB_SETFOREGROUND
@@ -664,7 +664,7 @@ void save_mini_dump (_EXCEPTION_POINTERS* pExceptionInfo)
     // firstly see if dbghelp.dll is around and has the function we need
 // look next to the EXE first, as the one in System32 might be old
     // (e.g. Windows 2000)
-    HMODULE hDll = NULL;
+    HMODULE hDll = nullptr;
     string_path szDbgHelpPath;
 
     if (GetModuleFileName( NULL, szDbgHelpPath, _MAX_PATH ))
@@ -677,13 +677,13 @@ void save_mini_dump (_EXCEPTION_POINTERS* pExceptionInfo)
         }
     }
 
-    if (hDll==NULL)
+    if (hDll==nullptr)
     {
         // load any version we can
         hDll = ::LoadLibrary( "DBGHELP.DLL" );
     }
 
-    LPCTSTR szResult = NULL;
+    LPCTSTR szResult = nullptr;
 
     if (hDll)
     {
@@ -716,12 +716,12 @@ void save_mini_dump (_EXCEPTION_POINTERS* pExceptionInfo)
             }
 
             // create the file
-            HANDLE hFile = ::CreateFile( szDumpPath, GENERIC_WRITE, FILE_SHARE_WRITE, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL );
+            HANDLE hFile = ::CreateFile( szDumpPath, GENERIC_WRITE, FILE_SHARE_WRITE, nullptr, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL );
             if (INVALID_HANDLE_VALUE==hFile)
             {
                 // try to place into current directory
                 MoveMemory (szDumpPath,szDumpPath+5,strlen(szDumpPath));
-                hFile = ::CreateFile( szDumpPath, GENERIC_WRITE, FILE_SHARE_WRITE, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL );
+                hFile = ::CreateFile( szDumpPath, GENERIC_WRITE, FILE_SHARE_WRITE, nullptr, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL );
             }
             if (hFile!=INVALID_HANDLE_VALUE)
             {
@@ -729,12 +729,12 @@ void save_mini_dump (_EXCEPTION_POINTERS* pExceptionInfo)
 
                 ExInfo.ThreadId = ::GetCurrentThreadId();
                 ExInfo.ExceptionPointers = pExceptionInfo;
-                ExInfo.ClientPointers = NULL;
+                ExInfo.ClientPointers = FALSE;
 
                 // write the dump
                 MINIDUMP_TYPE dump_flags = MINIDUMP_TYPE(MiniDumpNormal | MiniDumpFilterMemory | MiniDumpScanMemory );
 
-                BOOL bOK = pDump( GetCurrentProcess(), GetCurrentProcessId(), hFile, dump_flags, &ExInfo, NULL, NULL );
+                BOOL bOK = pDump( GetCurrentProcess(), GetCurrentProcessId(), hFile, dump_flags, &ExInfo, nullptr, NULL );
                 if (bOK)
                 {
                     xr_sprintf( szScratch, "Saved dump file to '%s'", szDumpPath );
@@ -860,7 +860,7 @@ LONG WINAPI UnhandledFilter(_EXCEPTION_POINTERS* pExceptionInfo)
 	ShowCursor(true);
 	ShowWindow(GetActiveWindow(), SW_FORCEMINIMIZE);
 	MessageBox(
-		GetTopWindow(NULL),
+		GetTopWindow(nullptr),
 		"Unhandled exception occured. See log for details",
 		"Fatal Error",
 		MB_OK | MB_ICONERROR | MB_SYSTEMMODAL
@@ -1020,7 +1020,7 @@ void _terminate()
     buffer += xr_sprintf(buffer, sizeof(buffer), "Press OK to abort execution%s",endline);
 
     MessageBox (
-        GetTopWindow(NULL),
+        GetTopWindow(nullptr),
         assertion_info,
         "Fatal Error",
         MB_OK|MB_ICONERROR|MB_SYSTEMMODAL

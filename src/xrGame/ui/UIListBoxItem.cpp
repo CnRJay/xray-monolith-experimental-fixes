@@ -5,7 +5,7 @@
 #include "UIStatic.h"
 
 CUIListBoxItem::CUIListBoxItem(float height)
-	: m_text(NULL), tag(u32(-1))
+	: m_text(nullptr), tag(u32(-1))
 {
 	SetHeight(height);
 	m_text = AddTextField("", 10.0f);

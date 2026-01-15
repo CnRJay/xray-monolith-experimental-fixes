@@ -29,7 +29,7 @@ void _VertexStream::Create()
 	R_CHK(HW.pDevice->CreateBuffer ( &bufferDesc, 0, &pVB ));
 	HW.stats_manager.increment_stats_vb(pVB);
 #else	//	USE_DX10
-	R_CHK(HW.pDevice->CreateVertexBuffer ( mSize, D3DUSAGE_WRITEONLY|D3DUSAGE_DYNAMIC, 0, D3DPOOL_DEFAULT, &pVB, NULL));
+	R_CHK(HW.pDevice->CreateVertexBuffer ( mSize, D3DUSAGE_WRITEONLY|D3DUSAGE_DYNAMIC, 0, D3DPOOL_DEFAULT, &pVB, nullptr));
 	HW.stats_manager.increment_stats_vb(pVB);
 #endif	//	USE_DX10
 
@@ -150,7 +150,7 @@ void _VertexStream::reset_begin()
 void _VertexStream::reset_end()
 {
 	Create();
-	//old_pVB				= NULL;
+	//old_pVB				= nullptr;
 }
 
 _VertexStream::_VertexStream()
@@ -160,7 +160,7 @@ _VertexStream::_VertexStream()
 
 void _VertexStream::_clear()
 {
-	pVB = NULL;
+	pVB = nullptr;
 	mSize = 0;
 	mPosition = 0;
 	mDiscardID = 0;
@@ -189,7 +189,7 @@ void _IndexStream::Create()
 	HW.stats_manager.increment_stats_ib(pIB);
 #else	//	USE_DX10
 	R_CHK(HW.pDevice->CreateIndexBuffer( mSize, D3DUSAGE_WRITEONLY|D3DUSAGE_DYNAMIC, D3DFMT_INDEX16, D3DPOOL_DEFAULT, &
-		pIB, NULL));
+		pIB, nullptr));
 	HW.stats_manager.increment_stats_ib(pIB);
 #endif	//	USE_DX10
 	R_ASSERT(pIB);
@@ -272,5 +272,5 @@ void _IndexStream::reset_begin()
 void _IndexStream::reset_end()
 {
 	Create();
-	//old_pIB				= NULL;
+	//old_pIB				= nullptr;
 }

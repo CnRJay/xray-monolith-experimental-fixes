@@ -29,7 +29,7 @@ public:
 	CObjectContactCallback(ObjectContactCallbackFun* c)
 		: callback(c)
 	{
-		next = NULL;
+		next = nullptr;
 		VERIFY(c);
 	}
 
@@ -73,7 +73,7 @@ public:
 		{
 			CObjectContactCallback* del = callbacks;
 			callbacks = callbacks->next;
-			del->next = NULL;
+			del->next = nullptr;
 			xr_delete(del);
 			VERIFY(!callbacks||!callbacks->HasCallback(c));
 		}
@@ -89,7 +89,7 @@ public:
 				{
 					CObjectContactCallback* del = i;
 					p->next = i->next;
-					del->next = NULL;
+					del->next = nullptr;
 					xr_delete(del);
 					VERIFY(!callbacks->HasCallback(c));
 					break;
@@ -176,7 +176,7 @@ IC IPhysicsShellHolder* retrieveRefObject(dGeomID geom)
 {
 	dxGeomUserData* ud = dGeomGetUserData(retrieveGeom(geom));
 	if (ud)return ud->ph_ref_object;
-	else return NULL;
+	else return nullptr;
 }
 
 IC void dGeomCreateUserData(dxGeom* geom)
@@ -192,15 +192,15 @@ IC void dGeomCreateUserData(dxGeom* geom)
 	(dGeomGetUserData(geom))->last_pos[2] = -dInfinity;
 
 
-	(dGeomGetUserData(geom))->ph_object = NULL;
+	(dGeomGetUserData(geom))->ph_object = nullptr;
 	(dGeomGetUserData(geom))->material = 0;
 	(dGeomGetUserData(geom))->tri_material = 0;
-	(dGeomGetUserData(geom))->callback = NULL;
-	(dGeomGetUserData(geom))->object_callbacks = NULL;
-	(dGeomGetUserData(geom))->ph_ref_object = NULL;
+	(dGeomGetUserData(geom))->callback = nullptr;
+	(dGeomGetUserData(geom))->object_callbacks = nullptr;
+	(dGeomGetUserData(geom))->ph_ref_object = nullptr;
 	(dGeomGetUserData(geom))->element_position = u16(-1);
 	(dGeomGetUserData(geom))->bone_id = u16(-1);
-	(dGeomGetUserData(geom))->callback_data = NULL;
+	(dGeomGetUserData(geom))->callback_data = nullptr;
 
 	(dGeomGetUserData(geom))->last_aabb_size.set(0, 0, 0);
 	//((dxGeomUserData*)dGeomGetData(geom))->ContactsParameters::mu=1.f;

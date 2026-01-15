@@ -102,7 +102,7 @@ void dx10ConstantBuffer::Flush()
         m_pBuffer->Unmap();
 #endif
 */
-        HW.pContext->UpdateSubresource(m_pBuffer, 0, NULL, (BYTE*)m_pBufferData, 0, 0);
+        HW.pContext->UpdateSubresource(m_pBuffer, 0, nullptr, (BYTE*)m_pBufferData, 0, 0);
         m_bChanged = false;
     }
 }

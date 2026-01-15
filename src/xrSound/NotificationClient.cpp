@@ -19,12 +19,12 @@ CNotificationClient::~CNotificationClient()
 inline bool CNotificationClient::Start() 
 {
     // Initialize the COM library for the current thread
-    HRESULT ihr = CoInitialize(NULL);
+    HRESULT ihr = CoInitialize(nullptr);
 
     if (SUCCEEDED(ihr)) {
         // Create the device enumerator
         IMMDeviceEnumerator* pEnumerator;
-        HRESULT hr = CoCreateInstance(__uuidof(MMDeviceEnumerator), NULL, CLSCTX_ALL, __uuidof(IMMDeviceEnumerator), (void**)&pEnumerator);
+        HRESULT hr = CoCreateInstance(__uuidof(MMDeviceEnumerator), nullptr, CLSCTX_ALL, __uuidof(IMMDeviceEnumerator), (void**)&pEnumerator);
         if (SUCCEEDED(hr)) {
             // Register for device change notifications
             hr = pEnumerator->RegisterEndpointNotificationCallback(this);

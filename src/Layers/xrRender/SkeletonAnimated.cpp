@@ -418,7 +418,7 @@ CBlend* CKinematicsAnimated::LL_PlayCycle(u16 part, MotionID motion_ID, BOOL bMi
 	VERIFY(motion_ID.valid());
 	CMotionDef* m_def = m_Motions[motion_ID.slot].motions.motion_def(motion_ID.idx);
 	VERIFY(m_def);
-	if (!m_def) return NULL;
+	if (!m_def) return nullptr;
 	return LL_PlayCycle(part, motion_ID, bMixIn,
 	                    m_def->Accrue(), m_def->Falloff(), m_def->Speed(), m_def->StopAtEnd(),
 	                    Callback, CallbackParam, channel);
@@ -442,7 +442,7 @@ CBlend* CKinematicsAnimated::PlayCycle(MotionID motion_ID, BOOL bMixIn, PlayCall
 	VERIFY(motion_ID.valid());
 	CMotionDef* m_def = m_Motions[motion_ID.slot].motions.motion_def(motion_ID.idx);
 	VERIFY(m_def);
-	if (!m_def) return NULL;
+	if (!m_def) return nullptr;
 	return LL_PlayCycle(m_def->bone_or_part, motion_ID, bMixIn,
 	                    m_def->Accrue(), m_def->Falloff(), m_def->Speed(), m_def->StopAtEnd(),
 	                    Callback, CallbackParam, channel);
@@ -454,7 +454,7 @@ CBlend* CKinematicsAnimated::PlayCycle(u16 partition, MotionID motion_ID, BOOL b
 	VERIFY(motion_ID.valid());
 	CMotionDef* m_def = m_Motions[motion_ID.slot].motions.motion_def(motion_ID.idx);
 	VERIFY(m_def);
-	if (!m_def) return NULL;
+	if (!m_def) return nullptr;
 	return LL_PlayCycle(partition, motion_ID, bMixIn,
 	                    m_def->Accrue(), m_def->Falloff(), m_def->Speed() * speed, m_def->StopAtEnd(),
 	                    Callback, CallbackParam, channel);
@@ -489,7 +489,7 @@ CBlend* CKinematicsAnimated::PlayFX(MotionID motion_ID, float power_scale)
 	VERIFY(motion_ID.valid());
 	CMotionDef* m_def = m_Motions[motion_ID.slot].motions.motion_def(motion_ID.idx);
 	VERIFY(m_def);
-	if (!m_def) return NULL;
+	if (!m_def) return nullptr;
 	return LL_PlayFX(m_def->bone_or_part, motion_ID,
 	                 m_def->Accrue(), m_def->Falloff(),
 	                 m_def->Speed(), m_def->Power() * power_scale);
@@ -668,8 +668,8 @@ CKinematicsAnimated::~CKinematicsAnimated()
 CKinematicsAnimated::CKinematicsAnimated():
 	CKinematics(),
 	IKinematicsAnimated(),
-	blend_instances(NULL),
-	m_Partition(NULL),
+	blend_instances(nullptr),
+	m_Partition(nullptr),
 	m_blend_destroy_callback(0),
 	m_update_tracks_callback(0),
 	Update_LastTime(0)
@@ -691,7 +691,7 @@ void CKinematicsAnimated::IBoneInstances_Destroy()
 	if (blend_instances)
 	{
 		xr_free(blend_instances);
-		blend_instances = NULL;
+		blend_instances = nullptr;
 	}
 }
 
@@ -774,8 +774,8 @@ void CKinematicsAnimated::Load(const char* N, IReader* data, u32 dwFlags)
 	inherited::Load(N, data, dwFlags);
 
 	// Globals
-	blend_instances = NULL;
-	m_Partition = NULL;
+	blend_instances = nullptr;
+	m_Partition = nullptr;
 	Update_LastTime = 0;
 
 	const auto loadOMF = [&](LPCSTR _path)
@@ -797,7 +797,7 @@ void CKinematicsAnimated::Load(const char* N, IReader* data, u32 dwFlags)
 			FS.r_close(MS);
 		}
 		if (create_res)
-			m_Motions.back().motions.create(_path, NULL, bones);
+			m_Motions.back().motions.create(_path, nullptr, bones);
 		else
 		{
 			m_Motions.pop_back();
