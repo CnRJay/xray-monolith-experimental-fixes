@@ -242,7 +242,7 @@ void ffp_sfp(bool drawDebug) {
 	if (drawDebug) {
 		Fvector u_e = {0,e.radius,0}; e.m_W.transform_dir(u_e);
 		Fvector u_o = {0,o.radius,0}; e.m_W.transform_dir(u_o);
-		Fvector u_c = {0,(o.radius + e.radius)*0.3,0}; e.m_W.transform_dir(u_c);
+		Fvector u_c = {0,(o.radius + e.radius)*0.3f,0}; e.m_W.transform_dir(u_c);
 
 
 		auto d = CDebugRenderer();

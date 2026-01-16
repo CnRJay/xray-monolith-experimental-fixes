@@ -192,7 +192,7 @@ void CWeaponStatMgun::SStmAnimWeapon::UpdateMagazineVisibility()
 		return;
 	IKinematics *K = m_stm->Visual()->dcast_PKinematics();
 	R_ASSERT(K);
-	bool visibility = std::find(m_magazine_hide_anm.begin(), m_magazine_hide_anm.end(), m_current_mid) == m_magazine_hide_anm.end();
+	BOOL visibility = std::find(m_magazine_hide_anm.begin(), m_magazine_hide_anm.end(), m_current_mid) == m_magazine_hide_anm.end() ? TRUE : FALSE;
 	if (K->LL_GetBoneVisible(m_magazine_hide_bid) != visibility)
 	{
 		K->LL_SetBoneVisible(m_magazine_hide_bid, visibility, TRUE);

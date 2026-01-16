@@ -9,6 +9,9 @@
 #endif
 #include "../../xrCore/profiler.h"
 
+#pragma warning(push)
+#pragma warning(disable: 4530) // C++ exception handler used
+
 CPHCall::CPHCall(CPHCondition* condition, CPHAction* action)
 {
 	m_action = action;
@@ -318,3 +321,5 @@ void CPHCommander::phys_shell_relcase(CPhysicsShell* sh)
 	CPHReqComparerHasShell c(sh);
 	remove_calls_threadsafety(&c);
 }
+
+#pragma warning(pop)

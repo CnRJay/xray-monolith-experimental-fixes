@@ -8,6 +8,9 @@
 
 #pragma once
 
+#pragma warning(push)
+#pragma warning(disable: 4530) // C++ exception handler used
+
 #define TEMPLATE_SPECIALIZATION template<\
 	typename _operator_condition,\
 	typename _operator,\
@@ -468,3 +471,5 @@ IC typename CProblemSolverAbstract::_edge_value_type CProblemSolverAbstract::est
 
 #undef TEMPLATE_SPECIALIZATION
 #undef CProblemSolverAbstract
+
+#pragma warning(pop)

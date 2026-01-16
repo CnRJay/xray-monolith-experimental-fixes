@@ -33,7 +33,7 @@ class CTextureDescrMngr
 	};
 
 public:
-	static struct texture_desc
+	struct texture_desc
 	{
 		texture_assoc* m_assoc;
 		texture_spec* m_spec;

@@ -8,6 +8,9 @@
 
 #pragma once
 
+#pragma warning(push)
+#pragma warning(disable: 4530)
+
 #include "ai_space.h"
 #include "script_engine.h"
 
@@ -227,3 +230,5 @@ void CScriptCallbackEx<void>::operator()(Args &&...args)
         const_cast<CScriptCallbackEx<void>*>(this)->clear();
     }
 }
+
+#pragma warning(pop)

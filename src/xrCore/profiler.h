@@ -1,8 +1,12 @@
 #pragma once
 
 // Profiler backends
+#ifndef PROFILER_NONE
 #define PROFILER_NONE (0)
+#endif
+#ifndef PROFILER_OPTICK
 #define PROFILER_OPTICK (1)
+#endif
 
 // Set active profiler backend
 #if !defined(XRCORE_PROFILER)

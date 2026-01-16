@@ -626,7 +626,7 @@ static class cl_screen_res : public R_constant_setup
 	}
 } binder_screen_res;
 
-static class cl_screen_params : public R_constant_setup
+class cl_screen_params : public R_constant_setup
 {
 	Fvector4 result;
 
