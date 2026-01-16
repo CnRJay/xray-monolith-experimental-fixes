@@ -157,6 +157,13 @@ void CMovementManager::process_game_path()
 					);
 				}
 
+				// accessible_nearest can fail with return value -1
+				if (!ai().level_graph().valid_vertex_id(dest_level_vertex_id))
+				{
+					Msg("! accessible_nearest failed in CMovementManager::process_game_path for object %s", *object().cName());
+					dest_level_vertex_id = object().ai_location().level_vertex_id();
+				}
+
 				Fvector temp = ai().level_graph().vertex_position(
 					dest_level_vertex_id/**level_path().intermediate_vertex_id()/**/);
 				level_path_builder().setup(
