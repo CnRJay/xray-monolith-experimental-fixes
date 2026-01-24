@@ -63,6 +63,9 @@ void CMovementManager::process_game_path()
 				object().ai_location().game_vertex_id());
 			return;
 		}
+		ai().game_graph().vertex(
+			game_path().intermediate_vertex_id()
+		)->level_vertex_id();
 
 		if (m_path_state != ePathStateTeleport)
 		{
@@ -147,6 +150,13 @@ void CMovementManager::process_game_path()
 				u32 dest_level_vertex_id = ai().game_graph().vertex(
 					game_path().intermediate_vertex_id()
 				)->level_vertex_id();
+
+				// is valid destination?
+				if (!ai().level_graph().valid_vertex_id(dest_level_vertex_id))
+				{
+					Msg("! intermediate_vertex_id invalid in CMovementManager::process_game_path for object %s", *object().cName());
+					dest_level_vertex_id = object().ai_location().level_vertex_id();
+				}
 
 				if (!accessible(dest_level_vertex_id))
 				{
