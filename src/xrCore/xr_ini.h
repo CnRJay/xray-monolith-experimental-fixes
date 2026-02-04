@@ -1,5 +1,4 @@
-#ifndef xr_iniH
-#define xr_iniH
+#pragma once
 
 #include <fastdelegate/fastdelegate.h>
 
@@ -7,29 +6,63 @@
 class CInifile;
 struct xr_token;
 
-
 class XRCORE_API CInifile
 {
 public:
 	struct XRCORE_API Item
 	{
 		shared_str first;
-		shared_str second;
+		mutable shared_str second;
 
 		//demonized: add DLTX info
-		shared_str filename;
-		//#ifdef DEBUG
-		// shared_str comment;
-		//#endif
-		Item() : first(0), second(0), filename(0)
-		//#ifdef DEBUG
-		// , comment(0)
-		//#endif
+		mutable shared_str filename;
+
+		// depth determines load order of DLTX overrides, lower depth is more important
+		// depth order: DLTX mod_file -> its includes -> Base file -> its includes
+		int depth;
+		
+		// Insertion index will determine what kv pair in overrides will win even if the depth is the same
+		u32 insertionIndex;
+
+		bool operator<(const Item& other) const
 		{
-		};
+			return xr_strcmp(*first, *other.first) < 0;
+		}
+
+		Item() : first(0), second(0), filename(0), depth(0), insertionIndex(0) {};
+	};
+
+	struct item_comparator
+	{
+		// Allows for searching by string-likes (string, char*,...) in set
+		using is_transparent = void;
+
+		bool operator() (const Item& x, const Item& y) const
+		{
+			return xr_strcmp(*x.first, *y.first) < 0;
+		}
+
+		template <typename T>
+		bool operator() (const Item& x, const T& y) const
+		{
+			if constexpr (std::is_same_v<T, shared_str>)
+				return xr_strcmp(*x.first, *y) < 0;
+			else
+				return xr_strcmp(*x.first, y) < 0;
+		}
+
+		template <typename T>
+		bool operator() (const T& x, const Item& y) const
+		{
+			if constexpr (std::is_same_v<T, shared_str>)
+				return xr_strcmp(*x, *y.first) < 0;
+			else
+				return xr_strcmp(x, *y.first) < 0;
+		}
 	};
 
 	typedef xr_vector<Item> Items;
+	typedef xr_vector<Item> ItemsVec;
 	typedef Items::const_iterator SectCIt;
 	typedef Items::iterator SectIt_;
 
@@ -88,9 +121,95 @@ public:
 
 	virtual ~CInifile();
 	bool save_as(LPCSTR new_fname = 0);
+
+	// DLTX
 	void DLTX_print(LPCSTR sec, LPCSTR line);
 	LPCSTR DLTX_getFilenameOfLine(LPCSTR sec, LPCSTR line);
 	bool DLTX_isOverride(LPCSTR sec, LPCSTR line);
+	xr_unordered_flat_map<shared_str, xr_unordered_flat_set<shared_str>> OverrideToFilename;
+	xr_unordered_flat_map<shared_str, shared_str> SectionToFilename;
+	xr_unordered_flat_set<shared_str> SectionsToDelete;
+	xr_unordered_flat_map<shared_str, RStringVec> BaseParentDataMap;
+	xr_unordered_flat_map<shared_str, Sect> BaseData;
+	xr_unordered_flat_map<shared_str, RStringVec> OverrideParentDataMap;
+	xr_unordered_flat_map<shared_str, Sect> OverrideData;
+	xr_unordered_flat_map<shared_str, Items> OverrideModifyListData;
+	struct EvaluationsContext
+	{
+		xr_unordered_flat_map<shared_str, Items> ResolvedCache; // "Black" Set
+		RStringVec RecursionStack;              // "Gray" Set
+
+		// Helper to check if we are currently visiting a section
+		bool IsInStack(const shared_str& section) const
+		{
+			return std::find(RecursionStack.begin(), RecursionStack.end(), section) != RecursionStack.end();
+		}
+
+		xr_string GetRecursionStackAsString() const
+		{
+			xr_string result;
+			for (const auto& section : RecursionStack)
+			{
+				if (!result.empty())
+					result += " -> ";
+				result += section.c_str();
+			}
+			return result;
+		}
+	};
+	enum InsertType
+	{
+		Override,
+		Base,
+		Parent
+	};
+	enum ModifyListType : char
+	{
+		Insert = '>',
+		Remove = '<'
+	};
+	void LTXLoad(
+		IReader* F,
+		LPCSTR path,
+		BOOL bIsRootFile,
+		string_path currentFileName,
+		int depth
+#ifndef _EDITOR
+		, allow_include_func_t allow_include_func = NULL
+#endif
+	);
+private:
+	void loadFile(
+		const string_path _fn,
+		const string_path inc_path,
+		const string_path name,
+		string_path currentFileName,
+		int depth
+#ifndef _EDITOR
+		, allow_include_func_t allow_include_func
+#endif
+	);
+	void StashCurrentSection(
+		Sect*& CurrentBase,
+		Sect*& CurrentOverride,
+		string_path currentFileName,
+		BOOL bIsCurrentSectionOverride
+	);
+	Items EvaluateSection(
+		shared_str SectionName,
+		EvaluationsContext& Evaluations,
+		string_path currentFileName
+	);
+	Items MergeSections(
+		const Items& BaseItems,
+		const Items& OverrideItems,
+		xr_unordered_flat_set<shared_str>& DeletedItems,
+		bool IsMergingBaseAndMod
+	);
+	void insert_item(CInifile::Sect* tgt, CInifile::Item& I);
+	void SortAndFilterSection(Sect& Data);
+
+public:
 	void save_as(IWriter& writer, bool bcheck = false) const;
 	void set_override_names(BOOL b) { m_flags.set(eOverrideNames, b); }
 	void save_at_end(BOOL b) { m_flags.set(eSaveAtEnd, b); }
@@ -178,5 +297,3 @@ public:
 // Main configuration file
 extern XRCORE_API CInifile const* pSettings;
 extern XRCORE_API CInifile const* pSettingsAuth;
-
-#endif //__XR_INI_H__

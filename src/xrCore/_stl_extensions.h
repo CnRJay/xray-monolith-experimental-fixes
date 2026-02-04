@@ -283,29 +283,42 @@ protected:
 template <class T>
 using xr_hash = robin_hood::hash<T>;
 
-template <typename K, class V, class Hasher = xr_hash<K>>
-using xr_unordered_map = robin_hood::unordered_node_map<K, V, Hasher>;
-
 template <typename K, class V>
 using xr_pair = robin_hood::pair<K, V>;
 
+template <typename K, class V, class Hasher = xr_hash<K>>
+using xr_unordered_map = robin_hood::unordered_node_map<K, V, Hasher>;
+
 template <class T, class Hasher = xr_hash<T>>
 using xr_unordered_set = robin_hood::unordered_node_set<T, Hasher>;
+
+template <typename K, class V, class Hasher = xr_hash<K>>
+using xr_unordered_flat_map = robin_hood::unordered_flat_map<K, V, Hasher>;
+
+template <class T, class Hasher = xr_hash<T>>
+using xr_unordered_flat_set = robin_hood::unordered_flat_set<T, Hasher>;
 
 #else
 
 template <class T>
 using xr_hash = std::hash<T>;
 
+template <typename K, class V>
+using xr_pair = std::pair<K, V>;
+
 template <typename K, class V, class Hasher = xr_hash<K>, class Traits = std::equal_to<K>,
 	typename allocator = xalloc<std::pair<const K, V>>>
 using xr_unordered_map = std::unordered_map<K, V, Hasher, Traits, allocator>;
 
-template <typename K, class V>
-using xr_pair = std::pair<K, V>;
+template <class T, class Hasher = xr_hash<T>, class Traits = std::equal_to<T>, typename allocator = xalloc<T>>
+using xr_unordered_set = std::unordered_set<T, Hasher, Traits, allocator>;
 
-template <class T, class Hasher = xr_hash<T>>
-using xr_unordered_set = std::unordered_set<T, Hasher>;
+template <typename K, class V, class Hasher = xr_hash<K>, class Traits = std::equal_to<K>,
+	typename allocator = xalloc<std::pair<const K, V>>>
+using xr_unordered_flat_map = std::unordered_map<K, V, Hasher, Traits, allocator>;
+
+template <class T, class Hasher = xr_hash<T>, class Traits = std::equal_to<T>, typename allocator = xalloc<T>>
+using xr_unordered_flat_set = std::unordered_set<T, Hasher, Traits, allocator>;
 
 #endif //USE_ROBINHOOD
 

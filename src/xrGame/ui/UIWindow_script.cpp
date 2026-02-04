@@ -76,6 +76,46 @@ int GetARGB(u16 a, u16 r, u16 g, u16 b)
 	return color_argb(a, r, g, b);
 }
 
+int ClrGetA(u32 argb)
+{
+	return color_get_A(argb);
+}
+
+int ClrGetR(u32 argb)
+{
+	return color_get_R(argb);
+}
+
+int ClrGetG(u32 argb)
+{
+	return color_get_G(argb);
+}
+
+int ClrGetB(u32 argb)
+{
+	return color_get_B(argb);
+}
+
+int ClrSetA(u32 argb, u16 a)
+{
+	return subst_alpha(argb, a);
+};
+
+int ClrSetR(u32 argb, u16 r)
+{
+	return subst_red(argb, r);
+};
+
+int ClrSetG(u32 argb, u16 g)
+{
+	return subst_green(argb, g);
+};
+
+int ClrSetB(u32 argb, u16 b)
+{
+	return subst_blue(argb, b);
+};
+
 const Fvector2* get_wnd_pos(CUIWindow* w)
 {
 	return &w->GetWndPos();
@@ -98,6 +138,15 @@ void CUIWindow::script_register(lua_State* L)
 	module(L)
 	[
 		def("GetARGB", &GetARGB),
+		def("ClrGetA", &ClrGetA),
+		def("ClrGetR", &ClrGetR),
+		def("ClrGetG", &ClrGetG),
+		def("ClrGetB", &ClrGetB),
+		def("ClrSetA", &ClrSetA),
+		def("ClrSetR", &ClrSetR),
+		def("ClrSetG", &ClrSetG),
+		def("ClrSetB", &ClrSetB),
+
 		def("GetFontSmall", &GetFontSmall),
 		def("GetFontMedium", &GetFontMedium),
 		def("GetFontDI", &GetFontDI),
