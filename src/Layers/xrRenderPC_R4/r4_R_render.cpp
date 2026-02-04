@@ -488,12 +488,11 @@ void CRender::renderGBuffer() {
 					PIX_EVENT(SCOPE_WRITE_LENS_DEPTH);
 					// Write lens depth
 					Target->draw_scope(Target->s_scope_depth_write, [&](auto N) -> void {
-						// Mask the lens so we know what to holepunch for svpscope
-						//    Use 0x40  as scope marker to avoid conflicting with
+						// Mask the lens so we know what to push for svpscope 0
+						//    This must contain 0x01 to prevent the skybox from rendering into the diffuse buffer
+						//    Use 0x41 (0x40 for scope and 0x01 for skybox) with mask 0x41 to avoid conflicting with
 						//    the deferred lighting stencil system which uses values starting at 5
-						//    Do NOT set bit 0x01 here as it fucks shit and that bit should only be set by actual geometry
-						//    so that the combine pass correctly skips sky pixels
-						RCache.set_Stencil(TRUE, D3DCMP_ALWAYS, 0x40, 0x40, 0x40, D3DSTENCILOP_KEEP, D3DSTENCILOP_REPLACE, D3DSTENCILOP_KEEP);
+						RCache.set_Stencil(TRUE, D3DCMP_ALWAYS, 0x41, 0x41, 0x41, D3DSTENCILOP_KEEP, D3DSTENCILOP_REPLACE, D3DSTENCILOP_KEEP);
 						RCache.set_c("scope_phase", SCOPE_PHASE_GBUFFER); //GBUFFER
 						RCache.set_c("scope_depth_value", 0.f);
 					});
@@ -517,11 +516,9 @@ void CRender::renderGBuffer() {
 				Target->draw_scope(Target->s_scope_depth_write, [&](auto _) -> void {
 					RImplementation.rmNormal();
 					// holepunch everything that is not occluded by closer objects, and is part of the lens
-					//    Where stencil still has 0x40 set clear it to 0
-					//    This ensures that pixels showing the sky through the pip scope will have stencil=0,
-					//    so the combine pass skips them and the sky shows through
-					//    World geometry will write 0x01 where it renders enabling proper lighting
-					RCache.set_Stencil(TRUE, D3DCMP_EQUAL, 0x40, 0x40, 0x40, D3DSTENCILOP_KEEP, D3DSTENCILOP_ZERO, D3DSTENCILOP_KEEP);
+					//    making sure to clear the scope bit (0x40) so subsequent passes know this area was processed
+					//    while preserving the skybox bit (0x01) for proper rendering.
+					RCache.set_Stencil(TRUE, D3DCMP_EQUAL, 0x41, 0x41, 0x40, D3DSTENCILOP_KEEP, D3DSTENCILOP_ZERO, D3DSTENCILOP_KEEP);
 					RCache.set_c("scope_phase", SCOPE_PHASE_DEPTHWRITE); //DEPTHWRITE
 					RCache.set_c("scope_depth_value", 1.f);
 				});
