@@ -518,6 +518,7 @@ void CRender::renderGBuffer() {
 					// holepunch everything that is not occluded by closer objects, and is part of the lens
 					//    making sure to clear the scope bit (0x40) so subsequent passes know this area was processed
 					//    while preserving the skybox bit (0x01) for proper rendering.
+					RCache.set_ZFunc(D3DCMP_ALWAYS);
 					RCache.set_Stencil(TRUE, D3DCMP_EQUAL, 0x41, 0x41, 0x40, D3DSTENCILOP_KEEP, D3DSTENCILOP_ZERO, D3DSTENCILOP_KEEP);
 					RCache.set_c("scope_phase", SCOPE_PHASE_DEPTHWRITE); //DEPTHWRITE
 					RCache.set_c("scope_depth_value", 1.f);
