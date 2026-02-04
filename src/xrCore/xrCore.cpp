@@ -37,6 +37,7 @@ static u32 init_counter = 0;
 // demonized: print modded exes version
 extern int get_modded_exes_version();
 extern xr_string get_modded_exes_version_string();
+extern LPCSTR get_modded_exes_name();
 extern std::string timeInDMYHMSMMM();
 
 void xrCore::_initialize(LPCSTR _ApplicationName, LogCallback cb, BOOL init_fs, LPCSTR fs_fname)
@@ -165,11 +166,7 @@ void xrCore::_initialize(LPCSTR _ApplicationName, LogCallback cb, BOOL init_fs, 
 		Msg("'%s' build %d, %s\n", "xrCore", build_id, build_date);
 
 		// demonized: Print modded exes version
-//<<<<<<< HEAD
-//		Msg("Modded exes version %s\n", get_modded_exes_version_string().c_str());
-//=======
-		Msg("Modded exes version %d - %s\n", get_modded_exes_version_string().c_str(), PIP_VER);
-//>>>>>>> svp/release
+		Msg("%s version %s - %s\n", get_modded_exes_name(), get_modded_exes_version_string().c_str(), PIP_VER);
 		Msg("Game started: %s\n", timeInDMYHMSMMM().c_str());
 		EFS._initialize();
 #ifdef DEBUG

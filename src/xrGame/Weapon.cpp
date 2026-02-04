@@ -2868,6 +2868,11 @@ void CWeapon::UpdateHudAdditional(Fmatrix& trans)
 	Fvector curr_offs;
 	curr_offs = {fLR_lim * -1.f * m_fLR_InertiaFactor, fUD_lim * m_fUD_InertiaFactor, 0.0f};
 
+	// PrivatePirate: rotate inertia offset around Z axis to compensate roll
+	Fmatrix R;
+	R.rotateZ(-m_hud_offset[1].z);
+	R.transform_dir(curr_offs);
+
 	Fmatrix hud_rotation;
 	hud_rotation.identity();
 	hud_rotation.translate_over(curr_offs);

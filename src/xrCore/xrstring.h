@@ -157,6 +157,20 @@ public:
 	}
 };
 
+
+namespace std
+{
+	template<>
+	class hash<shared_str>
+	{
+	public:
+		size_t operator()(const shared_str& s) const
+		{
+			return xr_hash<str_value*>()(const_cast<str_value*>(s._get()));
+		}
+	};
+}
+
 // res_ptr == res_ptr
 // res_ptr != res_ptr
 // const res_ptr == ptr

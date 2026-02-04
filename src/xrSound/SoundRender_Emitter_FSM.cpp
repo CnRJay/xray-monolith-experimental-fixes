@@ -362,7 +362,7 @@ BOOL CSoundRender_Emitter::update_culling(float dt)
 		volume_att = (p_source.max_distance - dist) / min_max;
 		clamp(volume_att, 0.f, p_source.volume);
 
-		float fade_scale = bStopping || (p_source.base_volume * p_source.volume * (owner_data->s_type == st_Effect ? psSoundVEffects * psSoundVFactor : psSoundVMusic) < psSoundCull) ? -1.f : 1.f;
+		float fade_scale = bStopping || (p_source.base_volume * p_source.volume * (owner_data->s_type == st_Effect ? psSoundVEffects * psSoundVFactor : psSoundVMusic * psSoundVMusicFactor) < psSoundCull) ? -1.f : 1.f;
 		fade_volume += dt * 10.f * fade_scale;
 		//LostAlphaRus out
 
@@ -380,7 +380,7 @@ BOOL CSoundRender_Emitter::update_culling(float dt)
 
 	// Update smoothing
 	//LostAlphaRus in
-	smooth_volume = (p_source.base_volume * volume_att * (owner_data->s_type == st_Effect ? psSoundVEffects * psSoundVFactor : psSoundVMusic) * occluder_volume * fade_volume);
+	smooth_volume = (p_source.base_volume * volume_att * (owner_data->s_type == st_Effect ? psSoundVEffects * psSoundVFactor : psSoundVMusic * psSoundVMusicFactor) * occluder_volume * fade_volume);
 	//LostAlphaRus out
 
 	if (smooth_volume < psSoundCull)
