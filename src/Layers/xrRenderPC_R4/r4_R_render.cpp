@@ -82,7 +82,7 @@ void CRender::render_main(Fmatrix& m_ViewProjection, bool _fportals)
 		(
 			pLastSector,
 			ViewBase,
-			Device.vCameraPosition,
+			Device.vCameraPosition_saved,
 			m_ViewProjection,
 			CPortalTraverser::VQ_HOM + CPortalTraverser::VQ_SSA + CPortalTraverser::VQ_FADE
 			//. disabled scissoring (HW.Caps.bScissor?CPortalTraverser::VQ_SCISSOR:0)	// generate scissoring info
@@ -403,12 +403,11 @@ void CRender::renderGBuffer() {
 	else set_Recorder(nullptr);
 	phase = PHASE_NORMAL;
 
-	//SVP HACK: Use main frame view matrix to prevent rendering the wrong sector
-	auto main_ft = Fmatrix().mul(Device.mProject, Device.matrices[0].mView);
-	ViewBase.CreateFromMatrix(main_ft, FRUSTUM_P_LRTB + FRUSTUM_P_FAR);
+	ViewBase.CreateFromMatrix(Device.mFullTransform, FRUSTUM_P_LRTB + FRUSTUM_P_FAR);
 	View = 0;
 
-	render_main(main_ft, true);
+	render_main(Device.mFullTransform, true);
+	
 	set_Recorder(nullptr);
 	r_pmask(true, false); // disable priority "1"
 	Device.Statistic->RenderCALC.End();
@@ -548,13 +547,10 @@ void CRender::renderGBuffer() {
 			stats.l_shadowed = LP_normal.v_shadowed.size();
 			stats.l_unshadowed = LP_normal.v_point.size() + LP_normal.v_spot.size();
 			stats.l_total = stats.l_shadowed + stats.l_unshadowed;
-		}
 
-		{
 			PIX_EVENT(DEFER_TEST_LIGHT_VIS);
 			Target->phase_occq();
 
-			auto LP = &Lights.package;
 			for (auto L : LP->v_shadowed)
 				L->vis_prepare();
 		}
@@ -845,8 +841,6 @@ void CRender::Render()
 		TargetSVP->SetActive();
 		{
 			PIX_EVENT(DRAW_SVP);
-			//SVP HACK: Use main frame view matrix to prevent rendering the wrong sector
-			Device.vCameraPosition = mainCameraPos;
 			renderGBuffer();
 		}
 	}
