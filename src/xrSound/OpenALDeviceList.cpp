@@ -45,34 +45,39 @@ ALDeviceList::ALDeviceList()
     pLog = al_log;
 #endif
 
-	snd_device_id = u32(-1);
 	Enumerate();
 }
 
-/* 
- * Exit call
- */
-ALDeviceList::~ALDeviceList()
+static void free_devices_token()
 {
+	if (!snd_devices_token)
+		return;
+
 	for (int i = 0; snd_devices_token[i].name; i++)
-	{
 		xr_free(snd_devices_token[i].name);
-	}
 	xr_free(snd_devices_token);
 	snd_devices_token = nullptr;
 }
 
+/*
+ * Exit call
+ */
+ALDeviceList::~ALDeviceList()
+{
+	free_devices_token();
+}
 
 void ALDeviceList::Enumerate()
 {
 	int	ALmajor, ALminor, EFXmajor, EFXminor, index;
 
 	Msg("SOUND: OpenAL: enumerate devices...");
+
+	free_devices_token();
+
 	// have a set of vectors storing the device list, selection status, spec version #, and XRAM support status
 	// -- empty all the lists and reserve space for 10 devices
 	m_devices.clear();
-
-	CoUninitialize();
 
 	xr_vector<xr_string> DeviceNameList;
 	xr_vector<const char*> DeviceOALNameList;
@@ -86,11 +91,10 @@ void ALDeviceList::Enumerate()
 			len = strlen(device);
 			xr_string cDevice = UTF8_to_CP1251(device);
 
-			size_t SubStrPos = cDevice.find('(');
-			if (SubStrPos != xr_string::npos)
-			{
-				cDevice = cDevice.substr(SubStrPos + 1, cDevice.find(')') - SubStrPos - 1);
-			}
+			// Strip "OpenAL Soft on " or similar prefix (e.g. "Generic Software on ")
+			size_t onPos = cDevice.find(" on ");
+			if (onPos != xr_string::npos)
+				cDevice = cDevice.substr(onPos + 4);
 
 			DeviceNameList.push_back(cDevice);
 			DeviceOALNameList.push_back(device);
@@ -121,34 +125,16 @@ void ALDeviceList::Enumerate()
 			ALCdevice* device = alcOpenDevice(Device);
 			if (device)
 			{
-				ALCcontext* context = alcCreateContext(device, nullptr);
-				if (context)
-				{
-					alcMakeContextCurrent(context);
+				if ((Device != nullptr) && xr_strlen(Device) > 0) {
+					alcGetIntegerv(device, ALC_MAJOR_VERSION, sizeof(int), &ALmajor);
+					alcGetIntegerv(device, ALC_MINOR_VERSION, sizeof(int), &ALminor);
+					alcGetIntegerv(device, ALC_EFX_MAJOR_VERSION, sizeof(int), &EFXmajor);
+					alcGetIntegerv(device, ALC_EFX_MINOR_VERSION, sizeof(int), &EFXminor);
 
-					// if new actual device name isn't already in the list, then add it...
-					if ((Device != nullptr) && xr_strlen(Device) > 0) {
-						alcGetIntegerv(device, ALC_MAJOR_VERSION, sizeof(int), &ALmajor);
-						alcGetIntegerv(device, ALC_MINOR_VERSION, sizeof(int), &ALminor);
-
-						alcGetIntegerv(device, ALC_EFX_MAJOR_VERSION, sizeof(int), &EFXmajor);
-						alcGetIntegerv(device, ALC_EFX_MINOR_VERSION, sizeof(int), &EFXminor);
-
-						m_devices.push_back(ALDeviceDesc(DeviceNameList[Iter].c_str(), Device, ALminor, ALmajor, EFXminor, EFXmajor));
-
-						++index;
-					}
-					alcDestroyContext(context);
-				}
-				else
-				{
-					Msg("SOUND: OpenAL: cant create context for %s", device);
+					m_devices.push_back(ALDeviceDesc(DeviceNameList[Iter].c_str(), Device, ALminor, ALmajor, EFXminor, EFXmajor));
+					++index;
 				}
 				alcCloseDevice(device);
-			}
-			else
-			{
-				Msg("SOUND: OpenAL: cant open device %s", Device);
 			}
 		}
 	}
@@ -163,13 +149,7 @@ void ALDeviceList::Enumerate()
 	for (u32 i = 0; i < _cnt; ++i)
 	{
 		snd_devices_token[i].id = i;
-
-		xr_string NormalName = m_devices[i].name;
-		if (NormalName.find("OpenAL Soft on") != xr_string::npos) {
-			NormalName = NormalName.substr(15);
-		}
-
-		snd_devices_token[i].name = xr_strdup(NormalName.data());
+		snd_devices_token[i].name = xr_strdup(m_devices[i].name);
 	}
 	//--
 
@@ -196,6 +176,16 @@ LPCSTR ALDeviceList::GetDeviceName(u32 index)
 	return snd_devices_token[index].name;
 }
 
+const ALDeviceDesc* ALDeviceList::GetDeviceDescByName(LPCSTR name)
+{
+	for (u32 i = 0; i < m_devices.size(); ++i)
+	{
+		if (_stricmp(name, m_devices[i].name) == 0)
+			return &m_devices[i];
+	}
+	return nullptr;
+}
+
 void ALDeviceList::SelectBestDevice()
 {
 	int best_majorVersion = -1;
@@ -205,10 +195,10 @@ void ALDeviceList::SelectBestDevice()
 	int EFXmajorVersion;
 	int EFXminorVersion;
 
-	if (snd_device_id == u32(-1))
+	if (snd_device_name.empty())
 	{
-		//select best
-		u32 new_device_id = snd_device_id;
+		//select best - find default device with best version
+		xr_string best_device_name;
 		for (u32 i = 0; i < GetNumDevices(); ++i)
 		{
 			if (_stricmp(m_defaultDeviceName, GetDeviceName(i)) != 0)
@@ -220,20 +210,20 @@ void ALDeviceList::SelectBestDevice()
 			{
 				best_majorVersion = ALmajorVersion;
 				best_minorVersion = ALminorVersion;
-				new_device_id = i;
+				best_device_name = GetDeviceName(i);
 			}
 		}
-		if (new_device_id == u32(-1))
+		if (best_device_name.empty())
 		{
 			R_ASSERT(GetNumDevices() != 0);
-			new_device_id = 0; //first
-		};
-		snd_device_id = new_device_id;
+			best_device_name = GetDeviceName(0); //first
+		}
+		snd_device_name = best_device_name;
 	}
 	if (GetNumDevices() == 0)
 		Msg("SOUND: Can't select device. List empty");
 	else
-		Msg("SOUND: Selected device is %s", GetDeviceName(snd_device_id));
+		Msg("SOUND: Selected device is %s", snd_device_name.c_str());
 }
 
 void ALDeviceList::GetDeviceVersion(u32 index, int* ALmajor, int* ALminor, int* EFXmajor, int* EFXminor)

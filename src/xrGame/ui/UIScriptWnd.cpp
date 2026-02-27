@@ -52,6 +52,16 @@ SCallbackInfo* CUIDialogWndEx::NewCallback()
 void CUIDialogWndEx::AddCallback(LPCSTR control_id, s16 evt, const ::luabind::functor<void>& functor,
                                  const ::luabind::object& object)
 {
+	// Find existing callback for this control+event and replace it
+	for (auto& cb : m_callbacks)
+	{
+		if (cb->m_control_name == control_id && cb->m_event == evt)
+		{
+			cb->m_callback.set(functor, object);
+			return;
+		}
+	}
+	// No existing callback, create new one
 	SCallbackInfo* c = NewCallback();
 	c->m_callback.set(functor, object);
 	c->m_control_name = control_id;

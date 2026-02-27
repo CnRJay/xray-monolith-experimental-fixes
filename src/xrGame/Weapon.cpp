@@ -55,6 +55,8 @@ float hud_fov_aim_multiplier = 1.0f;
 
 extern int g_nearwall;
 
+BOOL g_use_non_linear_inertia = TRUE;
+
 float CWeapon::SDS_Radius(bool alt) {
 	// hack for GL to always return 0, fix later
 	if (m_zoomtype == 2)
@@ -434,32 +436,31 @@ void CWeapon::SetUIScope(LPCSTR scope_texture)
 BOOL useSeparateUBGLKeybind = TRUE;
 void CWeapon::SwitchZoomType()
 {
-	if (!useSeparateUBGLKeybind) {
+	if (!useSeparateUBGLKeybind)
+    {
 		if (m_zoomtype == 0 && (m_altAimPos || g_player_hud->m_adjust_mode || (m_modular_attachments && IsScopeAttached() && READ_IF_EXISTS(pSettings, r_bool, GetScopeName(), "use_alt_aim_hud", false))))
 		{
-			SetZoomType(1);
-			m_zoom_params.m_bUseDynamicZoom = m_zoom_params.m_bUseDynamicZoom_Alt || READ_IF_EXISTS(pSettings, r_bool, cNameSect(), "scope_dynamic_zoom_alt", false);
-		} else if (IsGrenadeLauncherAttached())
+            SetZoomTypeAndParams(1);
+		}
+        else if (IsGrenadeLauncherAttached())
 		{
-			SwitchState(eSwitch);
-			return;
-		} else if (m_zoomtype != 0)
+            ToggleGrenadeLauncher();
+            return;
+		}
+        else if (m_zoomtype != 0)
 		{
-			SetZoomType(0);
-			m_zoom_params.m_bUseDynamicZoom = m_zoom_params.m_bUseDynamicZoom_Primary || READ_IF_EXISTS(pSettings, r_bool, cNameSect(), "scope_dynamic_zoom", false);
+            SetZoomTypeAndParams(0);
 		}
 
 		UpdateUIScope();
-	} else {
-		if (isGrenadeLauncherActive) // The IsGrenadeLauncherAttached() check is handled by ToggleGrenadeLauncher
-		{
-			ToggleGrenadeLauncher();
-		}
-
+	}
+    else
+    {
 		if (m_zoomtype == 0 && (m_altAimPos || g_player_hud->m_adjust_mode || (m_modular_attachments && IsScopeAttached() && READ_IF_EXISTS(pSettings, r_bool, GetScopeName(), "use_alt_aim_hud", false))))
 		{
 			SetZoomTypeAndParams(1);
-		} else if (m_zoomtype == 1)
+		}
+        else if (m_zoomtype != 0)
 		{
 			SetZoomTypeAndParams(0);
 		}
@@ -2694,12 +2695,26 @@ void CWeapon::UpdateHudAdditional(Fmatrix& trans)
 		// Двигаемся в любом другом направлении - плавно убираем наклон
 		if (m_fLR_MovingFactor < 0.0f)
 		{
-			m_fLR_MovingFactor += fStepPerUpd;
+			if (g_use_non_linear_inertia)
+			{
+				m_fLR_MovingFactor += fStepPerUpd * (0.1f - 2.f * m_fLR_MovingFactor);
+			}
+			else
+			{
+				m_fLR_MovingFactor += fStepPerUpd;
+			}
 			clamp(m_fLR_MovingFactor, -1.0f, 0.0f);
 		}
 		else
 		{
-			m_fLR_MovingFactor -= fStepPerUpd;
+			if (g_use_non_linear_inertia)
+			{
+				m_fLR_MovingFactor -= fStepPerUpd * (0.1f + 2.f * m_fLR_MovingFactor);
+			}
+			else
+			{
+				m_fLR_MovingFactor -= fStepPerUpd;
+			}
 			clamp(m_fLR_MovingFactor, 0.0f, 1.0f);
 		}
 	}
@@ -2835,12 +2850,26 @@ void CWeapon::UpdateHudAdditional(Fmatrix& trans)
 		float fRetSpeedMod = (fYMag == 0.0f ? 1.0f : 0.75f) * (fInertiaReturnSpeedMod * 0.075f);
 		if (m_fLR_InertiaFactor < 0.0f)
 		{
-			m_fLR_InertiaFactor += fAvgTimeDelta * fRetSpeedMod;
+			if (g_use_non_linear_inertia)
+			{
+				m_fLR_InertiaFactor += (0.3f - m_fLR_InertiaFactor) * fAvgTimeDelta * fRetSpeedMod;
+			}
+			else
+			{
+				m_fLR_InertiaFactor += fAvgTimeDelta * fRetSpeedMod;
+			}
 			clamp(m_fLR_InertiaFactor, -1.0f, 0.0f);
 		}
 		else
 		{
-			m_fLR_InertiaFactor -= fAvgTimeDelta * fRetSpeedMod;
+			if (g_use_non_linear_inertia)
+			{
+				m_fLR_InertiaFactor -= (0.3f + m_fLR_InertiaFactor) * fAvgTimeDelta * fRetSpeedMod;
+			}
+			else
+			{
+				m_fLR_InertiaFactor -= fAvgTimeDelta * fRetSpeedMod;
+			}
 			clamp(m_fLR_InertiaFactor, 0.0f, 1.0f);
 		}
 	}
@@ -2851,12 +2880,26 @@ void CWeapon::UpdateHudAdditional(Fmatrix& trans)
 		float fRetSpeedMod = (fPMag == 0.0f ? 1.0f : 0.75f) * (fInertiaReturnSpeedMod * 0.075f);
 		if (m_fUD_InertiaFactor < 0.0f)
 		{
-			m_fUD_InertiaFactor += fAvgTimeDelta * fRetSpeedMod;
+			if (g_use_non_linear_inertia)
+			{
+				m_fUD_InertiaFactor += (0.3f - m_fUD_InertiaFactor) * fAvgTimeDelta * fRetSpeedMod;
+			}
+			else
+			{
+				m_fUD_InertiaFactor += fAvgTimeDelta * fRetSpeedMod;
+			}
 			clamp(m_fUD_InertiaFactor, -1.0f, 0.0f);
 		}
 		else
 		{
-			m_fUD_InertiaFactor -= fAvgTimeDelta * fRetSpeedMod;
+			if (g_use_non_linear_inertia)
+			{
+				m_fUD_InertiaFactor -= (0.3f + m_fUD_InertiaFactor) * fAvgTimeDelta * fRetSpeedMod;
+			}
+			else
+			{
+				m_fUD_InertiaFactor -= fAvgTimeDelta * fRetSpeedMod;
+			}
 			clamp(m_fUD_InertiaFactor, 0.0f, 1.0f);
 		}
 	}

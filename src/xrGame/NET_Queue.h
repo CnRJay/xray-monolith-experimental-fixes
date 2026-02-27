@@ -81,7 +81,7 @@ class NET_Queue_Event
 {
 public:
 	//	xr_multiset<NET_Event>	queue;	
-	xr_deque<NET_Event> queue;
+	xr_vector<NET_Event> queue;
 public:
 	IC void insert(NET_Packet& P)
 	{
@@ -126,16 +126,5 @@ public:
 		}
 		/**/
 		return TRUE;
-	}
-
-	IC void get(u16& ID, u16& dest, u16& type, NET_Packet& P)
-	{
-		const NET_Event& E = *queue.begin();
-		ID = E.ID;
-		dest = E.destination;
-		type = E.type;
-		E.implication(P);
-		//		queue.erase			(queue.begin());
-		queue.pop_front();
 	}
 };

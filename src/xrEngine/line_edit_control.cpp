@@ -108,25 +108,7 @@ namespace text_editor
 
 	static inline bool get_caps_lock_state()
 	{
-#if 0
-    static bool first_time = true;
-    static bool is_windows_vista_or_later = false;
-    if (first_time)
-    {
-        first_time = false;
-        OSVERSIONINFO version_info;
-        ZeroMemory(&version_info, sizeof(version_info));
-        version_info.dwOSVersionInfoSize = sizeof(version_info);
-        GetVersionEx(&version_info);
-        is_windows_vista_or_later = version_info.dwMajorVersion >= 6;
-    }
-
-    if (is_windows_vista_or_later)
-        return !!(GetKeyState(VK_CAPITAL) & 1);
-    else
-#else // #if 0
-		return false;
-#endif // #if 0
+		return (GetKeyState(VK_CAPITAL) & 1) != 0;
 	}
 
 	void line_edit_control::update_key_states()
@@ -397,6 +379,12 @@ namespace text_editor
 	void line_edit_control::insert_character(char c)
 	{
 		m_inserted[0] = c;
+	}
+
+	void line_edit_control::insert_text(LPCSTR s)
+	{
+		if (!s) { clear_inserted(); return; }
+		xr_strcpy(m_inserted, m_buffer_size, s);
 	}
 
 	void line_edit_control::clear_inserted()

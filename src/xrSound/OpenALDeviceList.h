@@ -46,13 +46,15 @@ class ALDeviceList
 private:
 	xr_vector<ALDeviceDesc> m_devices;
 	string256 m_defaultDeviceName;
-	void Enumerate();
 public:
+	void Enumerate();
 	ALDeviceList();
 	~ALDeviceList();
 
+	string256 &GetDefaultDeviceName() { return m_defaultDeviceName; }
 	u32 GetNumDevices() { return m_devices.size(); }
 	const ALDeviceDesc& GetDeviceDesc(u32 index) { return m_devices[index]; }
+	const ALDeviceDesc* GetDeviceDescByName(LPCSTR name);
 	LPCSTR GetDeviceName(u32 index);
 	void GetDeviceVersion(u32 index, int* ALmajor, int* ALminor, int* EFXmajor, int* EFXminor);
 	void SelectBestDevice();

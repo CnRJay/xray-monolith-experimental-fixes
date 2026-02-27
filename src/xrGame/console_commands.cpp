@@ -82,6 +82,10 @@ extern float psSqueezeVelocity;
 
 // Lua
 extern int psLUA_GCSTEP;
+extern int psLua_ParallelGCStep;
+extern int psLua_ParallelGC_CallAmount;
+extern BOOL psLua_ParallelGC_debug;
+extern BOOL psLua_ParallelGC;
 extern BOOL lua_debug;
 
 float g_end_modif = 0.f;
@@ -148,6 +152,7 @@ extern int MOUSEBUFFERSIZE;
 extern int KEYBOARDBUFFERSIZE;
 extern BOOL print_bone_warnings;
 extern BOOL print_dltx_warnings;
+extern BOOL dltx_use_cache;
 extern BOOL poltergeist_spawn_corpse_on_death;
 extern BOOL useNewZoomDeltaAlgorithm;
 extern BOOL g_aimmode_remember;
@@ -222,6 +227,9 @@ extern CrosshairSettings g_crosshair_device_far;
 	CrosshairDistanceCommands(crosshair, suffix); \
 	CrosshairOpacityCommands(crosshair, suffix); \
 	CrosshairLineCommands(crosshair, suffix)
+
+extern BOOL g_decouple_horz_recoil;
+extern BOOL g_use_non_linear_inertia;
 
 extern float recon_show_speed;
 extern float recon_hide_speed;
@@ -331,6 +339,12 @@ static void full_memory_stats()
 	Msg("* [x-ray]: shared strings: memory[%ld K], count[%lu]", _eco_strings / 1024, _eco_strings_count);
 	Msg("* [x-ray]: shared memory: memory[%ld K]", _eco_smem);
 
+	u64 DLTX_total_bytes = 0;
+	u64 DLTX_section_count = 0;
+	u64 DLTX_files_cached = 0;
+	CInifile::GetCacheStats(DLTX_files_cached, DLTX_total_bytes, DLTX_section_count);
+	Msg("* [x-ray]: DLTX Cache: Files Cached: %zu, Sections Total %zu, Usage: %.2f MB", DLTX_files_cached, DLTX_section_count, (double)DLTX_total_bytes / 1024 / 1024);
+	
 	size_t lua_mem = lua_gc(ai().script_engine().lua(), LUA_GCCOUNT, 0);
 	Msg("* [Lua]: Memory usage: %u K", lua_mem);
 
@@ -2339,6 +2353,24 @@ public:
 	}
 };
 
+class CCC_DLTXCache : public CCC_Integer
+{
+public:
+	CCC_DLTXCache(LPCSTR N) :
+		CCC_Integer(N, &dltx_use_cache, 0, 1)
+	{
+	};
+
+	virtual void Execute(LPCSTR args)
+	{
+		CCC_Integer::Execute(args);
+
+		dltx_use_cache = std::atoi(args) != 0;
+		if (!dltx_use_cache)
+			CInifile::InvalidateCache();
+	}
+};
+
 void CCC_RegisterCommands()
 {
 	//Not needed for a singleplayer-only mod
@@ -2446,6 +2478,13 @@ void CCC_RegisterCommands()
 
     // Moved lua_gcstep outside of DEBUG to allow for easier experimentation.
 	CMD4(CCC_Integer, "lua_gcstep", &psLUA_GCSTEP, 1, 1000);
+
+	// demonized: GC step that is used for repeated calls on second thread while frame is rendering, limit to small values
+	CMD4(CCC_Integer, "lua_parallel_gcstep", &psLua_ParallelGCStep, 1, 100);
+	CMD4(CCC_Integer, "lua_parallel_gc_call_amount", &psLua_ParallelGC_CallAmount, 1, 50);
+	CMD4(CCC_Integer, "lua_parallel_gc_debug", &psLua_ParallelGC_debug, 0, 1);
+	CMD4(CCC_Integer, "lua_parallel_gc", &psLua_ParallelGC, 0, 1);
+
 	CMD4(CCC_Integer, "lua_debug", &lua_debug, 0, 1);
 
 #ifdef DEBUG
@@ -2596,6 +2635,9 @@ void CCC_RegisterCommands()
 	CrosshairFarCommands(g_crosshair_weapon_far, "weapon_far");
 	CrosshairNearCommands(g_crosshair_device_near, "device_near");
 	CrosshairFarCommands(g_crosshair_device_far, "device_far");
+
+	CMD4(CCC_Integer, "g_decouple_horz_recoil", &g_decouple_horz_recoil, 0, 1);
+	CMD4(CCC_Integer, "g_use_non_linear_inertia", &g_use_non_linear_inertia, 0, 1);
 
 	CMD4(CCC_Float, "g_recon_show_speed", &recon_show_speed, 0.f, 20.f);
 	CMD4(CCC_Float, "g_recon_hide_speed", &recon_hide_speed, 0.f, 20.f);
@@ -2958,8 +3000,11 @@ void CCC_RegisterCommands()
 	// Print warnings when using bone_position and bone_direction functions and encounter invalid bones
 	CMD4(CCC_Integer, "print_bone_warnings", &print_bone_warnings, 0, 1);
 
-	// Print DLTX warnings when "override section which doesn't exist"
+	// Print DLTX warnings when "override section which doesn't exist", also prints cache hit for each file
 	CMD4(CCC_Integer, "print_dltx_warnings", &print_dltx_warnings, 0, 1);
+
+	// Use DLTX Cache
+	CMD1(CCC_DLTXCache, "dltx_use_cache");
 
 	// Ignore "no renderer type set for hanging-lamp" error
 	CMD4(CCC_Integer, "hanging_lamp_ignore_match_configuration", &alifeObjectHangingLampIgnoreMatchConfiguration, 0, 1);

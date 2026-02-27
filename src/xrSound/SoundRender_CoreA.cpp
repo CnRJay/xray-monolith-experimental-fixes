@@ -206,6 +206,103 @@ void  CSoundRender_CoreA::_restart()
 	inherited::_restart();
 }
 
+void CSoundRender_CoreA::refresh_devices()
+{
+	if (!pDeviceList)
+		return;
+
+	pDeviceList->Enumerate();
+	Msg("SOUND: OpenAL: Device list refreshed, %d devices found", pDeviceList->GetNumDevices());
+	const ALDeviceDesc* pDeviceDesc = pDeviceList->GetDeviceDescByName(snd_device_name.c_str());
+	if (!pDeviceDesc)
+    {
+        Msg("! SOUND: Current device not found after refresh: %s. Switching to default", snd_device_name.c_str());
+		switch_device(pDeviceList->GetDefaultDeviceName());
+    }
+}
+
+void CSoundRender_CoreA::default_device_changed()
+{
+    if (!pDeviceList)
+        return;
+
+    if (_stricmp(snd_device_name.c_str(), pDeviceList->GetDefaultDeviceName()) == 0)
+    {
+        Msg("SOUND: Default device changed, switching to new default device");
+        switch_device(pDeviceList->GetDefaultDeviceName());
+    }
+}
+
+void CSoundRender_CoreA::switch_device(LPCSTR device_name)
+{
+	if (!pDevice || !pContext)
+		return;
+
+	if (!pDeviceList)
+		return;
+
+	const ALDeviceDesc* pDeviceDesc = pDeviceList->GetDeviceDescByName(device_name);
+	if (!pDeviceDesc)
+	{
+		Msg("! SOUND: Device not found: %s", device_name);
+		return;
+	}
+
+	const ALDeviceDesc& deviceDesc = *pDeviceDesc;
+	Msg("SOUND: Attempting to open device: name='%s', name_al='%s'", deviceDesc.name, deviceDesc.name_al);
+
+	ALCdevice* newDevice = alcOpenDevice(deviceDesc.name_al);
+	if (!newDevice)
+	{
+		Msg("! SOUND: Failed to open device: %s", deviceDesc.name);
+		return;
+	}
+
+	ALCcontext* newContext = alcCreateContext(newDevice, nullptr);
+	if (!newContext)
+	{
+		Msg("! SOUND: Failed to create context for device: %s", deviceDesc.name);
+		alcCloseDevice(newDevice);
+		return;
+	}
+
+	bReady = false;
+	pause_emitters(true);
+
+	for (u32 it = 0; it < s_targets.size(); it++)
+	{
+		CSoundRender_TargetA* AlTarget = (CSoundRender_TargetA*)s_targets[it];
+		AlTarget->_destroy();
+	}
+
+	DestroyEffect();
+
+	ALCdevice* oldDevice = pDevice;
+	ALCcontext* oldContext = pContext;
+
+	pDevice = newDevice;
+	pContext = newContext;
+	snd_device_name = deviceDesc.name;
+
+	alcMakeContextCurrent(pContext);
+	alcDestroyContext(oldContext);
+	alcCloseDevice(oldDevice);
+
+	for (u32 it = 0; it < s_targets.size(); it++)
+	{
+		CSoundRender_TargetA* AlTarget = (CSoundRender_TargetA*)s_targets[it];
+		AlTarget->_initialize();
+	}
+
+	LoadEffect();
+
+	restart_emitters();
+	pause_emitters(false);
+	bReady = true;
+
+	Msg("SOUND: Switched to device: %s", deviceDesc.name);
+}
+
 void CSoundRender_CoreA::_initialize(int stage)
 {
 	if (stage == 0)
@@ -221,8 +318,17 @@ void CSoundRender_CoreA::_initialize(int stage)
 	}
 
 	pDeviceList->SelectBestDevice();
-	R_ASSERT(snd_device_id>=0 && snd_device_id<pDeviceList->GetNumDevices());
-	const ALDeviceDesc& deviceDesc = pDeviceList->GetDeviceDesc(snd_device_id);
+
+	const ALDeviceDesc* pDeviceDesc = pDeviceList->GetDeviceDescByName(snd_device_name.c_str());
+	if (!pDeviceDesc)
+	{
+		Msg("! SOUND: Saved device not found: %s. Falling back to default.", snd_device_name.c_str());
+		snd_device_name = "";
+		pDeviceList->SelectBestDevice();
+		pDeviceDesc = pDeviceList->GetDeviceDescByName(snd_device_name.c_str());
+	}
+	R_ASSERT2(pDeviceDesc, make_string("Sound device not found: %s", snd_device_name.c_str()));
+	const ALDeviceDesc& deviceDesc = *pDeviceDesc;
 	// OpenAL device
 	pDevice = alcOpenDevice(deviceDesc.name_al);
 	if (pDevice == nullptr)

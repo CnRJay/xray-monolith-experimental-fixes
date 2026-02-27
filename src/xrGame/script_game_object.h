@@ -957,6 +957,7 @@ public:
 	_DECLARE_FUNCTION14(cast_FoodItem, CFoodItem);
 	_DECLARE_FUNCTION14(cast_BottleItem, CBottleItem);
 	_DECLARE_FUNCTION14(cast_Missile, CMissile);
+	_DECLARE_FUNCTION14(cast_Explosive, CExplosive);
 
 	void SetHealthEx(float hp); //AVO
 	float GetLuminocityHemi();

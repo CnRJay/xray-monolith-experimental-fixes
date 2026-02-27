@@ -43,7 +43,7 @@ XRSOUND_API extern float snd_efx_environment_change_time;
 XRSOUND_API extern float psSpeedOfSound;
 XRSOUND_API extern int psSoundCacheSizeMB;
 XRSOUND_API extern xr_token* snd_devices_token;
-XRSOUND_API extern u32 snd_device_id;
+XRSOUND_API extern xr_string snd_device_name;
 
 // Flags
 enum
@@ -373,6 +373,10 @@ public:
 
 	virtual void _restart() = 0;
 	virtual BOOL i_locked() = 0;
+	virtual BOOL is_ready() = 0;
+	virtual void refresh_devices() = 0;
+	virtual void default_device_changed() = 0;
+	virtual void switch_device(LPCSTR device_name) = 0;
 
 	virtual void create(ref_sound& S, LPCSTR fName, esound_type sound_type, int game_type) = 0;
 	virtual void attach_tail(ref_sound& S, LPCSTR fName) = 0;

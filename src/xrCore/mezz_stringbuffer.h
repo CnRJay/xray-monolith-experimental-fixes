@@ -33,5 +33,7 @@ void trim(xr_string& s, const char* t = " \t\n\r\f\v");
 std::string trimCopy(std::string s, const char* t = " \t\n\r\f\v");
 void toLowerCase(std::string& s);
 std::string toLowerCaseCopy(std::string s);
+void toLowerCase(xr_string& s);
+xr_string toLowerCaseCopy(xr_string s);
 void replaceAll(std::string& str, const std::string& from, const std::string& to);
 std::string replaceAllCopy(std::string str, const std::string& from, const std::string& to);

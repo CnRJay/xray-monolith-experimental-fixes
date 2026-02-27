@@ -257,39 +257,36 @@ public:
 	IC R_occlusion::occq_try_result occq_try_get(u32 ID) { return HWOCC.occq_try_get(ID); }
 	IC R_occlusion::occq_result occq_get(u32& ID) { return HWOCC.occq_get(ID); }
 
-  ICF void apply_object(IRenderable *O) {
-    if (0 == O)
-      return;
-    if (0 == O->renderable_ROS())
-      return;
-    CROS_impl &LT = *((CROS_impl *)O->renderable_ROS());
-    LT.update_smooth(O);
-    o_hemi = 0.75f * LT.get_hemi();
-    // o_hemi						= 0.5f*LT.get_hemi
-    // ()	;
-    o_sun = 0.75f * LT.get_sun();
-    //--DSR-- HeatVision_start
-    RCache.hemi.set_hotness(O->GetHotness(), O->GetTransparency(), 0.f,
-                            0.f); //--DSR-- HeatVision
-    RCache.hemi.set_glowing(      //--DSR-- SilencerOverheat
-        sil_glow_color.x, sil_glow_color.y, sil_glow_color.z, O->GetGlowing());
-    //--DSR-- HeatVision_end
-    CopyMemory(o_hemi_cube, LT.get_hemi_cube(),
-               CROS_impl::NUM_FACES * sizeof(float));
-  }
-
-  IC void apply_lmaterial() {
-    R_constant *C = &*RCache.get_c(c_sbase); // get sampler
-    if (0 == C)
-      return;
-    VERIFY(RC_dest_sampler == C->destination);
-    VERIFY(RC_dx10texture == C->type);
-    CTexture *T = RCache.get_ActiveTexture(u32(C->samp.index));
-    VERIFY(T);
-    float mtl = T ? T->m_material : 0.f;
-#ifdef DEBUG
-    if (ps_r2_ls_flags.test(R2FLAG_GLOBALMATERIAL))
-      mtl = ps_r2_gmaterial;
+	ICF void apply_object(IRenderable* O)
+	{
+		if (0 == O) return;
+		if (0 == O->renderable_ROS()) return;
+		CROS_impl& LT = *((CROS_impl*)O->renderable_ROS());
+		LT.update_smooth(O);
+		o_hemi = 0.75f * LT.get_hemi();
+		//o_hemi						= 0.5f*LT.get_hemi			()	;
+		o_sun = 0.75f * LT.get_sun();
+		//--DSR-- HeatVision_start
+		RCache.hemi.set_hotness(O->GetHotness(), O->GetTransparency(), 0.f, 0.f);			//--DSR-- HeatVision
+		RCache.hemi.set_glowing(															//--DSR-- SilencerOverheat
+			sil_glow_color.x, 
+			sil_glow_color.y,
+			sil_glow_color.z, O->GetGlowing());
+		//--DSR-- HeatVision_end
+		CopyMemory(o_hemi_cube, LT.get_hemi_cube(), CROS_impl::NUM_FACES*sizeof(float));
+	}
+	
+	IC void apply_lmaterial()
+	{
+		R_constant* C = RCache.get_c(c_sbase); // get sampler
+		if (0 == C) return;
+		VERIFY(RC_dest_sampler == C->destination);
+		VERIFY(RC_dx10texture == C->type);
+		CTexture* T = RCache.get_ActiveTexture(u32(C->samp.index));
+		VERIFY(T);
+		float mtl = T ? T->m_material : 0.f;
+#ifdef	DEBUG
+        if (ps_r2_ls_flags.test(R2FLAG_GLOBALMATERIAL))	mtl=ps_r2_gmaterial;
 #endif
     if (!(T && T->m_is_hot)) //--DSR-- HeatVision
       RCache.hemi.set_hotness(0.f, 0.f, 0.f, 0.f);

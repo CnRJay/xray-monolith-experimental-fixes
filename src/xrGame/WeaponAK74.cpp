@@ -140,6 +140,13 @@ void CWeaponAK74::script_register	(lua_State *L)
 			.def("Set_mFirePoint2", &CWeapon::set_mFirePoint2)
 			.def("Set_mShellPoint", &CWeapon::set_mShellPoint)
 
+			.def("Get_mOffset", &CWeapon::get_mOffset)
+			.def("Get_mStrapOffset", &CWeapon::get_mStrapOffset)
+			.def("Get_strap_bone0", &CWeapon::strap_bone0)
+			.def("Get_strap_bone1", &CWeapon::strap_bone1)
+			.def("Get_strapped_mode", (bool (CWeapon::*)() const)&CWeapon::strapped_mode)
+			.def("HandDependence", &CWeapon::HandDependence)
+
 			// Cam Recoil
 			// Getters
 			.def("GetCamRelaxSpeed", &CWeapon::GetCamRelaxSpeed)

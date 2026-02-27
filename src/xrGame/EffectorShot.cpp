@@ -9,6 +9,10 @@
 //-----------------------------------------------------------------------------
 // Weapon shot effector
 //-----------------------------------------------------------------------------
+
+// calculate horz recoil independently of vert recoil
+BOOL g_decouple_horz_recoil = FALSE;
+
 CWeaponShotEffector::CWeaponShotEffector()
 {
 	Reset();
@@ -83,7 +87,15 @@ void CWeaponShotEffector::Shot2(float angle)
 	}
 
 	float rdm = m_Random.randF(-1.0f, 1.0f);
-	m_angle_horz += (m_angle_vert / m_cam_recoil.MaxAngleVert) * rdm * m_cam_recoil.StepAngleHorz;
+
+	if (g_decouple_horz_recoil)
+	{
+		m_angle_horz += rdm * m_cam_recoil.StepAngleHorz;
+	}
+	else
+	{
+		m_angle_horz += (m_angle_vert / m_cam_recoil.MaxAngleVert) * rdm * m_cam_recoil.StepAngleHorz;
+	}
 
 	clamp(m_angle_horz, -m_cam_recoil.MaxAngleHorz, m_cam_recoil.MaxAngleHorz);
 

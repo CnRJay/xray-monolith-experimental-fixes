@@ -77,55 +77,31 @@ namespace text_editor
 		m_char_shift = c_shift;
 	}
 
-
 	void type_pair::on_key_press(line_edit_control* const control)
 	{
-		char c = 0;
-		if (m_translate)
-		{
-			c = m_char;
-			char c_shift = m_char_shift;
-			string128 buff;
-			buff[0] = 0;
+		char out[16] = {};
+		const bool shift = control->get_key_state(ks_Shift);
+		const bool caps = control->get_key_state(ks_CapsLock);
+		const bool ctrl = control->get_key_state(ks_Ctrl);
+		const bool alt = control->get_key_state(ks_Alt);
+		const bool altgr = control->get_key_state(ks_RAlt);
 
-			/*
-			//setlocale( LC_ALL, "" ); // User-default
-	
-			// The following 3 lines looks useless
-	
-			LPSTR loc;
-			STRCONCAT ( loc, ".", itoa( GetACP(), code_page, 10 ) );
-			setlocale ( LC_ALL, loc );*/
-
-			static _locale_t current_locale = _create_locale(LC_ALL, "");
-
-			if (pInput->get_dik_name(m_dik, buff, sizeof(buff)))
+		if (m_translate) {
+			if (pInput->dik_to_text((int)m_dik, shift, caps, ctrl, alt, altgr, out, sizeof(out)))
 			{
-				// demonized: add extra check for russian letters
-				if (std::isalpha(buff[0], std::locale("")) || _isalpha_l(buff[0], current_locale) || buff[0] == char(-1)) // "я" = -1
-				{
-					_strlwr_l(buff, current_locale);
-					c = buff[0];
-					_strupr_l(buff, current_locale);
-					c_shift = buff[0];
-				}
+				control->insert_text(out);
+				return;
 			}
 
-			//setlocale( LC_ALL, "C" ); // restore to ANSI
-
-			if (control->get_key_state(ks_Shift) != control->get_key_state(ks_CapsLock))
-			{
-				c = c_shift;
-			}
+			// If unrepresentable, do nothing (or insert fallback char?)
+			return;
 		}
-		else
-		{
-			c = m_char;
-			if (control->get_key_state(ks_Shift) != control->get_key_state(ks_CapsLock))
-			{
-				c = m_char_shift;
-			}
-		}
+
+		// Fallback to old static mapping
+		char c = m_char;
+		if (shift != caps)
+			c = m_char_shift;
+
 		control->insert_character(c);
 	}
 

@@ -129,9 +129,11 @@ void CResourceManager::_ParseList(sh_list &dest, LPCSTR names) {
   }
 }
 
-ShaderElement *CResourceManager::_CreateElement(ShaderElement &S) {
-  if (S.passes.empty())
-    return 0;
+ShaderElement* CResourceManager::_CreateElement(ShaderElement& S)
+{
+	if (S.passes.empty()) return 0;
+
+	xrCriticalSectionGuard guard(creationGuard);
 
   // Search equal in shaders array
   for (u32 it = 0; it < v_elements.size(); it++)
@@ -145,19 +147,21 @@ ShaderElement *CResourceManager::_CreateElement(ShaderElement &S) {
   return N;
 }
 
-void CResourceManager::_DeleteElement(const ShaderElement *S) {
-  if (0 == (S->dwFlags & xr_resource_flagged::RF_REGISTERED))
-    return;
-  if (reclaim(v_elements, S))
-    return;
-  Msg("! ERROR: Failed to find compiled 'shader-element'");
+void CResourceManager::_DeleteElement(const ShaderElement* S)
+{
+	xrCriticalSectionGuard guard(creationGuard);
+	if (0 == (S->dwFlags & xr_resource_flagged::RF_REGISTERED)) return;
+	if (reclaim(v_elements, S)) return;
+	Msg("! ERROR: Failed to find compiled 'shader-element'");
 }
 
-Shader *CResourceManager::_cpp_Create(IBlender *B, LPCSTR s_shader,
-                                      LPCSTR s_textures, LPCSTR s_constants,
-                                      LPCSTR s_matrices) {
-  CBlender_Compile C;
-  Shader S;
+Shader* CResourceManager::_cpp_Create(IBlender* B, LPCSTR s_shader, LPCSTR s_textures, LPCSTR s_constants,
+                                      LPCSTR s_matrices)
+{
+	xrCriticalSectionGuard guard(creationGuard);
+
+	CBlender_Compile C;
+	Shader S;
 
   //.
   // if (strstr(s_shader,"transparent"))	__asm int 3;
@@ -361,12 +365,12 @@ Shader *CResourceManager::Create(LPCSTR s_shader, LPCSTR s_textures,
   // #endif
 }
 
-void CResourceManager::Delete(const Shader *S) {
-  if (0 == (S->dwFlags & xr_resource_flagged::RF_REGISTERED))
-    return;
-  if (reclaim(v_shaders, S))
-    return;
-  Msg("! ERROR: Failed to find complete shader");
+void CResourceManager::Delete(const Shader* S)
+{
+	xrCriticalSectionGuard guard(creationGuard);
+	if (0 == (S->dwFlags & xr_resource_flagged::RF_REGISTERED)) return;
+	if (reclaim(v_shaders, S)) return;
+	Msg("! ERROR: Failed to find complete shader");
 }
 
 void CResourceManager::DeferredUpload() {
@@ -432,16 +436,17 @@ void CResourceManager::_GetMemoryUsage(u32 &m_base, u32 &c_base, u32 &m_lmaps,
 void CResourceManager::_DumpMemoryUsage() {
   xr_multimap<u32, std::pair<u32, shared_str>> mtex;
 
-  // sort
-  {
-    map_Texture::iterator I = m_textures.begin();
-    map_Texture::iterator E = m_textures.end();
-    for (; I != E; I++) {
-      u32 m = I->second->flags.MemoryUsage;
-      shared_str n = I->second->cName;
-      mtex.insert(mk_pair(m, mk_pair(I->second->dwReference, n)));
-    }
-  }
+	// sort
+	{
+		map_Texture::iterator I = m_textures.begin();
+		map_Texture::iterator E = m_textures.end();
+		for (; I != E; I++)
+		{
+			u32 m = I->second->flags.MemoryUsage;
+			shared_str n = I->second->cName;
+			mtex.insert(mk_pair(m, mk_pair(I->second->dwReference.load(std::memory_order_relaxed), n)));
+		}
+	}
 
   // dump
   {

@@ -248,6 +248,7 @@ public:
 	IC Fvector2 v2d(const Fvector& vector3d) const;
 	IC bool valid_vertex_position(const Fvector& position) const;
 	bool neighbour_in_direction(const Fvector& direction, u32 start_vertex_id) const;
+	void nearby_vertices(const Fvector &position, float radius, xr_vector<CVertex *> &res) const;
 
 	IC CVertex* vertices() { return m_nodes; }
 

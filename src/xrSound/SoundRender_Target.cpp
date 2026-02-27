@@ -23,6 +23,13 @@ BOOL CSoundRender_Target::_initialize()
 	return TRUE;
 }
 
+void CSoundRender_Target::_destroy()
+{
+	m_pEmitter = nullptr;
+	rendering = FALSE;
+	wave = 0;
+}
+
 void CSoundRender_Target::start(CSoundRender_Emitter* E)
 {
 	R_ASSERT(E);

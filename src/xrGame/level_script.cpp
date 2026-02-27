@@ -58,6 +58,8 @@
 #include "ui\UILogsWnd.h"
 #include "game_news.h"
 #include "alife_registry_wrappers.h"
+#include "cover_manager.h"
+#include "cover_point.h"
 
 using namespace luabind;
 
@@ -290,6 +292,28 @@ void change_game_time(u32 days, u32 hours, u32 mins)
 		g_pGamePersistent->Environment().ChangeGameTime(fValue);
 		tpGame->alife().time_manager().change_game_time(value);
 	}
+}
+
+::luabind::object get_nearby_covers(const Fvector &pos, float radius)
+{
+	xr_vector<CCoverPoint *> nearby_covers;
+	nearby_covers.clear();
+	ai().cover_manager().covers().nearest(pos, radius, nearby_covers);
+	::luabind::object lua_table = ::luabind::newtable(ai().script_engine().lua());
+	for (auto &I : nearby_covers)
+	{
+		lua_table[I->level_vertex_id()] = true;
+	}
+	return lua_table;
+}
+
+u32 vertex_link(u32 level_vertex_id, int index)
+{
+	if (!ai().level_graph().valid_vertex_id(level_vertex_id))
+	{
+		return u32(-1);
+	}
+	return ai().level_graph().vertex(level_vertex_id)->link(index);
 }
 
 float high_cover_in_direction(u32 level_vertex_id, const Fvector& direction)
@@ -1095,6 +1119,19 @@ u32 vertex_id(Fvector position)
 	return (ai().level_graph().vertex_id(position));
 }
 
+::luabind::object get_nearby_vertices(const Fvector &pos, float radius)
+{
+	xr_vector<CLevelGraph::CVertex *> nearby_vertices;
+	nearby_vertices.clear();
+	ai().level_graph().nearby_vertices(pos, radius, nearby_vertices);
+	::luabind::object lua_table = ::luabind::newtable(ai().script_engine().lua());
+	for (auto &I : nearby_vertices)
+	{
+		lua_table[ai().level_graph().vertex_id(I)] = true;
+	}
+	return lua_table;
+}
+
 u32 render_get_dx_level()
 {
 	return ::Render->get_dx_level();
@@ -1517,9 +1554,9 @@ bool AllowHudMotion()
 	return g_player_hud->allow_script_anim();
 }
 
-void PlayBlendAnm(LPCSTR name, u8 part, float speed, float power, bool bLooped, bool no_restart)
+void PlayBlendAnm(LPCSTR name, u8 part, float speed, float power, bool bLooped, bool no_restart, LPCSTR pivot_bone)
 {
-	g_player_hud->PlayBlendAnm(name, part, speed, power, bLooped, no_restart);
+	g_player_hud->PlayBlendAnm(name, part, speed, power, bLooped, no_restart, pivot_bone);
 }
 
 void StopBlendAnm(LPCSTR name, bool bForce)
@@ -2398,6 +2435,8 @@ void CLevel::script_register(lua_State* L)
 			def("get_time_minutes", get_time_minutes),
 			def("change_game_time", change_game_time),
 
+			def("get_nearby_covers", get_nearby_covers),
+			def("vertex_link", vertex_link),
 			def("high_cover_in_direction", high_cover_in_direction),
 			def("low_cover_in_direction", low_cover_in_direction),
 			def("vertex_in_direction", vertex_in_direction),
@@ -2482,6 +2521,7 @@ void CLevel::script_register(lua_State* L)
 			def("remove_complex_effector", &remove_complex_effector),
 
 			def("vertex_id", &vertex_id),
+			def("get_nearby_vertices", &get_nearby_vertices),
 
 			def("game_id", &GameID),
 			def("ray_pick", &ray_pick),

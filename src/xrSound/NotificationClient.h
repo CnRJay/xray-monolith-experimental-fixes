@@ -45,4 +45,5 @@ private:
 private:
     LONG m_cRef;
     IMMDeviceEnumerator* m_pEnumerator;
+    bool m_bComInitialized;
 };

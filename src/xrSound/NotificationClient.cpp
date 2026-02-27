@@ -2,11 +2,9 @@
 #include "NotificationClient.h"
 
 #include "SoundRender_CoreA.h"
-#include "SoundRender_Emitter.h"
-#include "SoundRender_TargetA.h"
-#include <AL/al.h>
 
-CNotificationClient::CNotificationClient() 
+CNotificationClient::CNotificationClient()
+    : m_bComInitialized(false)
 {
     Start();
 }
@@ -21,7 +19,10 @@ inline bool CNotificationClient::Start()
     // Initialize the COM library for the current thread
     HRESULT ihr = CoInitialize(nullptr);
 
-    if (SUCCEEDED(ihr)) {
+    // RPC_E_CHANGED_MODE means COM already initialized in different mode - this is OK
+    if (SUCCEEDED(ihr) || ihr == RPC_E_CHANGED_MODE) {
+        m_bComInitialized = SUCCEEDED(ihr);
+
         // Create the device enumerator
         IMMDeviceEnumerator* pEnumerator;
         HRESULT hr = CoCreateInstance(__uuidof(MMDeviceEnumerator), nullptr, CLSCTX_ALL, __uuidof(IMMDeviceEnumerator), (void**)&pEnumerator);
@@ -33,7 +34,10 @@ inline bool CNotificationClient::Start()
             return true;
         }
 
-        CoUninitialize();
+        if (m_bComInitialized) {
+            CoUninitialize();
+            m_bComInitialized = false;
+        }
     }
 
     return false;
@@ -47,8 +51,10 @@ inline void CNotificationClient::Close()
         m_pEnumerator->Release();
     }
 
-    // Uninitialize the COM library for the current thread
-    CoUninitialize();
+    if (m_bComInitialized) {
+        CoUninitialize();
+        m_bComInitialized = false;
+    }
 }
 
 inline STDMETHODIMP_(HRESULT __stdcall) CNotificationClient::OnDeviceAdded(LPCWSTR pwstrDeviceId) 
@@ -62,61 +68,28 @@ inline STDMETHODIMP_(HRESULT __stdcall) CNotificationClient::OnDeviceAdded(LPCWS
 
 inline STDMETHODIMP_(HRESULT __stdcall) CNotificationClient::OnDefaultDeviceChanged(EDataFlow flow, ERole role, LPCWSTR pwstrDeviceId)
 {
-    // Default audio device has been changed.
-    ALDeviceDesc deviceDesc = SoundRenderA->pDeviceList->GetDeviceDesc(snd_device_id);
+	// Only handle render (output) devices with console (default) role
+    if (flow != eRender || role != eConsole)
+        return S_OK;
 
-    xr_string DeviceName = deviceDesc.name;
-    if (DeviceName == "Default Device")
-    {
-        SoundRenderA->bReady = false;
-        SoundRenderA->pause_emitters(true);
-
-        ALCdevice* OldDevice = SoundRenderA->pDevice;
-        ALCcontext* OldContect = SoundRenderA->pContext;
-
-        for (u32 it = 0; it < SoundRenderA->s_targets.size(); it++)
-        {
-            CSoundRender_TargetA* AlTarget = (CSoundRender_TargetA*)SoundRenderA->s_targets[it];
-            AlTarget->_destroy();
-        }
-
-        SoundRenderA->DestroyEffect();
-        SoundRenderA->pDevice = alcOpenDevice(deviceDesc.name_al);
-        SoundRenderA->pContext = alcCreateContext(SoundRenderA->pDevice, nullptr);
-
-        alcMakeContextCurrent(SoundRenderA->pContext);
-        alcDestroyContext(OldContect);
-
-        //alcCloseDevice(OldDevice);
-
-        for (u32 it = 0; it < SoundRenderA->s_targets.size(); it++)
-        {
-            CSoundRender_TargetA* AlTarget = (CSoundRender_TargetA*)((CSoundRender_Emitter*)SoundRenderA->s_targets[it]);
-            AlTarget->_initialize();
-        }
-
-        SoundRenderA->LoadEffect();
-        SoundRenderA->pause_emitters(false);
-        SoundRenderA->bReady = true;
-    }
-
+    SoundRenderA->bPendingDefaultDeviceSwitch = TRUE;
     return S_OK;
 }
 
 inline STDMETHODIMP_(HRESULT __stdcall) CNotificationClient::OnDeviceRemoved(LPCWSTR pwstrDeviceId)
 {
-    // An audio device has been removed.
+    SoundRenderA->bPendingDeviceListRefresh = TRUE;
     return S_OK;
 }
 
-inline STDMETHODIMP_(HRESULT __stdcall) CNotificationClient::OnDeviceStateChanged(LPCWSTR pwstrDeviceId, DWORD dwNewState) 
+inline STDMETHODIMP_(HRESULT __stdcall) CNotificationClient::OnDeviceStateChanged(LPCWSTR pwstrDeviceId, DWORD dwNewState)
 {
-    // The state of an audio device has changed.
+    SoundRenderA->bPendingDeviceListRefresh = TRUE;
     return S_OK;
 }
 
-inline STDMETHODIMP_(HRESULT __stdcall) CNotificationClient::OnPropertyValueChanged(LPCWSTR pwstrDeviceId, const PROPERTYKEY key) 
+inline STDMETHODIMP_(HRESULT __stdcall) CNotificationClient::OnPropertyValueChanged(LPCWSTR pwstrDeviceId, const PROPERTYKEY key)
 {
-    // A property value of an audio device has changed.
+    SoundRenderA->bPendingDeviceListRefresh = TRUE;
     return S_OK;
 }

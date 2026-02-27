@@ -438,10 +438,12 @@ void CResourceManager::LS_Unload() {
   LSVM = nullptr;
 }
 
-BOOL CResourceManager::_lua_HasShader(LPCSTR s_shader) {
-  string256 undercorated;
-  for (int i = 0, l = xr_strlen(s_shader) + 1; i < l; i++)
-    undercorated[i] = ('\\' == s_shader[i]) ? '_' : s_shader[i];
+BOOL CResourceManager::_lua_HasShader(LPCSTR s_shader)
+{
+	xrCriticalSectionGuard guard(creationGuard);
+	string256 undercorated;
+	for (int i = 0, l = xr_strlen(s_shader) + 1; i < l; i++)
+		undercorated[i] = ('\\' == s_shader[i]) ? '_' : s_shader[i];
 
 #ifdef _EDITOR
   return Script::bfIsObjectPresent(LSVM, undercorated, "editor", LUA_TFUNCTION);
@@ -453,9 +455,11 @@ BOOL CResourceManager::_lua_HasShader(LPCSTR s_shader) {
 #endif
 }
 
-Shader *CResourceManager::_lua_Create(LPCSTR d_shader, LPCSTR s_textures) {
-  CBlender_Compile C;
-  Shader S;
+Shader* CResourceManager::_lua_Create(LPCSTR d_shader, LPCSTR s_textures)
+{
+	xrCriticalSectionGuard guard(creationGuard);
+	CBlender_Compile C;
+	Shader S;
 
   // undecorate
   string256 undercorated;

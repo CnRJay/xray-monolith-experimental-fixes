@@ -13,12 +13,22 @@
 #include "xrserver_objects_alife.h"
 #include "script_game_object.h"
 
+#ifdef EXPLOSIVE_CHANGE
+#include "../xrEngine/GameMtlLib.h"
+#include "../xrphysics/ExtendedGeom.h"
+#include "../xrphysics/CalculateTriangle.h"
+#include "../xrphysics/tri-colliderknoopc/dctriangle.h"
+#endif
+
 #define GRENADE_REMOVE_TIME		30000
 const float default_grenade_detonation_threshold_hit = 100;
 
 CGrenade::CGrenade(void)
 {
 	m_destroy_callback.clear();
+#ifdef EXPLOSIVE_CHANGE
+	m_on_grenade_explode_callback._set("");
+#endif
 }
 
 CGrenade::~CGrenade(void)
@@ -38,6 +48,11 @@ void CGrenade::Load(LPCSTR section)
 		m_dwGrenadeRemoveTime = GRENADE_REMOVE_TIME;
 	m_grenade_detonation_threshold_hit = READ_IF_EXISTS(pSettings, r_float, section, "detonation_threshold_hit",
 	                                                    default_grenade_detonation_threshold_hit);
+
+#ifdef EXPLOSIVE_CHANGE
+	m_on_grenade_explode_callback._set(READ_IF_EXISTS(pSettings, r_string, section, "on_grenade_explode", ""));
+	m_contact.enabled = !!READ_IF_EXISTS(pSettings, r_bool, section, "explode_on_contact", FALSE);
+#endif
 }
 
 void CGrenade::Hit(SHit* pHDS)
@@ -285,6 +300,10 @@ void CGrenade::UpdateCL()
 	CExplosive::UpdateCL();
 
 	if (!IsGameTypeSingle()) make_Interpolation();
+
+#ifdef EXPLOSIVE_CHANGE
+	ContactUpdateCL();
+#endif
 }
 
 
@@ -385,3 +404,163 @@ bool CGrenade::GetBriefInfo(II_BriefInfo& info)
 	info.cur_ammo._set(stmp);
 	return true;
 }
+
+#ifdef EXPLOSIVE_CHANGE
+void CGrenade::activate_physic_shell()
+{
+	inherited::activate_physic_shell();
+	if (PPhysicsShell())
+	{
+		PPhysicsShell()->add_ObjectContactCallback(GrenadeContactCallback);
+	}
+}
+
+void CGrenade::Contact(const Fvector &pos, const Fvector &vel, const Fvector &nor, const LPCSTR mtl)
+{
+	m_contact.contact = true;
+	m_contact.position.set(pos);
+	m_contact.velocity.set(vel);
+	m_contact.normal.set(nor);
+	m_contact.material._set(mtl ? mtl : "");
+}
+
+void CGrenade::ContactUpdateCL()
+{
+	if (!m_contact.contact)
+	{
+		return;
+	}
+	m_contact.contact = false;
+	m_contact.explode = true;
+
+	if (PPhysicsShell())
+	{
+		PPhysicsShell()->set_LinearVel(zero_vel);
+		PPhysicsShell()->set_AngularVel(zero_vel);
+		PPhysicsShell()->remove_ObjectContactCallback(GrenadeContactCallback);
+		PPhysicsShell()->Disable();
+	}
+	Position().set(m_contact.position);
+	Destroy();
+}
+
+void CGrenade::GrenadeContactCallback(bool &do_colide, bool bo1, dContact &c, SGameMtl *material_1, SGameMtl *material_2)
+{
+	dxGeomUserData *gd1 = PHRetrieveGeomUserData(c.geom.g1);
+	dxGeomUserData *gd2 = PHRetrieveGeomUserData(c.geom.g2);
+
+	SGameMtl *mtl = nullptr;
+	Fvector pos;
+	Fvector nor;
+	pos.set(*(Fvector *)&c.geom.pos);
+	CGrenade *gnd = gd1 ? smart_cast<CGrenade *>(gd1->ph_ref_object) : nullptr;
+	if (!gnd)
+	{
+		gnd = gd2 ? smart_cast<CGrenade *>(gd2->ph_ref_object) : nullptr;
+		nor.invert(*(Fvector *)&c.geom.normal);
+		mtl = material_1;
+	}
+	else
+	{
+		nor.set(*(Fvector *)&c.geom.normal);
+		mtl = material_2;
+	}
+	VERIFY(mtl);
+
+	if (mtl->Flags.is(SGameMtl::flPassable))
+		return;
+
+	if (gnd == nullptr || gnd->m_contact.enabled != true || gnd->m_contact.contact == true)
+		return;
+
+	CGameObject *who = gd1 ? smart_cast<CGameObject *>(gd1->ph_ref_object) : NULL;
+	if (!who || who == (CGameObject *)gnd)
+	{
+		who = gd2 ? smart_cast<CGameObject *>(gd2->ph_ref_object) : NULL;
+	}
+
+	if (!who || who->ID() != gnd->CurrentParentID())
+	{
+#if 0 /* Copy from CCustomRocket. No idea what these do. Don't seem to work. */
+		dxGeomUserData *l_pMYU = bo1 ? gd1 : gd2;
+		VERIFY(l_pMYU);
+		if (l_pMYU->last_pos[0] != -dInfinity)
+		{
+			pos = cast_fv(l_pMYU->last_pos);
+		}
+		if (!gd1 || !gd2)
+		{
+			dGeomID GID = (gd1) ? c.geom.g1 : c.geom.g2;
+			dxGeomUserData *&GUD = gd1 ? gd1 : gd2;
+
+			if (GUD->pushing_neg)
+			{
+				Fvector velocity;
+				gnd->PHGetLinearVell(velocity);
+				if (velocity.square_magnitude() > EPS)
+				{
+					velocity.normalize();
+					Triangle neg_tri;
+					CalculateTriangle(GUD->neg_tri, GID, neg_tri, Level().ObjectSpace.GetStaticVerts());
+					float cosinus = velocity.dotproduct(*((Fvector *)neg_tri.norm));
+					VERIFY(_valid(neg_tri.dist));
+					float dist = neg_tri.dist / cosinus;
+					velocity.mul(dist * 1.1f);
+					pos.sub(velocity);
+				}
+			}
+		}
+#endif
+		Fvector vel;
+		gnd->PHGetLinearVell(vel);
+		gnd->Contact(pos, vel, nor, mtl->m_Name.c_str());
+		R_ASSERT(gnd->m_pPhysicsShell);
+		gnd->m_pPhysicsShell->DisableCollision();
+		gnd->m_pPhysicsShell->set_LinearVel(zero_vel);
+		gnd->m_pPhysicsShell->set_AngularVel(zero_vel);
+		gnd->m_pPhysicsShell->setForce(zero_vel);
+		gnd->m_pPhysicsShell->setTorque(zero_vel);
+		gnd->m_pPhysicsShell->set_ApplyByGravity(false);
+		gnd->setEnabled(FALSE);
+
+		do_colide = false;
+	}
+}
+
+void CGrenade::OnBeforeExplosion()
+{
+	CExplosive::OnBeforeExplosion();
+	if (m_on_grenade_explode_callback.size())
+	{
+		::luabind::functor<void> lua_function;
+		if (ai().script_engine().functor(m_on_grenade_explode_callback.c_str(), lua_function))
+		{
+			Fvector pos;
+			Fvector vel;
+			Fvector nor;
+			LPCSTR mtl = "";
+			if (m_contact.explode)
+			{
+				pos.set(m_contact.position);
+				vel.set(m_contact.velocity);
+				nor.set(m_contact.normal);
+				mtl = m_contact.material.c_str();
+			}
+			else
+			{
+				pos.set(Position());
+				PHGetLinearVell(vel);
+				nor.set(0.0F, 1.0F, 0.0F);
+				mtl = "";
+			}
+			::luabind::object lua_table = ::luabind::newtable(ai().script_engine().lua());
+			lua_table["flag"] = m_contact.explode;
+			lua_table["position"] = pos;
+			lua_table["velocity"] = vel;
+			lua_table["normal"] = nor;
+			lua_table["material"] = mtl;
+			lua_function(lua_game_object(), lua_table);
+		}
+	}
+}
+#endif

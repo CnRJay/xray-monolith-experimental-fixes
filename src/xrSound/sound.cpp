@@ -3,8 +3,8 @@
 
 #include "SoundRender_CoreA.h"
 
-XRSOUND_API xr_token* snd_devices_token = nullptr;
-XRSOUND_API u32 snd_device_id = u32(-1);
+XRSOUND_API xr_token* snd_devices_token = NULL;
+XRSOUND_API xr_string snd_device_name;
 
 void CSound_manager_interface::_create(int stage)
 {

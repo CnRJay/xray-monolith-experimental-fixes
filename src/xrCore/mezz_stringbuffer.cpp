@@ -119,6 +119,16 @@ std::string toLowerCaseCopy(std::string s) {
 	return s;
 }
 
+void toLowerCase(xr_string& s) {
+	std::transform(s.begin(), s.end(), s.begin(), [](unsigned char c) {
+		return std::tolower(c);
+		});
+}
+xr_string toLowerCaseCopy(xr_string s) {
+	toLowerCase(s);
+	return s;
+}
+
 void replaceAll(std::string& str, const std::string& from, const std::string& to) {
 	if (from.empty())
 		return;

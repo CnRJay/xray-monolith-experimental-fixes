@@ -67,6 +67,7 @@ namespace text_editor
 		void assign_callback(u32 const dik, key_state state, Callback const& callback);
 
 		void insert_character(char c);
+		void insert_text(LPCSTR s);
 
 		IC bool get_key_state(key_state mask) const { return (mask) ? !!(m_key_state.test(mask)) : true; }
 		IC void set_key_state(key_state mask, bool value) { m_key_state.set(mask, value); }

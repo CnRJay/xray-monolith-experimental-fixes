@@ -254,6 +254,7 @@ public:
 	NET_Queue_Event* spawn_events = nullptr;
 	prefetch_event_queue* prefetch_events = nullptr;
 	models_set* prefetched_models = nullptr;
+	xrSRWLock prefetch_lock;
     bool PostponedSpawn(u16 id);
 	void ProcessSpawnEvents();
 	static void ProcessPrefetchEvents(void* args);
@@ -302,6 +303,7 @@ public:
 	IC CAutosaveManager& autosave_manager();
     IC CDebugRenderer& debug_renderer();
 	void __stdcall script_gc(); // GC-cycle
+	static int __stdcall LuaGC(const bool cleanup); // GC that will called from Device via Device.LuaGC
 	IC CPHCommander& ph_commander();
 	IC CPHCommander& ph_commander_scripts();
 	IC CPHCommander& ph_commander_physics_worldstep();

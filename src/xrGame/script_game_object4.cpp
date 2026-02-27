@@ -537,6 +537,7 @@ SPECIFIC_CAST(CScriptGameObject::cast_Knife, CWeaponKnife);
 SPECIFIC_CAST(CScriptGameObject::cast_WeaponMagazined, CWeaponMagazined);
 SPECIFIC_CAST(CScriptGameObject::cast_WeaponMagazinedWGrenade, CWeaponMagazinedWGrenade);
 SPECIFIC_CAST(CScriptGameObject::cast_Missile, CMissile);
+SPECIFIC_CAST(CScriptGameObject::cast_Explosive, CExplosive);
 CMedkit* CScriptGameObject::cast_Medkit()
 {
 	CInventoryItem* ii = object().cast_inventory_item();

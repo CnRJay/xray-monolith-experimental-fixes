@@ -530,6 +530,7 @@ class_<CScriptGameObject> script_register_game_object2(class_<CScriptGameObject>
 		.def("cast_FoodItem", &CScriptGameObject::cast_FoodItem)
 		.def("cast_BottleItem", &CScriptGameObject::cast_BottleItem)
 		.def("cast_Missile", &CScriptGameObject::cast_Missile)
+		.def("cast_Explosive", &CScriptGameObject::cast_Explosive)
 		//Alundaio: END
 
 		//Torch

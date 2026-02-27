@@ -24,7 +24,7 @@ public:
 		// Insertion index will determine what kv pair in overrides will win even if the depth is the same
 		u32 insertionIndex;
 
-		bool operator<(const Item& other) const
+		bool operator<(const Item& other) const noexcept
 		{
 			return xr_strcmp(*first, *other.first) < 0;
 		}
@@ -37,13 +37,13 @@ public:
 		// Allows for searching by string-likes (string, char*,...) in set
 		using is_transparent = void;
 
-		bool operator() (const Item& x, const Item& y) const
+		bool operator() (const Item& x, const Item& y) const noexcept
 		{
 			return xr_strcmp(*x.first, *y.first) < 0;
 		}
 
 		template <typename T>
-		bool operator() (const Item& x, const T& y) const
+		bool operator() (const Item& x, const T& y) const noexcept
 		{
 			if constexpr (std::is_same_v<T, shared_str>)
 				return xr_strcmp(*x.first, *y) < 0;
@@ -52,7 +52,7 @@ public:
 		}
 
 		template <typename T>
-		bool operator() (const T& x, const Item& y) const
+		bool operator() (const T& x, const Item& y) const noexcept
 		{
 			if constexpr (std::is_same_v<T, shared_str>)
 				return xr_strcmp(*x, *y.first) < 0;
@@ -126,6 +126,44 @@ public:
 	void DLTX_print(LPCSTR sec, LPCSTR line);
 	LPCSTR DLTX_getFilenameOfLine(LPCSTR sec, LPCSTR line);
 	bool DLTX_isOverride(LPCSTR sec, LPCSTR line);
+	
+private:
+	static xr_unordered_flat_map<xr_string, xr_unordered_flat_map<shared_str, CInifile::Items>> CachedData;
+	static xrCriticalSection CacheCS;
+
+public:
+	static void InvalidateCache(LPCSTR path = nullptr);
+	static void CInifile::GetCacheStats(u64& files_cached, u64& total_bytes, u64& section_count)
+	{
+		total_bytes = 0;
+		section_count = 0;
+		files_cached = CachedData.size();
+
+		for (const auto& file_pair : CachedData)
+		{
+			// Size of the file path string
+			total_bytes += file_pair.first.capacity();
+
+			// Inner map overhead
+			for (const auto& sect_pair : file_pair.second)
+			{
+				section_count++;
+				// Each section name
+				// Plus the overhead of the xr_vector structure
+				total_bytes += sizeof(sect_pair.first) + sizeof(sect_pair.second);
+
+				// Items
+				total_bytes += sect_pair.second.capacity() * sizeof(Item);
+			}
+		}
+	}
+
+private:
+	IC bool IsValidFileNameForCache() const
+	{
+		return m_file_name && m_file_name[0];
+	}
+
 	xr_unordered_flat_map<shared_str, xr_unordered_flat_set<shared_str>> OverrideToFilename;
 	xr_unordered_flat_map<shared_str, shared_str> SectionToFilename;
 	xr_unordered_flat_set<shared_str> SectionsToDelete;
@@ -157,6 +195,7 @@ public:
 			return result;
 		}
 	};
+	void InsertIntoDATA(xr_unordered_flat_map<shared_str, Items>& FinalData);
 	enum InsertType
 	{
 		Override,
@@ -192,8 +231,7 @@ private:
 	void StashCurrentSection(
 		Sect*& CurrentBase,
 		Sect*& CurrentOverride,
-		string_path currentFileName,
-		BOOL bIsCurrentSectionOverride
+		string_path currentFileName
 	);
 	Items EvaluateSection(
 		shared_str SectionName,

@@ -344,6 +344,70 @@ bool CInput::get_dik_name(int dik, LPSTR dest_str, int dest_sz)
 	return (cnt != -1);
 }
 
+bool CInput::dik_to_text(int dik, bool shift, bool caps, bool ctrl, bool alt, bool altgr, LPSTR dest, int dest_sz)
+{
+	if (!dest || dest_sz <= 1)
+		return false;
+
+	dest[0] = 0;
+
+	const UINT scan = static_cast<UINT>(dik);
+	const HKL hkl = GetKeyboardLayout(0);
+
+	// Convert scan code -> virtual key according to current layout
+	const UINT vk = MapVirtualKeyEx(scan, MAPVK_VSC_TO_VK_EX, hkl);
+	if (vk == 0)
+		return false;
+
+	BYTE ks[256] = {};
+	if (shift) ks[VK_SHIFT] = 0x80;
+	if (ctrl)  ks[VK_CONTROL] = 0x80;
+	if (alt)   ks[VK_MENU] = 0x80;
+	if (caps)  ks[VK_CAPITAL] = 0x01;
+
+	// AltGr (usually Right Alt) on Windows behaves like Ctrl+Alt
+	if (altgr)
+	{
+		ks[VK_CONTROL] = 0x80;
+		ks[VK_MENU] = 0x80;
+	}
+
+	wchar_t wbuf[8] = {};
+	const int rc = ToUnicodeEx(vk, scan, ks, wbuf, (int)std::size(wbuf), 0, hkl);
+
+	if (rc <= 0)
+	{
+		// Dead key: clear keyboard state in ToUnicodeEx internal buffer
+		if (rc == -1)
+		{
+			BYTE ks0[256] = {};
+			wchar_t dummy[8] = {};
+			ToUnicodeEx(vk, scan, ks0, dummy, (int)std::size(dummy), 0, hkl);
+		}
+		return false;
+	}
+
+	// Filter control chars
+	if (wbuf[0] < 0x20)
+		return false;
+
+	// Convert produced Unicode to CP1251
+	BOOL usedDefault = FALSE;
+	const int mb = WideCharToMultiByte(1251, WC_NO_BEST_FIT_CHARS, wbuf, rc, dest, dest_sz - 1, "?", &usedDefault);
+	if (mb <= 0)
+		return false;
+
+	// Null-terminate
+	dest[mb] = 0;
+
+	// If UI cannot represent it in CP1251, prevent cyrillic output
+	// Return true to insert '?'
+	if (usedDefault)
+		return false;
+
+	return true;
+}
+
 #define MOUSE_1 (0xED + 100)
 #define MOUSE_8 (0xED + 107)
 

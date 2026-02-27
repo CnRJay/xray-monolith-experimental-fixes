@@ -74,4 +74,40 @@ public:
 	~xrCriticalSectionGuard() { Leave(); }
 };
 
+using ThreadID = HANDLE;
 
+
+class XRCORE_API xrSRWLock
+{
+private:
+    SRWLOCK smutex;
+
+public:
+    xrSRWLock();
+    ~xrSRWLock() {};
+
+    void AcquireExclusive();
+    void ReleaseExclusive();
+
+    void AcquireShared();
+    void ReleaseShared();
+
+    BOOL TryAcquireExclusive();
+    BOOL TryAcquireShared();
+};
+//Write functions guard: lock.AcquireExclusive(); ... lock.ReleaseExclusive();
+//Read functions guard: lock.AcquireShared(); ... lock.ReleaseShared();
+
+class XRCORE_API xrSRWLockGuard
+{
+public:
+    xrSRWLockGuard(xrSRWLock& lock, bool shared = false);
+    xrSRWLockGuard(xrSRWLock* lock, bool shared = false);
+    ~xrSRWLockGuard();
+
+private:
+    xrSRWLock* lock;
+    bool shared;
+};
+//Write functions guard: xrSRWLockGuard guard(lock); ...
+//Read functions guard: xrSRWLockGuard guard(lock, true); ...

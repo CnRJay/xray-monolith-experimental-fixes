@@ -47,6 +47,16 @@ SCallbackInfo* CUIWndCallback::NewCallback()
 
 void CUIWndCallback::AddCallback(CUIWindow* pWnd, s16 evt, const void_function& f)
 {
+	// Find existing callback for this control+event and replace it
+	for (auto& cb : m_callbacks)
+	{
+		if (cb->m_control_ptr == pWnd && cb->m_event == evt)
+		{
+			cb->m_cpp_callback = f;
+			return;
+		}
+	}
+	// No existing callback, create new one
 	SCallbackInfo* c = NewCallback();
 	c->m_cpp_callback = f;
 	c->m_control_ptr = pWnd;
@@ -56,6 +66,17 @@ void CUIWndCallback::AddCallback(CUIWindow* pWnd, s16 evt, const void_function& 
 
 void CUIWndCallback::AddCallbackStr(const shared_str& control_id, s16 evt, const void_function& f)
 {
+	// Find existing callback for this control+event and replace it
+	for (auto& cb : m_callbacks)
+	{
+		if (cb->m_control_name == control_id && cb->m_event == evt)
+		{
+			cb->m_cpp_callback = f;
+			cb->m_control_ptr = NULL;
+			return;
+		}
+	}
+	// No existing callback, create new one
 	SCallbackInfo* c = NewCallback();
 	c->m_cpp_callback = f;
 	c->m_control_ptr = nullptr;

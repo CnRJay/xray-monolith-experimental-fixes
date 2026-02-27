@@ -119,6 +119,13 @@ char* find_free(int size)
 	return NULL;
 }
 
+void XR_EARLY_INIT()
+{
+	ntavm = (PNTAVM)GetProcAddress(GetModuleHandleA("ntdll.dll"),
+	                               "NtAllocateVirtualMemory");
+	XR_INIT();
+}
+
 static 	char temp[1025];
 void dump_map(void* ptr, size_t size, char c)
 {

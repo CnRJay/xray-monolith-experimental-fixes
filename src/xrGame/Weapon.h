@@ -153,6 +153,8 @@ public:
 	void set_mFirePoint(Fvector &fire_point);
 	void set_mFirePoint2(Fvector &fire_point);
 	void set_mShellPoint(Fvector &fire_point);
+	Fmatrix get_mOffset() { return m_Offset; };
+	Fmatrix get_mStrapOffset() { return m_StrapOffset; };
 
 	virtual void create_physic_shell();
 	virtual void activate_physic_shell();

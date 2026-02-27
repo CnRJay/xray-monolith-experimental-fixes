@@ -27,7 +27,7 @@ void CInifile::Destroy(CInifile* ini)
 	xr_delete(ini);
 }
 
-bool sect_pred(const CInifile::Sect* x, LPCSTR val)
+bool sect_pred(const CInifile::Sect* x, LPCSTR val) noexcept
 {
 	return xr_strcmp(*x->Name, val) < 0;
 };
@@ -106,7 +106,49 @@ BOOL CInifile::Sect::line_exist(LPCSTR L, LPCSTR* val)
 	return FALSE;
 }
 
-//------------------------------------------------------------------------------
+// Initialize the static cache member
+BOOL dltx_use_cache = TRUE;
+xr_unordered_flat_map<xr_string, xr_unordered_flat_map<shared_str, CInifile::Items>> CInifile::CachedData;
+xrCriticalSection CInifile::CacheCS;
+void CInifile::InvalidateCache(LPCSTR path) {
+	if (path)
+	{
+		if (path[0])
+		{
+			xr_string FileName(path);
+			toLowerCase(FileName);
+			xrCriticalSectionGuard g(CacheCS);
+			CachedData.erase(FileName);
+		}
+	}
+	else
+	{
+		xrCriticalSectionGuard g(CacheCS);
+		for (auto& p : CachedData)
+		{
+			p.second.clear();
+			p.second.rehash(0);
+		}
+		CachedData.clear();
+		CachedData.rehash(0);
+	}
+};
+
+void CInifile::InsertIntoDATA(xr_unordered_flat_map<shared_str, Items>& FinalData)
+{
+	DATA.reserve(FinalData.size());
+	for (auto& SectPair : FinalData)
+	{
+		auto s = xr_new<Sect>();
+		s->Name = SectPair.first;
+		s->Data = SectPair.second;
+		DATA.push_back(s);
+	}
+	std::sort(DATA.begin(), DATA.end(), [](const Sect* a, const Sect* b)
+	{
+		return xr_strcmp(a->Name, b->Name) < 0;
+	});
+}
 
 CInifile::CInifile(IReader* F, LPCSTR path
 #ifndef _EDITOR
@@ -150,6 +192,23 @@ CInifile::CInifile(LPCSTR szFileName,
 
 	if (bLoad)
 	{
+		// Find in cache and use it, skip initiating IReader
+		if (dltx_use_cache && IsValidFileNameForCache())
+		{
+			xr_string FileName(m_file_name);
+			toLowerCase(FileName);
+
+			xrCriticalSectionGuard g(CacheCS);
+			auto CachedDataIt = CachedData.find(FileName);
+			if (CachedDataIt != CachedData.end())
+			{
+				if (print_dltx_warnings)
+					Msg("[DLTX] [%s] Found data in cache", m_file_name);
+				InsertIntoDATA(CachedDataIt->second);
+				return;
+			}
+		}
+
 		string_path path, folder;
 		_splitpath(m_file_name, path, folder, 0, 0);
 		xr_strcat(path, sizeof(path), folder);
@@ -218,7 +277,7 @@ IC BOOL is_empty_line_now(IReader* F)
 // Regex pattern cache (added before Load function)
 static const std::regex& GetCachedRegex(const xr_string& pattern)
 {
-	static xr_map<xr_string, std::regex> g_RegexCache;
+	static xr_unordered_flat_map<xr_string, std::regex> g_RegexCache;
 	auto it = g_RegexCache.find(pattern);
 	if (it == g_RegexCache.end())
 	{
@@ -315,8 +374,7 @@ void CInifile::loadFile(
 void CInifile::StashCurrentSection(
 		Sect*& CurrentBase,
 		Sect*& CurrentOverride,
-		string_path currentFileName,
-		BOOL bIsCurrentSectionOverride
+		string_path currentFileName
 	)
 {
 	// Store base section if exists
@@ -325,11 +383,7 @@ void CInifile::StashCurrentSection(
 		auto SectIt = BaseData.find(CurrentBase->Name);
 		if (SectIt != BaseData.end() && SectIt->first.equal(CurrentBase->Name))
 		{
-			// Overwrite existing base data
-			for (Item& CurrentItem : CurrentBase->Data)
-			{
-				insert_item(&SectIt->second, CurrentItem);
-			}
+			Debug.fatal(DEBUG_INFO, "[DLTX] Duplicate section '%s' wasn't marked as an override.\n\nOverride section by prefixing it with '!' (![%s]) or give it a unique name.\n\nCheck this file and its DLTX mods:\n\"%s\",\nfile with section \"%s\",\nfile with duplicate \"%s\"", *CurrentBase->Name, *CurrentBase->Name, m_file_name, SectionToFilename[CurrentBase->Name].c_str(), currentFileName);
 		}
 		else
 		{
@@ -345,11 +399,6 @@ void CInifile::StashCurrentSection(
 		auto SectIt = OverrideData.find(CurrentOverride->Name);
 		if (SectIt != OverrideData.end() && SectIt->first.equal(CurrentOverride->Name))
 		{
-			if (!bIsCurrentSectionOverride)
-			{
-				Debug.fatal(DEBUG_INFO, "[DLTX] Duplicate section '%s' wasn't marked as an override.\n\nOverride section by prefixing it with '!' (![%s]) or give it a unique name.\n\nCheck this file and its DLTX mods:\n\"%s\",\nfile with section \"%s\",\nfile with duplicate \"%s\"", *CurrentOverride->Name, *CurrentOverride->Name, m_file_name, SectionToFilename[CurrentOverride->Name].c_str(), currentFileName);
-			}
-
 			// Overwrite existing override data
 			for (Item& CurrentItem : CurrentOverride->Data)
 			{
@@ -499,8 +548,7 @@ void CInifile::LTXLoad (
 			StashCurrentSection(
 				CurrentBase,
 				CurrentOverride,
-				currentFileName,
-				bIsCurrentSectionOverride
+				currentFileName
 			);
 			bHasLoadedModFiles = TRUE;
 
@@ -685,8 +733,7 @@ void CInifile::LTXLoad (
 			StashCurrentSection(
 				CurrentBase,
 				CurrentOverride,
-				currentFileName,
-				bIsCurrentSectionOverride
+				currentFileName
 			);
 
 			u32 SectionNameStartPos = 3;
@@ -706,8 +753,7 @@ void CInifile::LTXLoad (
 			StashCurrentSection(
 				CurrentBase,
 				CurrentOverride,
-				currentFileName,
-				bIsCurrentSectionOverride
+				currentFileName
 			);
 
 			u32 SectionNameStartPos = (isModSection(str) ? 2 : 1);
@@ -848,8 +894,7 @@ void CInifile::LTXLoad (
 	StashCurrentSection(
 		CurrentBase,
 		CurrentOverride,
-		currentFileName,
-		bIsCurrentSectionOverride
+		currentFileName
 	);
 
 	// Create empty sections that were marked with @[ and weren't defined normally
@@ -1247,6 +1292,7 @@ CInifile::Items CInifile::EvaluateSection(
 	}
 
 	Evaluations.RecursionStack.pop_back();
+	CurrentResult.shrink_to_fit();
 	return Evaluations.ResolvedCache[SectionName] = std::move(CurrentResult);
 };
 
@@ -1257,7 +1303,7 @@ void CInifile::Load(IReader* F, LPCSTR path
 )
 {
 	R_ASSERT(F);
-
+	
 	static shared_str DLTX_DELETE = "DLTX_DELETE";
 	string_path currentFileName;
 
@@ -1306,16 +1352,16 @@ void CInifile::Load(IReader* F, LPCSTR path
 		EvaluateSection(SectName, Evaluations, currentFileName);
 	}
 
-	auto& FinalData = Evaluations.ResolvedCache;
+	auto& ResolvedData = Evaluations.ResolvedCache;
 	// Handle marked-for-delete sections
 	for (auto &s : SectionsToDelete)
 	{
 		Msg("[DLTX] [%s] Found section %s to delete", m_file_name, s.c_str());
-		auto it = FinalData.find(s);
-		if (it != FinalData.end())
+		auto it = ResolvedData.find(s);
+		if (it != ResolvedData.end())
 		{
 			Msg("[DLTX] [%s] Deleting section %s", m_file_name, s.c_str());
-			FinalData.erase(it);
+			ResolvedData.erase(it);
 			auto s_it = OverrideData.find(s);
 			if (s_it != OverrideData.end())
 			{
@@ -1325,20 +1371,16 @@ void CInifile::Load(IReader* F, LPCSTR path
 		}
 	}
 
-	// Insert all finalized sections into final container
-	DATA.reserve(FinalData.size());
-	for (auto& SectPair : FinalData)
+	if (dltx_use_cache && IsValidFileNameForCache())
 	{
-		auto s = xr_new<Sect>();
-		s->Name = SectPair.first;
-		s->Data = std::move(SectPair.second);
-		s->Data.shrink_to_fit();
-		DATA.push_back(std::move(s));
+		xr_string FileName(m_file_name);
+		toLowerCase(FileName);
+		xrCriticalSectionGuard g(CacheCS);
+		CachedData.emplace(std::move(FileName), ResolvedData);
 	}
-	std::sort(DATA.begin(), DATA.end(), [](const Sect* a, const Sect* b)
-	{
-		return xr_strcmp(a->Name, b->Name) < 0;
-	});
+
+	// Insert all finalized sections into final container
+	InsertIntoDATA(ResolvedData);
 
 	// Handle override warnings
 	if (OverrideData.size())
@@ -1515,6 +1557,9 @@ bool CInifile::save_as(LPCSTR new_fname)
 	if (!F)
 		return (false);
 
+	xr_string FileName(m_file_name);
+	toLowerCase(FileName);
+	InvalidateCache(FileName.c_str());
 	save_as(*F);
 	FS.w_close(F);
 	return (true);

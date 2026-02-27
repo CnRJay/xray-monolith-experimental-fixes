@@ -1,4 +1,5 @@
 #include "stdafx.h"
+#include "profiler.h"
 
 #ifdef PROFILE_CRITICAL_SECTIONS
 static add_profile_portion_callback add_profile_portion = 0;
@@ -85,4 +86,70 @@ xrCriticalSection::raii::raii(xrCriticalSection* critical_section)
 xrCriticalSection::raii::~raii()
 {
 	critical_section->Leave();
+}
+
+xrSRWLock::xrSRWLock()
+{
+    InitializeSRWLock(&smutex);
+}
+
+void xrSRWLock::AcquireExclusive()
+{
+	PROF_EVENT("xrSRWLock::AcquireExclusive");
+    AcquireSRWLockExclusive(&smutex);
+}
+
+void xrSRWLock::ReleaseExclusive()
+{
+	PROF_EVENT("xrSRWLock::ReleaseExclusive");
+    ReleaseSRWLockExclusive(&smutex);
+}
+
+void xrSRWLock::AcquireShared()
+{
+	PROF_EVENT("xrSRWLock::AcquireShared");
+    AcquireSRWLockShared(&smutex);
+}
+
+void xrSRWLock::ReleaseShared()
+{
+	PROF_EVENT("xrSRWLock::ReleaseShared");
+    ReleaseSRWLockShared(&smutex);
+}
+
+BOOL xrSRWLock::TryAcquireExclusive()
+{
+    return TryAcquireSRWLockExclusive(&smutex);
+}
+
+BOOL xrSRWLock::TryAcquireShared()
+{
+    return TryAcquireSRWLockShared(&smutex);
+}
+
+
+xrSRWLockGuard::xrSRWLockGuard(xrSRWLock* lock, bool shared)
+    : lock(lock), shared(shared)
+{
+    if (shared)
+        lock->AcquireShared();
+    else
+        lock->AcquireExclusive();
+}
+
+xrSRWLockGuard::xrSRWLockGuard(xrSRWLock& lock, bool shared)
+    : lock(&lock), shared(shared)
+{
+    if (shared)
+        lock.AcquireShared();
+    else
+        lock.AcquireExclusive();
+}
+
+xrSRWLockGuard::~xrSRWLockGuard()
+{
+    if (shared)
+        lock->ReleaseShared();
+    else
+        lock->ReleaseExclusive();
 }

@@ -100,6 +100,7 @@ public:
 	void unacquire();
 	void acquire(const bool& exclusive);
 	bool get_dik_name(int dik, LPSTR dest, int dest_sz);
+	bool dik_to_text(int dik, bool shift, bool caps, bool ctrl, bool alt, bool altgr, LPSTR dest, int dest_sz);
 
 	void feedback(u16 s1, u16 s2, float time);
 };

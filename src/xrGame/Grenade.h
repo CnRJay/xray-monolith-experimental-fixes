@@ -3,6 +3,29 @@
 #include "explosive.h"
 #include "../xrEngine/feel_touch.h"
 
+#ifdef EXPLOSIVE_CHANGE
+struct SGrenadeContact
+{
+	bool enabled; /* Enable explode by contact. */
+	bool contact; /* Set true on grenade contact callback, used for ContactUpdateCL. */
+	bool explode; /* Grenade explode by contact. (not by time out) */
+	Fvector position;
+	Fvector velocity;
+	Fvector normal;
+	shared_str material;
+	SGrenadeContact()
+	{
+		enabled = false;
+		contact = false;
+		explode = false;
+		position.set(0.0F, 0.0F, 0.0F);
+		velocity.set(0.0F, 0.0F, 0.0F);
+		normal.set(0.0F, 1.0F, 0.0F);
+		material._set("");
+	}
+};
+#endif
+
 class CGrenade :
 	public CMissile,
 	public CExplosive
@@ -75,6 +98,17 @@ public:
 	{
 		m_destroy_callback = callback;
 	}
+
+#ifdef EXPLOSIVE_CHANGE
+	SGrenadeContact m_contact;
+	virtual void activate_physic_shell();
+	void Contact(const Fvector &pos, const Fvector &vel, const Fvector &nor, const LPCSTR mtl);
+	void ContactUpdateCL();
+	static void GrenadeContactCallback(bool &do_colide, bool bo1, dContact &c, SGameMtl *mtl_1, SGameMtl *mtl_2);
+
+	shared_str m_on_grenade_explode_callback;
+	void OnBeforeExplosion();
+#endif
 
 private:
 	destroy_callback m_destroy_callback;

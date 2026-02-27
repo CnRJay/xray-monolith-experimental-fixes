@@ -577,3 +577,18 @@ bool CLevelGraph::neighbour_in_direction(const Fvector& direction, u32 start_ver
 	}
 	return (false);
 }
+
+void CLevelGraph::nearby_vertices(const Fvector &position, float radius, xr_vector<CVertex *> &res) const
+{
+	float radius_sqr = _sqr(radius);
+	for (u32 i = 0; i < header().vertex_count(); ++i)
+	{
+		CVertex *ver = m_nodes + i;
+		Fvector vec;
+		vertex_position(vec, ver->position());
+		if (vec.distance_to_xz_sqr(position) < radius_sqr)
+		{
+			res.push_back(ver);
+		}
+	}
+}

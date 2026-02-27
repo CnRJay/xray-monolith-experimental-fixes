@@ -92,6 +92,9 @@ public:
 	virtual void _initialize(int stage);
 	virtual void _clear();
 	virtual void _restart();
+	virtual void refresh_devices() override;
+	virtual void default_device_changed() override;
+	virtual void switch_device(LPCSTR device_name) override;
 
 	virtual void set_master_volume(float f);
 

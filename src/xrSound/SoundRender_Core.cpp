@@ -116,6 +116,13 @@ void CSoundRender_Core::stop_emitters()
 		s_emitters[eit]->stop(FALSE);
 }
 
+void CSoundRender_Core::restart_emitters()
+{
+	for (u32 eit = 0; eit < s_emitters.size(); eit++)
+		if (s_emitters[eit]->target)
+			i_start(s_emitters[eit]);
+}
+
 int CSoundRender_Core::pause_emitters(bool val)
 {
 	m_iPauseCounter += val ? +1 : -1;

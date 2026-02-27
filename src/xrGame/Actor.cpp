@@ -1592,12 +1592,21 @@ void CActor::detach_Vehicle(bool bForce)
 		CCar *car = smart_cast<CCar *>(m_holder);
 #ifdef CAR_NEW
 		if (car && car->IsRemoteControl() == false)
-#endif
 		{
 			character_physics_support()->movement()->SetPosition(m_holder->ExitPosition());
 			character_physics_support()->movement()->SetVelocity(m_holder->ExitVelocity());
 			cam_Active()->Direction().set(Fvector().setHP(GO->Direction().getH(), 0.0F));
 		}
+#endif
+#ifdef STATIONARYMGUN_NEW
+		CWeaponStatMgun *stm = smart_cast<CWeaponStatMgun *>(m_holder);
+		if (stm)
+		{
+			character_physics_support()->movement()->SetPosition(m_holder->ExitPosition());
+			character_physics_support()->movement()->SetVelocity(m_holder->ExitVelocity());
+			cam_Active()->Direction().set(Fvector().setHP(GO->Direction().getH(), 0.0F));
+		}
+#endif
 
 		m_holder->detach_Actor();
 		m_holder = nullptr;
