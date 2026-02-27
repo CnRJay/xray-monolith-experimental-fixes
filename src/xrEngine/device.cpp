@@ -911,8 +911,3 @@ void CRenderDevice::CSecondVPParams::SetSVPActive(bool bState) //--#SM+#-- +Seco
 	if (g_pGamePersistent != nullptr)
 		g_pGamePersistent->m_pGShaderConstants->m_blender_mode.z = (isActive ? 1.0f : 0.0f);
 }
-
-bool CRenderDevice::CSecondVPParams::IsSVPFrame() //--#SM+#-- +SecondVP+
-{
-	return IsSVPActive() && Device.dwFrame % frameDelay == 0;
-}
