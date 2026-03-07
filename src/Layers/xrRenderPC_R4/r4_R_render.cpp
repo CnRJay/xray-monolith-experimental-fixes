@@ -82,7 +82,7 @@ void CRender::render_main(Fmatrix& m_ViewProjection, bool _fportals)
 		(
 			pLastSector,
 			ViewBase,
-			Device.vCameraPosition_saved,
+            Device.vCameraPosition,
 			m_ViewProjection,
 			CPortalTraverser::VQ_HOM + CPortalTraverser::VQ_SSA + CPortalTraverser::VQ_FADE
 			//. disabled scissoring (HW.Caps.bScissor?CPortalTraverser::VQ_SCISSOR:0)	// generate scissoring info
@@ -403,10 +403,12 @@ void CRender::renderGBuffer() {
 	else set_Recorder(nullptr);
 	phase = PHASE_NORMAL;
 
-	ViewBase.CreateFromMatrix(Device.mFullTransform, FRUSTUM_P_LRTB + FRUSTUM_P_FAR);
-	View = 0;
+    //SVP HACK: Use main frame view matrix to prevent rendering the wrong sector
+    auto main_ft = Fmatrix().mul(Device.mProject, Device.matrices[0].mView);
+    ViewBase.CreateFromMatrix(main_ft, FRUSTUM_P_LRTB + FRUSTUM_P_FAR);
+    View = 0;
 
-	render_main(Device.mFullTransform, true);
+    render_main(main_ft, true);
 	
 	set_Recorder(nullptr);
 	r_pmask(true, false); // disable priority "1"
@@ -527,34 +529,37 @@ void CRender::renderGBuffer() {
 
 	bool locked = scope_debug == 4;
 
-	if (!locked) {
-		// Build light list
-		// I doubt there is any point to occq checking non-shadowcasters
+    if (!locked) {
+        // Build light list
+        // I doubt there is any point to occq checking non-shadowcasters
 
-		if (Target == TargetMain) {
-			auto LP = &Lights.package;
-			LP_normal.clear();
-			for (auto L : LP->v_shadowed) {
-				L->vis_update(); 
-				if (L->vis.visible)
-					LP_normal.v_shadowed.push_back(L);
-				else if (scope_debug >= 3) CDebugRenderer().draw_line(Fmatrix(), L->position, Fvector(L->direction).mul(L->range).add(L->position), 0xff999999, false);
-			}
-			for (auto L : LP->v_point) LP_normal.v_point.push_back(L);
-			for (auto L : LP->v_spot) LP_normal.v_spot.push_back(L);
+        if (Target == TargetMain) {
+            auto LP = &Lights.package;
+            LP_normal.clear();
+            for (auto L : LP->v_shadowed) {
+                L->vis_update();
+                if (L->vis.visible)
+                    LP_normal.v_shadowed.push_back(L);
+                else if (scope_debug >= 3) CDebugRenderer().draw_line(Fmatrix(), L->position, Fvector(L->direction).mul(L->range).add(L->position), 0xff999999, false);
+            }
+            for (auto L : LP->v_point) LP_normal.v_point.push_back(L);
+            for (auto L : LP->v_spot) LP_normal.v_spot.push_back(L);
 
-			// stats
-			stats.l_shadowed = LP_normal.v_shadowed.size();
-			stats.l_unshadowed = LP_normal.v_point.size() + LP_normal.v_spot.size();
-			stats.l_total = stats.l_shadowed + stats.l_unshadowed;
+            // stats
+            stats.l_shadowed = LP_normal.v_shadowed.size();
+            stats.l_unshadowed = LP_normal.v_point.size() + LP_normal.v_spot.size();
+            stats.l_total = stats.l_shadowed + stats.l_unshadowed;
+        }
 
-			PIX_EVENT(DEFER_TEST_LIGHT_VIS);
-			Target->phase_occq();
+        {
+            PIX_EVENT(DEFER_TEST_LIGHT_VIS);
+            Target->phase_occq();
 
-			for (auto L : LP->v_shadowed)
-				L->vis_prepare();
-		}
-	}
+            auto LP = &Lights.package;
+            for (auto L : LP->v_shadowed)
+                L->vis_prepare();
+        }
+    }
 
 	//******* Main render :: PART-1 (second)
 	if (split_the_scene_to_minimize_wait)
@@ -840,8 +845,10 @@ void CRender::Render()
 	if (Device.m_SecondViewport.IsSVPActive()) {
 		TargetSVP->SetActive();
 		{
-			PIX_EVENT(DRAW_SVP);
-			renderGBuffer();
+            PIX_EVENT(DRAW_SVP);
+            //SVP HACK: Use main frame view matrix to prevent rendering the wrong sector
+            Device.vCameraPosition = mainCameraPos;
+            renderGBuffer();
 		}
 	}
 
