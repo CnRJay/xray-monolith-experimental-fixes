@@ -151,12 +151,11 @@ void CMovementManager::process_game_path()
 					game_path().intermediate_vertex_id()
 				)->level_vertex_id();
 
-				// is valid destination?
-				if (!ai().level_graph().valid_vertex_id(dest_level_vertex_id))
-				{
-					Msg("! intermediate_vertex_id invalid in CMovementManager::process_game_path for object %s", *object().cName());
-					dest_level_vertex_id = object().ai_location().level_vertex_id();
-				}
+                if (!ai().level_graph().valid_vertex_id(dest_level_vertex_id))
+                {
+                    Msg("! [CMovementManager::process_game_path::ePathStateBuildLevelPath] cannot build path, invalid dest_level_vertex_id %lu, object %s", dest_level_vertex_id, object().cName().c_str());
+                    break;
+                }
 
 				if (!accessible(dest_level_vertex_id))
 				{
@@ -167,12 +166,11 @@ void CMovementManager::process_game_path()
 					);
 				}
 
-				// accessible_nearest can fail with return value -1
-				if (!ai().level_graph().valid_vertex_id(dest_level_vertex_id))
-				{
-					Msg("! accessible_nearest failed in CMovementManager::process_game_path for object %s", *object().cName());
-					dest_level_vertex_id = object().ai_location().level_vertex_id();
-				}
+                if (!ai().level_graph().valid_vertex_id(dest_level_vertex_id))
+                {
+                    Msg("! [CMovementManager::process_game_path::ePathStateBuildLevelPath] cannot build path after accessible_nearest check, invalid dest_level_vertex_id %lu, object %s", dest_level_vertex_id, object().cName().c_str());
+                    break;
+                }
 
 				Fvector temp = ai().level_graph().vertex_position(
 					dest_level_vertex_id/**level_path().intermediate_vertex_id()/**/);

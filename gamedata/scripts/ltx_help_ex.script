@@ -3,6 +3,10 @@
 
     Objects
         ignore_collision - Objects can use "ignore_collision" in section configs to ignore collision with another objects. Can be map geometry, other physic objects, and creatures. Example: ignore_collision = map,obj,npc
+
+    Outfits, Actor
+        legs_visual - Model for first person body legs
+        legs_fwd_offset - Forward position offset
     
     Weapons
         zoom_step_count - option for weapons to customize steps range for dynamic scopes. Default fallback to original 3

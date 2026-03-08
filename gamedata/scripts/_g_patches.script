@@ -640,19 +640,19 @@ _G.alife_clone_weapon = function(se_obj, section, parent_id)
             copy_table(m_data_se[se_obj_new.id], m_data_se[se_obj.id])
             m_data_se[se_obj_new.id].name = se_obj_new:name() -- alife_storage_manager uses name as validation incase se_unregister is missed. which can happen. 
         end
-        
+                 
+        -- Register the new weapon.
+        alife_record(se_obj_new,true) 
+        se_obj_new = alife():register(se_obj_new) -- register deletes and respawns the object
+
         -- Clone parts states
         if item_parts then
             item_parts.copy_parts_con(se_obj.id, se_obj_new.id)
             item_parts.clear_parts_con(se_obj.id)
         end
-        
+
         -- Release the old weapon.
-        alife_record(se_obj_new,true)
         alife_release(se_obj)
-        
-        -- Register the new weapon.
-        se_obj_new = alife():register(se_obj_new) -- register deletes and respawns the object
     end
     
     return se_obj_new
@@ -711,3 +711,37 @@ _G.log = function(str)
         LuaPanda.printToVSCode(str,1,2)
     end
 end
+
+-- Always return a copy of these global variables to prevent modification in scripts
+local constTable = {
+	VEC_ZERO = function() return vector():set(0,0,0) end,
+	VEC_X = function() return vector():set(1,0,0) end,
+	VEC_Y = function() return vector():set(0,1,0) end,
+	VEC_Z = function() return vector():set(0,0,1) end,
+}
+_G.VEC_ZERO = nil
+_G.VEC_X = nil
+_G.VEC_Y = nil
+_G.VEC_Z = nil
+
+local old_mt_g = getmetatable(_G) or {}
+local old_index_g = old_mt_g.__index
+
+setmetatable(_G, {
+    __index = function(t, key)
+    	if constTable[key] then
+    		return constTable[key]()
+    	end
+
+        -- Fallback to old metatable
+        if type(old_index_g) == "function" then
+            return old_index_g(t, key)
+        elseif type(old_index_g) == "table" then
+            return old_index_g[key]
+        end
+
+        return rawget(t, key)
+    end,
+
+    __newindex = old_mt_g.__newindex or rawset
+})

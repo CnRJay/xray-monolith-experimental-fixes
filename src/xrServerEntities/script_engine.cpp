@@ -404,6 +404,10 @@ void CScriptEngine::init()
 	load_common_scripts();
 #endif
 	m_stack_level = lua_gettop(lua());
+
+    if (strstr(Core.Params, "-ldbg")) {
+        CScriptStorage::DebuggerAttach();
+    }
 }
 
 void CScriptEngine::remove_script_process(const EScriptProcessors& process_id)

@@ -869,7 +869,8 @@ void CInifile::LTXLoad (
 			I.first = (name[0] ? name : nullptr);
 			if (!I.first)
 			{
-				Msg("~[DLTX] WARNING: Malformed line %s in file %s, can't get key name, skipping, section data might be altered unexpectedly", currentLine.c_str(), currentFileName);
+                if (print_dltx_warnings)
+				    Msg("~[DLTX] WARNING: Malformed line %s in file %s, can't get key name, skipping, section data might be altered unexpectedly", currentLine.c_str(), currentFileName);
 				continue;
 			}
 			I.second = bIsDelete ? DLTX_DELETE.c_str() : (str2[0] ? str2.GetBuffer() : nullptr);
@@ -1066,22 +1067,28 @@ CInifile::Items CInifile::EvaluateSection(
 				auto OverrideDataIt = OverrideData.find(parent);
 				if (OverrideDataIt != OverrideData.end())
 				{
-					Msg("~[DLTX] WARNING: Section '%s' has parent '%s' that is defined as Override. Creating parent for backwards compatibility. Check this file and its DLTX mods: %s, mod file %s",
-						SectionName.c_str(),
-						parent.c_str(),
-						m_file_name,
-						currentFileName
-					);
+                    if (print_dltx_warnings)
+                    {
+                        Msg("~[DLTX] WARNING: Section '%s' has parent '%s' that is defined as Override. Creating parent for backwards compatibility. Check this file and its DLTX mods: %s, mod file %s",
+                            SectionName.c_str(),
+                            parent.c_str(),
+                            m_file_name,
+                            currentFileName
+                        );
+                    }
 					BaseData[parent].Name = parent;
 				}
 				else
 				{
-					Msg("~[DLTX] WARNING: Section '%s' inherits from non-existent section '%s'. Creating fallback empty parent section. Check this file and its DLTX mods: %s, mod file %s",
-						SectionName.c_str(),
-						parent.c_str(),
-						m_file_name,
-						currentFileName
-					);
+                    if (print_dltx_warnings)
+                    {
+                        Msg("~[DLTX] WARNING: Section '%s' inherits from non-existent section '%s'. Creating fallback empty parent section. Check this file and its DLTX mods: %s, mod file %s",
+                            SectionName.c_str(),
+                            parent.c_str(),
+                            m_file_name,
+                            currentFileName
+                        );
+                    }
 					BaseData[parent].Name = parent;
 				}
 			}
@@ -1606,7 +1613,7 @@ BOOL CInifile::section_exist(const shared_str& S) const { return section_exist(*
 //--------------------------------------------------------------------------------------
 CInifile::Sect& CInifile::r_section(LPCSTR S) const
 {
-	R_ASSERT(S && strlen(S),
+	R_ASSERT2(S && strlen(S),
 	         "Empty section (null\\'') passed into CInifile::r_section(). See info above ^, check your configs and 'call stack'.")
 	; //--#SM+#--
 

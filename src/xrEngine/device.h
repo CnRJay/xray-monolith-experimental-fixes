@@ -256,7 +256,8 @@ public:
 	// LuaGC
 	int LuaGCCount;
 	bool LuaGCDone;
-	fastdelegate::FastDelegate1<const bool, int> LuaGC;
+	fastdelegate::FastDelegate0<int> LuaGC;
+	fastdelegate::FastDelegate0<void> LuaGCDebug;
 
 	// Dependent classes
 	//CResourceManager* Resources;

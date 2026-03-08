@@ -258,7 +258,7 @@ void CWeaponStatMgun::Load(LPCSTR section)
 			_GetItem(str, i, sec);
 			if (strlen(sec))
 			{
-				m_barrels.push_back(SStmBarrel(this, sec));
+				m_barrels.emplace_back(this, sec);
 				m_barrels.back().Load(cNameSect_str());
 			}
 		}

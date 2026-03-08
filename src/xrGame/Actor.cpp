@@ -114,7 +114,9 @@ static Fbox bbCrouchBox;
 static Fvector vFootCenter;
 static Fvector vFootExt;
 
-Flags32 psActorFlags = {AF_AUTOPICKUP | AF_RUN_BACKWARD | AF_IMPORTANT_SAVE | AF_USE_TRACERS};
+BOOL showActorBody = FALSE;
+
+Flags32 psActorFlags = {AF_GODMODE_RT | AF_AUTOPICKUP | AF_RUN_BACKWARD | AF_IMPORTANT_SAVE | AF_USE_TRACERS};
 int psActorSleepTime = 1;
 
 
@@ -2145,14 +2147,28 @@ bool CActor::AllowActorShadow()
 }
 
 #include "debug_renderer.h"
+#include "../xrEngine/FDemoRecord.h"
+extern xr_unordered_set<CDemoRecord*> pDemoRecords;
+BOOL legs_in_demo_record = FALSE;
 void CActor::renderable_Render()
 {
 	VERIFY(_valid(XFORM()));
-	
+
 	if (cam_active == eacFirstEye)
 	{
 		if (::Render->active_phase() == 0) // can render first person body here
 		{
+			if (g_player_hud && !m_holder && (legs_in_demo_record || pDemoRecords.empty()) && !showActorBody)
+			{
+				g_player_hud->render_legs();
+			}
+
+            if (showActorBody)
+            {
+                inherited::renderable_Render();
+                CInventoryOwner::renderable_Render();
+            }
+
 			//if (fpBody) 
 			//	inherited::renderable_Render();
 		}
@@ -2165,7 +2181,7 @@ void CActor::renderable_Render()
 		}
 	}
 
-// Third Person Body and Weapon/Item
+	// Third Person Body and Weapon/Item
 	else
 	{
 		inherited::renderable_Render();

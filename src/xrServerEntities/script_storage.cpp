@@ -464,11 +464,28 @@ void CScriptStorage::reinit()
 			LoadKernelScriptToGlobal(lua(), "LuaPanda.lua");
 		}
 	}
-	
+
 	if (strstr(Core.Params, "-_g"))
 		file_header = file_header_new; //AVO: I get fatal crash at the start if this is used
 	else
 		file_header = file_header_old;
+}
+
+void CScriptStorage::DebuggerAttach()
+{
+    const char* S = "debugger_attach()";
+    shared_str m_script_name = "console command";
+    int l_iErrorCode = luaL_loadbuffer(lua(), S, xr_strlen(S), "@console_command");
+
+    if (!l_iErrorCode) {
+        l_iErrorCode = lua_pcall(lua(), 0, 0, 0);
+        if (l_iErrorCode) {
+            print_output(lua(), *m_script_name, l_iErrorCode);
+            return;
+        }
+    }
+
+    print_output(lua(), *m_script_name, l_iErrorCode);
 }
 
 int CScriptStorage::vscript_log(ScriptStorage::ELuaMessageType tLuaMessageType, LPCSTR caFormat, va_list marker)
@@ -603,7 +620,7 @@ void CScriptStorage::print_stack()
 			if (!xr_strcmp(l_tDebugInfo.what, "C"))
 			{
 				script_log_no_stack(ScriptStorage::eLuaMessageTypeError, "%2d : [C  ] %s", i, l_tDebugInfo.name);
-				//script_log(ScriptStorage::eLuaMessageTypeError, "%2d : [C  ] %s", i, l_tDebugInfo.name);  
+				//script_log(ScriptStorage::eLuaMessageTypeError, "%2d : [C  ] %s", i, l_tDebugInfo.name);
 			}
 			else
 			{
