@@ -7,7 +7,7 @@
 
 typedef long (*PNTAVM)(HANDLE handle, void **addr, ULONG zbits,
 		       size_t *size, ULONG alloctype, ULONG prot);
-extern PNTAVM ntavm;
+static PNTAVM ntavm;
 /* Number of top bits of the lower 32 bits of an address that must be zero.
 ** Apparently 0 gives us full 64 bit addresses and 1 gives us the lower 2GB.
 */
@@ -119,7 +119,7 @@ char* find_free(int size)
 	return NULL;
 }
 
-void XR_EARLY_INIT()
+__declspec(dllexport) void XR_EARLY_INIT()
 {
 	ntavm = (PNTAVM)GetProcAddress(GetModuleHandleA("ntdll.dll"),
 	                               "NtAllocateVirtualMemory");

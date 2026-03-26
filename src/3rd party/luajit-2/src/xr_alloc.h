@@ -9,6 +9,6 @@ void XR_INIT();
 void* XR_MMAP(size_t size);
 void XR_DESTROY(void* p, size_t size);
 
-void XR_EARLY_INIT();
+__declspec(dllexport) void XR_EARLY_INIT();
 
 #endif
