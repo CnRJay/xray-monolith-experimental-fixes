@@ -57,6 +57,10 @@ CWeaponStatMgun::SStmAnimWeapon::SStmAnimWeapon()
 	m_current_idx = 0;
 	m_current_mid.invalidate();
 
+	m_hand_bid = BI_NONE;
+	m_hand_pos.set(0, 0, 0);
+	m_hand_vis._set("");
+
 	m_magazine_hide_bid = BI_NONE;
 	m_magazine_hide_anm.clear();
 #if 0
@@ -70,6 +74,7 @@ CWeaponStatMgun::SStmAnimWeapon::SStmAnimWeapon()
 
 CWeaponStatMgun::SStmAnimWeapon::~SStmAnimWeapon()
 {
+	HandRemove();
 }
 
 void CWeaponStatMgun::SStmAnimWeapon::Init(CWeaponStatMgun *stm)
@@ -135,6 +140,13 @@ BOOL CWeaponStatMgun::SStmAnimWeapon::net_Spawn(CSE_Abstract *DC)
 			Play(eStmAnimWeapon_idle);
 		}
 	}
+
+	if (ini->section_exist("animation_hand"))
+	{
+		m_hand_bid = ini->line_exist("animation_hand", "hand_bid") ? K->LL_BoneID(ini->r_string("animation_hand", "hand_bid")) : BI_NONE;
+		m_hand_pos = READ_IF_EXISTS(ini, r_fvector3, "animation_hand", "hand_pos", Fvector().set(0, 0, 0));
+		m_hand_anims[eStmAnimWeapon_idle]._set(READ_IF_EXISTS(ini, r_string, "animation_hand", "hand_idle", ""));
+	}
 	return TRUE;
 }
 
@@ -184,6 +196,54 @@ void CWeaponStatMgun::SStmAnimWeapon::AnimationCallback(CBlend *B)
 {
 	CWeaponStatMgun *stm = (CWeaponStatMgun *)B->CallbackParam;
 	stm->m_anim_weapon.OnAnimationEnd();
+}
+
+bool CWeaponStatMgun::SStmAnimWeapon::HandGetVisualName()
+{
+	m_hand_vis._set("");
+	if (g_player_hud == nullptr || g_player_hud->section_name().size() == 0)
+		return false;
+	LPCSTR str = READ_IF_EXISTS(pSettings, r_string, g_player_hud->section_name().c_str(), "visual", nullptr);
+	if (str == nullptr || strlen(str) == 0)
+		return false;
+	string128 visual_name;
+	xr_sprintf(visual_name, sizeof(visual_name), "%s.ogf", str);
+	m_hand_vis._set(visual_name);
+	return true;
+}
+
+void CWeaponStatMgun::SStmAnimWeapon::HandCreate()
+{
+	if (m_hand_bid == BI_NONE)
+		return;
+	if (HandGetVisualName() == false)
+		return;
+	script_attachment *att = m_stm->get_attachment(m_hand_atm);
+	if (att && xr_strcmp(m_hand_vis, att->GetModelScript()) == 0)
+		return;
+	att = xr_new<script_attachment>(m_hand_atm, m_hand_vis.c_str());
+	R_ASSERT(att);
+	att->SetType(script_attachment_type::eSA_World);
+	att->SetParent(m_stm->cast_game_object());
+	att->SetParentBone(m_hand_bid);
+	att->SetPosition(m_hand_pos);
+	HandPlay(eStmAnimWeapon_idle);
+}
+
+void CWeaponStatMgun::SStmAnimWeapon::HandRemove()
+{
+	m_stm->remove_attachment(m_hand_atm);
+}
+
+void CWeaponStatMgun::SStmAnimWeapon::HandPlay(u8 anim)
+{
+	script_attachment *att = m_stm->get_attachment(m_hand_atm);
+	if (att == nullptr)
+		return;
+	if (m_hand_anims[anim].size())
+	{
+		att->PlayMotion(m_hand_anims[anim].c_str(), false, 1.0);
+	}
 }
 
 void CWeaponStatMgun::SStmAnimWeapon::UpdateMagazineVisibility()

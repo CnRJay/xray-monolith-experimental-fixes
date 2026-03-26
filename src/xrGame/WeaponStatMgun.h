@@ -8,6 +8,9 @@
 #include "PHSkeleton.h"
 #include "../xrphysics/PHUpdateObject.h"
 #include "PhysicsSkeletonObject.h"
+
+#include "player_hud.h"
+#include "script_attachment_manager.h"
 #endif
 
 #include "holder_custom.h"
@@ -20,6 +23,8 @@ class CCameraBase;
 #define DESIRED_DIR 1
 
 #ifdef STATIONARYMGUN_NEW
+#define STM_SHOT_EFFECTOR 0x53564D /* STM ~ 53 56 4D */
+
 class CActor;
 class CInventoryOwner;
 class CInventory;
@@ -346,6 +351,17 @@ public:
 		void OnAnimationEnd();
 		static void AnimationCallback(CBlend *B);
 
+		const LPCSTR m_hand_atm = "stm_hand_atm";
+		u16 m_hand_bid;
+		Fvector m_hand_pos;
+		shared_str m_hand_vis;
+		shared_str m_hand_anims[eStmAnimWeapon_size];
+
+		bool HandGetVisualName();
+		void HandCreate();
+		void HandRemove();
+		void HandPlay(u8 anim);
+
 		u16 m_magazine_hide_bid;
 		xr_vector<MotionID> m_magazine_hide_anm;
 		void UpdateMagazineVisibility();
@@ -409,6 +425,8 @@ private:
 	xr_vector<u16> m_bullet_bones;
 	u16 m_bullet_count;
 	void UpdateBulletVisibility(u16 num);
+
+	shared_str m_shot_effector;
 
 public:
 	enum eState

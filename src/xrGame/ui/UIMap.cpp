@@ -472,6 +472,16 @@ void CUILevelMap::UpdateSpots()
 			}
 		}
 	}
+
+	std::stable_sort(m_ChildWndList.begin(), m_ChildWndList.end(),
+		[](CUIWindow* a, CUIWindow* b) {
+			CMapSpot* sa = smart_cast<CMapSpot*>(a);
+			CMapSpot* sb = smart_cast<CMapSpot*>(b);
+			int la = sa ? sa->get_location_level() : 0;
+			int lb = sb ? sb->get_location_level() : 0;
+			return la < lb;
+		}
+	);
 }
 
 Frect CUILevelMap::CalcWndRectOnGlobal()

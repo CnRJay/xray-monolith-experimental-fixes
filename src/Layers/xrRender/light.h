@@ -39,6 +39,7 @@ public:
 	int sss_refresh;
 	s8 sss_priority;
 	bool sss_is_playerlight;
+    fastdelegate::FastDelegate1<light*, void> sss_on_light_destroy;
 
 	light* omipart_parent;
 	float distance;

@@ -268,6 +268,10 @@ void CSoundRender_CoreA::refresh_devices()
 
 	pDeviceList->Enumerate();
 	Msg("SOUND: OpenAL: Device list refreshed, %d devices found", pDeviceList->GetNumDevices());
+
+	if (pDeviceList->GetNumDevices() == 0)
+		return;
+
 	const ALDeviceDesc* pDeviceDesc = pDeviceList->GetDeviceDescByName(snd_device_name.c_str());
 	if (!pDeviceDesc)
     {
@@ -279,6 +283,9 @@ void CSoundRender_CoreA::refresh_devices()
 void CSoundRender_CoreA::default_device_changed()
 {
     if (!pDeviceList)
+        return;
+
+    if (pDeviceList->GetNumDevices() == 0)
         return;
 
     if (_stricmp(snd_device_name.c_str(), pDeviceList->GetDefaultDeviceName()) == 0)

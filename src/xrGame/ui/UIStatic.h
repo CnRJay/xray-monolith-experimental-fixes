@@ -94,6 +94,7 @@ public:
 	virtual void ColorAnimationSetTextureColor(u32 color, bool only_alpha);
 	virtual void ColorAnimationSetTextColor(u32 color, bool only_alpha);
 
+	void SetNoShaderCache(bool v) { m_UIStaticItem.SetNoShaderCache(v); }
 
 protected:
 	CUILines* m_pTextControl;
@@ -154,4 +155,6 @@ public:
 	virtual void ColorAnimationSetTextColor(u32 color, bool only_alpha);
 
 	CUILines& TextItemControl() { return m_lines; }
+
+
 };

@@ -12,6 +12,7 @@ public:
 		flValidTextureRect =(1 << 1),
 		flValidHeadingPivot =(1 << 2),
 		flFixedLTWhileHeading =(1 << 3),
+        flNoShaderCache = (1 << 4),
 	};
 
 	Frect TextureRect;
@@ -67,6 +68,10 @@ public:
 	void ResetHeadingPivot();
 	IC bool GetFixedLTWhileHeading() const { return !!uFlags.test(flFixedLTWhileHeading); }
 	Fvector2 GetHeadingPivot() { return vHeadingPivot; }
+
+    void SetNoShaderCache(const bool v) {
+        uFlags.set(flNoShaderCache, v);
+    }
 
 private:
 	void RenderInternal(const Fvector2& pos);

@@ -368,7 +368,6 @@ public:
 	void StopAllBlendAnms(bool bForce);
 	float SetBlendAnmTime(LPCSTR name, float time);
 	void render_hud();
-	void render_legs();
 	void render_item_ui();
 	bool render_item_ui_query();
 	u32 anim_play(u16 part, const MotionID& M, BOOL bMixIn, const CMotionDef*& md, float speed, u16 override_part = u16(-1));
@@ -446,11 +445,6 @@ public:
 	Fvector m_adjust_obj[2]; // pos,rot; used for the item/weapon itself
 	Fvector m_adjust_ui_offset[2]; // pos,rot; used for custom device ui
 
-	player_legs_controller m_legs_controller;
-
-	void update_legs(const Fmatrix& cam_trans);
-	void delete_legs_model();
-
 	Fvector m_adjust_firepoint_shell[2][2];
 	xr_map<EBoneCallbackParam, BoneCallbackParams*> m_bone_callback_params; // bonename,params
 	int m_edit_attachment;
@@ -491,4 +485,3 @@ public:
 };
 
 extern player_hud* g_player_hud;
-extern BOOL g_legs_enabled;

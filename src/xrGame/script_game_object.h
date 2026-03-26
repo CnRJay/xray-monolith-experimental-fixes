@@ -183,6 +183,17 @@ public:
 	virtual ~CScriptGameObject();
 	operator CObject*();
 
+    IC bool is_valid() const
+    {
+        // If the pointer was never set, it's obviously invalid.
+        if (!m_game_object) return false;
+
+        // Check lua game object pointer back-reference. If it doesn't point to this, then the object was likely deleted and the pointer is now dangling.
+        if (m_game_object->lua_game_object() != this) return false;
+
+        return true;
+    }
+
 	CGameObject& object() const;
 	CScriptGameObject* Parent() const;
 	void Hit(CScriptHit* tLuaHit);
@@ -1171,6 +1182,107 @@ public:
 
 DECLARE_SCRIPT_REGISTER_FUNCTION
 };
+
+extern BOOL lua_busy_hands_debug;
+extern xr_vector<xr_string> get_lua_stack(lua_State* L);
+
+// Default: Assume the class DOES NOT have is_valid()
+template <typename T, typename = void>
+struct has_is_valid : std::false_type {};
+
+// Specialization: If T->is_valid() compiles, this becomes true
+template <typename T>
+struct has_is_valid<T, std::void_t<decltype(std::declval<T>()->is_valid())>> : std::true_type {};
+
+struct SafeWrapBase
+{
+    template <typename Ret>
+    static Ret handle_invalid()
+    {
+        // This part is never reached because we crash the game,
+        // but we need to satisfy the compiler.
+        if constexpr (std::is_reference_v<Ret>)
+        {
+            return *static_cast<std::remove_reference_t<Ret>*>(nullptr);
+        }
+        else
+        {
+            return Ret();
+        }
+    }
+
+    static void log(LPCSTR error)
+    {
+        ai().script_engine().script_log(ScriptStorage::eLuaMessageTypeError, "[BusyHandsDebug] Error: %s", error);
+    }
+
+    static void log_and_callback(LPCSTR error)
+    {
+        log(error);
+        ai().script_engine().lua_error_not_crash(ai().script_engine().lua());
+    }
+
+    // This generic function accepts ANY instance type (const or non-const) 
+    // and ANY member function pointer type.
+    template <typename InstanceT, typename FuncT, typename... Args>
+    static auto execute(InstanceT instance, FuncT memFunc, Args&&... args)
+        -> decltype((instance->*memFunc)(std::forward<Args>(args)...))
+    {
+        if (lua_busy_hands_debug)
+        {
+            bool is_valid = false;
+
+            if (instance != nullptr)
+            {
+                if constexpr (has_is_valid<InstanceT>::value)
+                    // The class has is_valid(), so we use it
+                    is_valid = instance->is_valid();
+                else
+                    // The class does NOT have is_valid(), so being non-null is good enough
+                    is_valid = true;
+            }
+
+            // Send one last call to Lua to warn users that Lua is about to die
+            if (!is_valid)
+                log_and_callback("Accessing destroyed object");
+        }
+
+        // Sayonara
+        return (instance->*memFunc)(std::forward<Args>(args)...);
+    }
+};
+
+// The primary template (just a declaration)
+template <typename FuncSignature, FuncSignature MemFunc>
+struct SafeWrap;
+
+// 1. Generalized specialization for NON-CONST methods
+template <typename T, typename Ret, typename... Args, Ret(T::* MemFunc)(Args...)>
+struct SafeWrap<Ret(T::*)(Args...), MemFunc> : SafeWrapBase
+{
+    // T is deduced as the class (e.g., CScriptGameObject)
+    using type = Ret(*)(T*, Args...);
+
+    static Ret call(T* instance, Args... args)
+    {
+        return execute(instance, MemFunc, std::forward<Args>(args)...);
+    }
+};
+
+// 2. Generalized specialization for CONST methods
+template <typename T, typename Ret, typename... Args, Ret(T::* MemFunc)(Args...) const>
+struct SafeWrap<Ret(T::*)(Args...) const, MemFunc> : SafeWrapBase
+{
+    // T is deduced as the class, but we use const T* for the instance
+    using type = Ret(*)(const T*, Args...);
+
+    static Ret call(const T* instance, Args... args)
+    {
+        return execute(instance, MemFunc, std::forward<Args>(args)...);
+    }
+};
+
+#define SAFE_WRAP(func) static_cast<typename SafeWrap<decltype(func), func>::type>(SafeWrap<decltype(func), func>::call)
 
 extern void sell_condition(CScriptIniFile* ini_file, LPCSTR section);
 extern void sell_condition(float friend_factor, float enemy_factor);

@@ -14,8 +14,6 @@
 
 extern int g_nearwall;
 
-BOOL g_legs_enabled = FALSE;
-
 player_hud* g_player_hud = NULL;
 Fvector _ancor_pos;
 Fvector _wpn_root_pos;
@@ -705,8 +703,6 @@ player_hud::player_hud()
 	m_model = nullptr;
 	m_model_2 = nullptr;
 
-	m_legs_controller.destroy();
-
 	m_attached_items[0] = nullptr;
 	m_attached_items[1] = nullptr;
 	m_attached_items[SCOPE_ATTACH_IDX] = nullptr;
@@ -766,8 +762,6 @@ player_hud::~player_hud()
 	::Render->model_Delete(v);
 	m_model_2 = nullptr;
 
-	m_legs_controller.destroy();
-
 	delete_data(m_hand_motions);
 	delete_data(m_script_layers);
 	delete_data(m_movement_layers);
@@ -826,8 +820,6 @@ void player_hud::load(const shared_str& player_hud_sect, bool force)
 		IRenderVisual* v = m_model_2->dcast_RenderVisual();
 		::Render->model_Delete(v);
 	}
-
-	delete_legs_model();
 
 	const shared_str& model_name = pSettings->r_string(player_hud_sect, "visual");
 	::Render->hud_loading = true;
@@ -1068,8 +1060,6 @@ extern float psHUD_FOV;
 
 void player_hud::update(const Fmatrix& cam_trans)
 {
-	update_legs(cam_trans);
-
 	Fmatrix trans = cam_trans;
 	Fmatrix trans_b = cam_trans;
 	CWeapon* wep = smart_cast<CWeapon*>(Actor()->inventory().ActiveItem());

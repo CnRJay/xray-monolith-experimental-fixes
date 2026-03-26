@@ -114,7 +114,7 @@ static Fbox bbCrouchBox;
 static Fvector vFootCenter;
 static Fvector vFootExt;
 
-BOOL showActorBody = FALSE;
+int showActorBody = 0;
 
 Flags32 psActorFlags = {AF_GODMODE_RT | AF_AUTOPICKUP | AF_RUN_BACKWARD | AF_IMPORTANT_SAVE | AF_USE_TRACERS};
 int psActorSleepTime = 1;
@@ -263,6 +263,7 @@ CActor::CActor() : CEntityAlive(), current_ik_cam_shift(0)
 
 CActor::~CActor()
 {
+    m_legs_controller.destroy();
 	xr_delete(m_location_manager);
 	xr_delete(m_memory);
 	xr_delete(game_news_registry);
@@ -531,6 +532,8 @@ void CActor::Load(LPCSTR section)
 	m_sInventoryBoxUseAction = "inventory_box_use";
 	//---------------------------------------------------------------------
 	m_sHeadShotParticle = READ_IF_EXISTS(pSettings, r_string, section, "HeadShotParticle", 0);
+
+    m_legs_controller.destroy();
 }
 
 void CActor::set_actor_box_y_offset(u32 box_num, float offset)
@@ -1192,6 +1195,7 @@ void CActor::UpdateCL()
 	CWeapon* pWeapon = smart_cast<CWeapon*>(inventory().ActiveItem());
 
 	cam_Update(float(Device.dwTimeDelta) / 1000.0f, currentFOV());
+    m_legs_controller.update(this);
 
 #ifdef STATIONARYMGUN_NEW
 	CWeaponStatMgun *stm = smart_cast<CWeaponStatMgun *>(Holder());
@@ -2150,23 +2154,34 @@ bool CActor::AllowActorShadow()
 #include "../xrEngine/FDemoRecord.h"
 extern xr_unordered_set<CDemoRecord*> pDemoRecords;
 BOOL legs_in_demo_record = FALSE;
+BOOL legs_in_low_crouch = FALSE;
+extern BOOL g_legs_enabled;
 void CActor::renderable_Render()
 {
 	VERIFY(_valid(XFORM()));
+
+    static auto canRenderLegs = [](CActor* actor, CHolderCustom* m_holder)
+    {
+        return g_legs_enabled && (legs_in_low_crouch || !(actor->mstate_real & mcCrouch && actor->mstate_real & mcAccel)) && g_player_hud && !m_holder && (legs_in_demo_record || pDemoRecords.empty()) && showActorBody == 0;
+    };
 
 	if (cam_active == eacFirstEye)
 	{
 		if (::Render->active_phase() == 0) // can render first person body here
 		{
-			if (g_player_hud && !m_holder && (legs_in_demo_record || pDemoRecords.empty()) && !showActorBody)
+			if (canRenderLegs(this, m_holder))
 			{
-				g_player_hud->render_legs();
+				m_legs_controller.render();
 			}
 
-            if (showActorBody)
+            if (showActorBody == 1 || showActorBody == 2)
             {
                 inherited::renderable_Render();
-                CInventoryOwner::renderable_Render();
+
+                if (showActorBody == 2)
+                {
+                    CInventoryOwner::renderable_Render();
+                }
             }
 
 			//if (fpBody) 
@@ -2174,10 +2189,53 @@ void CActor::renderable_Render()
 		}
 		else if (AllowActorShadow()) // render actor shadow
 		{
-			inherited::renderable_Render();
-			if ((IsFocused() || (!(IsFocused() && ((!m_holder) ||
-				(m_holder && m_holder->allowWeapon() && m_holder->HUDView()))))))
-				CInventoryOwner::renderable_Render();
+            if (canRenderLegs(this, m_holder))
+            {
+                Fvector diff(XFORMShadow.c);
+                diff.sub(XFORM().c);
+                float m = diff.magnitude();
+                diff.normalize_safe();
+
+                // Render full body from legs controller without hiding bones for shadow correctness
+                // Solves potential issues with manipulating actor's XFORM
+                m_legs_controller.update(this, true);
+                m_legs_controller.render();
+
+                // Ideally the active item also should be duplicated but leave this for now
+                // Move active item
+                PIItem pItem = inventory().ActiveItem();
+                if (pItem)
+                {
+                    auto& v = pItem->object();
+                    v.XFORM().c.mad(diff, m);
+                    v.renderable_Render();
+                }
+
+                // Move torch
+                auto I = attachedItem(CLSID_DEVICE_TORCH);
+                if (I)
+                {
+                    auto& v = I->object();
+                    v.XFORM().c.mad(diff, m);
+                    v.renderable_Render();
+                }
+
+                // Move bolt
+                if (inventory().GetActiveSlot() == BOLT_SLOT)
+                {
+                    auto bI = inventory().ItemFromSlot(BOLT_SLOT);
+                    if (bI)
+                    {
+                        auto& v = bI->object();
+                        v.XFORM().c.mad(diff, m);
+                    }
+                }
+            }
+            else
+            {
+                inherited::renderable_Render();
+                CInventoryOwner::renderable_Render();
+            }			
 		}
 	}
 
