@@ -27,7 +27,7 @@ public:
 	virtual void set_active(bool b) { bActive = b; }
 	virtual bool get_active() { return bActive; }
 
-	virtual void set_position(const Fvector& P)
+	virtual void set_position(const Fvector& P, const float eps = EPS_L)
 	{
 	}
 

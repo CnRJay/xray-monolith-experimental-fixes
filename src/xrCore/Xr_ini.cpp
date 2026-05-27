@@ -27,9 +27,9 @@ void CInifile::Destroy(CInifile* ini)
 	xr_delete(ini);
 }
 
-bool sect_pred(const CInifile::Sect* x, LPCSTR val) noexcept
+bool sect_pred(const CInifile::Sect& x, LPCSTR val) noexcept
 {
-	return xr_strcmp(*x->Name, val) < 0;
+	return xr_strcmp(x.Name, val) < 0;
 };
 
 //------------------------------------------------------------------------------
@@ -108,7 +108,7 @@ BOOL CInifile::Sect::line_exist(LPCSTR L, LPCSTR* val)
 
 // Initialize the static cache member
 BOOL dltx_use_cache = TRUE;
-xr_unordered_flat_map<xr_string, xr_unordered_flat_map<shared_str, CInifile::Items>> CInifile::CachedData;
+xr_unordered_flat_map<xr_string, CInifile::Root> CInifile::CachedData;
 xrCriticalSection CInifile::CacheCS;
 void CInifile::InvalidateCache(LPCSTR path) {
 	if (path)
@@ -127,7 +127,6 @@ void CInifile::InvalidateCache(LPCSTR path) {
 		for (auto& p : CachedData)
 		{
 			p.second.clear();
-			p.second.rehash(0);
 		}
 		CachedData.clear();
 		CachedData.rehash(0);
@@ -139,14 +138,11 @@ void CInifile::InsertIntoDATA(xr_unordered_flat_map<shared_str, Items>& FinalDat
 	DATA.reserve(FinalData.size());
 	for (auto& SectPair : FinalData)
 	{
-		auto s = xr_new<Sect>();
-		s->Name = SectPair.first;
-		s->Data = SectPair.second;
-		DATA.push_back(s);
+        DATA.push_back({ SectPair.first, SectPair.second });
 	}
-	std::sort(DATA.begin(), DATA.end(), [](const Sect* a, const Sect* b)
+	std::sort(DATA.begin(), DATA.end(), [](const Sect& a, const Sect& b)
 	{
-		return xr_strcmp(a->Name, b->Name) < 0;
+		return xr_strcmp(a.Name, b.Name) < 0;
 	});
 }
 
@@ -204,7 +200,7 @@ CInifile::CInifile(LPCSTR szFileName,
 			{
 				if (print_dltx_warnings)
 					Msg("[DLTX] [%s] Found data in cache", m_file_name);
-				InsertIntoDATA(CachedDataIt->second);
+                DATA = CachedDataIt->second;
 				return;
 			}
 		}
@@ -234,11 +230,6 @@ CInifile::~CInifile()
 		if (!save_as())
 			Log("!Can't save inifile:", m_file_name);
 	}
-
-	RootIt I = DATA.begin();
-	RootIt E = DATA.end();
-	for (; I != E; ++I)
-		xr_delete(*I);
 }
 
 void CInifile::insert_item(Sect* tgt, Item& I)
@@ -1378,16 +1369,16 @@ void CInifile::Load(IReader* F, LPCSTR path
 		}
 	}
 
-	if (dltx_use_cache && IsValidFileNameForCache())
-	{
-		xr_string FileName(m_file_name);
-		toLowerCase(FileName);
-		xrCriticalSectionGuard g(CacheCS);
-		CachedData.emplace(std::move(FileName), ResolvedData);
-	}
-
 	// Insert all finalized sections into final container
 	InsertIntoDATA(ResolvedData);
+
+    if (dltx_use_cache && IsValidFileNameForCache())
+    {
+        xr_string FileName(m_file_name);
+        toLowerCase(FileName);
+        xrCriticalSectionGuard g(CacheCS);
+        CachedData.emplace(std::move(FileName), DATA);
+    }
 
 	// Handle override warnings
 	if (OverrideData.size())
@@ -1434,8 +1425,8 @@ void CInifile::DLTX_print(LPCSTR sec, LPCSTR line)
 	Msg("%s", m_file_name);
 	if (!sec) {
 		for (const auto& d : DATA) {
-			Msg("[%s]", d->Name.c_str());
-			for (const auto& s : d->Data) {
+			Msg("[%s]", d.Name.c_str());
+			for (const auto& s : d.Data) {
 				printIniItemLine(s);
 			}
 		}
@@ -1515,17 +1506,17 @@ void CInifile::save_as(IWriter& writer, bool bcheck) const
 	string4096 temp, val;
 	for (RootCIt r_it = DATA.begin(); r_it != DATA.end(); ++r_it)
 	{
-		xr_sprintf(temp, sizeof(temp), "[%s]", (*r_it)->Name.c_str());
+		xr_sprintf(temp, sizeof(temp), "[%s]", (*r_it).Name.c_str());
 		writer.w_string(temp);
 		if (bcheck)
 		{
-			xr_sprintf(temp, sizeof(temp), "; %d %d %d", (*r_it)->Name._get()->dwCRC,
-			           (*r_it)->Name._get()->dwReference,
-			           (*r_it)->Name._get()->dwLength);
+			xr_sprintf(temp, sizeof(temp), "; %d %d %d", (*r_it).Name._get()->dwCRC,
+			           (*r_it).Name._get()->dwReference,
+			           (*r_it).Name._get()->dwLength);
 			writer.w_string(temp);
 		}
 
-		for (const Item& I : (*r_it)->Data)
+		for (const Item& I : (*r_it).Data)
 		{
 			if (*I.first)
 			{
@@ -1575,7 +1566,7 @@ bool CInifile::save_as(LPCSTR new_fname)
 BOOL CInifile::section_exist(LPCSTR S) const
 {
 	RootCIt I = std::lower_bound(DATA.begin(), DATA.end(), S, sect_pred);
-	return (I != DATA.end() && xr_strcmp(*(*I)->Name, S) == 0);
+	return (I != DATA.end() && xr_strcmp(*(*I).Name, S) == 0);
 }
 
 BOOL CInifile::line_exist(LPCSTR S, LPCSTR L) const
@@ -1621,11 +1612,12 @@ CInifile::Sect& CInifile::r_section(LPCSTR S) const
 	xr_strcpy(section, sizeof(section), S);
 	strlwr(section);
 	RootCIt I = std::lower_bound(DATA.begin(), DATA.end(), section, sect_pred);
-	if (!(I != DATA.end() && xr_strcmp(*(*I)->Name, section) == 0))
+	if (!(I != DATA.end() && xr_strcmp(*(*I).Name, section) == 0))
 	{
 		Debug.fatal(DEBUG_INFO, "Can't open section '%s'. Please attach [*.ini_log] file to your bug report", S);
 	}
-	return **I;
+    const CInifile::Sect& res = *I;
+	return const_cast<CInifile::Sect&>(res);
 }
 
 LPCSTR CInifile::r_string(LPCSTR S, LPCSTR L) const
@@ -1853,10 +1845,8 @@ void CInifile::w_string(LPCSTR S, LPCSTR L, LPCSTR V, LPCSTR comment)
 	if (!section_exist(sect))
 	{
 		// create _new_ section
-		Sect* NEW = xr_new<Sect>();
-		NEW->Name = sect;
 		RootIt I = std::lower_bound(DATA.begin(), DATA.end(), sect, sect_pred);
-		DATA.insert(I, NEW);
+		DATA.insert(I, Sect{ sect });
 	}
 
 	// parse line/value

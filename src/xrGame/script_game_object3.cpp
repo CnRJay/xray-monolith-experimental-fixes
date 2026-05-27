@@ -148,6 +148,35 @@ void CScriptGameObject::SetVisualMemoryEnabled(bool enabled)
 		custom_monster->memory().visual().enable(enabled);
 }
 
+float CScriptGameObject::GetObjectVisibleDistance(const CScriptGameObject* obj)
+{
+    if (obj == nullptr)
+    {
+        ai().script_engine().script_log(ScriptStorage::eLuaMessageTypeError, "CGameObject: [%s] wrong parameters.", object().cNameSect_str());
+    }
+    CCustomMonster* custom_monster = smart_cast<CCustomMonster*>(&object());
+    if (custom_monster == nullptr)
+    {
+        ai().script_engine().script_log(ScriptStorage::eLuaMessageTypeError, "CGameObject: [%s] cannot access class member CCustomMonster.", object().cNameSect_str());
+    }
+    float distance = 0.0F;
+    return custom_monster->visual_memory()->object_visible_distance(&obj->object(), distance);
+}
+
+float CScriptGameObject::GetObjectLuminocity(const CScriptGameObject* obj)
+{
+    if (obj == nullptr)
+    {
+        ai().script_engine().script_log(ScriptStorage::eLuaMessageTypeError, "CGameObject: [%s] wrong parameters.", object().cNameSect_str());
+    }
+    CCustomMonster* custom_monster = smart_cast<CCustomMonster*>(&object());
+    if (custom_monster == nullptr)
+    {
+        ai().script_engine().script_log(ScriptStorage::eLuaMessageTypeError, "CGameObject: [%s] cannot access class member CCustomMonster.", object().cNameSect_str());
+    }
+    return custom_monster->visual_memory()->object_luminocity(&obj->object());
+}
+
 CScriptGameObject* CScriptGameObject::GetEnemy() const
 {
 	CCustomMonster* l_tpCustomMonster = smart_cast<CCustomMonster*>(&object());

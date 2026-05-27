@@ -137,6 +137,8 @@ class_<CScriptGameObject> script_register_game_object1(class_<CScriptGameObject>
 		.def("reset_action_queue", SAFE_WRAP(&CScriptGameObject::ResetActionQueue))
 		.def("see", SAFE_WRAP(&CScriptGameObject::CheckObjectVisibility))
 		.def("see", SAFE_WRAP(&CScriptGameObject::CheckTypeVisibility))
+		.def("get_object_visible_distance", SAFE_WRAP(&CScriptGameObject::GetObjectVisibleDistance))
+		.def("get_object_luminocity", SAFE_WRAP(&CScriptGameObject::GetObjectLuminocity))
 
 		.def("who_hit_name", SAFE_WRAP(&CScriptGameObject::WhoHitName))
 		.def("who_hit_section_name", SAFE_WRAP(&CScriptGameObject::WhoHitSectionName))
@@ -176,30 +178,30 @@ class_<CScriptGameObject> script_register_game_object1(class_<CScriptGameObject>
 
 		.def("patrol", SAFE_WRAP(&CScriptGameObject::GetPatrolPathName))
 
-		.def("get_ammo_in_magazine", SAFE_WRAP(&CScriptGameObject::GetAmmoElapsed))
-		.def("get_ammo_total", SAFE_WRAP(&CScriptGameObject::GetSuitableAmmoTotal))
-		.def("set_ammo_elapsed", SAFE_WRAP(&CScriptGameObject::SetAmmoElapsed))
+		.def("get_ammo_in_magazine", &CScriptGameObject::GetAmmoElapsed)
+		.def("get_ammo_total", &CScriptGameObject::GetSuitableAmmoTotal)
+		.def("set_ammo_elapsed", &CScriptGameObject::SetAmmoElapsed)
 		//Alundaio
 		.def("use", SAFE_WRAP(&CScriptGameObject::Use))
-		.def("start_trade", SAFE_WRAP(&CScriptGameObject::StartTrade))
-		.def("start_upgrade", SAFE_WRAP(&CScriptGameObject::StartUpgrade))
-		.def("set_ammo_type", SAFE_WRAP(&CScriptGameObject::SetAmmoType))
-		.def("get_ammo_type", SAFE_WRAP(&CScriptGameObject::GetAmmoType))
-		.def("get_ammo_count_for_type", SAFE_WRAP(&CScriptGameObject::GetAmmoCount))
-		.def("get_main_weapon_type", SAFE_WRAP(&CScriptGameObject::GetMainWeaponType))
-		.def("get_weapon_type", SAFE_WRAP(&CScriptGameObject::GetWeaponType))
-		.def("set_main_weapon_type", SAFE_WRAP(&CScriptGameObject::SetMainWeaponType))
-		.def("set_weapon_type", SAFE_WRAP(&CScriptGameObject::SetWeaponType))
-		.def("has_ammo_type", SAFE_WRAP(&CScriptGameObject::HasAmmoType))
-		.def("get_weapon_substate", SAFE_WRAP(&CScriptGameObject::GetWeaponSubstate))
+		.def("start_trade", &CScriptGameObject::StartTrade)
+		.def("start_upgrade", &CScriptGameObject::StartUpgrade)
+		.def("set_ammo_type", &CScriptGameObject::SetAmmoType)
+		.def("get_ammo_type", &CScriptGameObject::GetAmmoType)
+		.def("get_ammo_count_for_type", &CScriptGameObject::GetAmmoCount)
+		.def("get_main_weapon_type", &CScriptGameObject::GetMainWeaponType)
+		.def("get_weapon_type", &CScriptGameObject::GetWeaponType)
+		.def("set_main_weapon_type", &CScriptGameObject::SetMainWeaponType)
+		.def("set_weapon_type", &CScriptGameObject::SetWeaponType)
+		.def("has_ammo_type", &CScriptGameObject::HasAmmoType)
+		.def("get_weapon_substate", &CScriptGameObject::GetWeaponSubstate)
 		.def("set_weight", SAFE_WRAP(&CScriptGameObject::SetWeight))
 		//-Alundaio
 		.def("set_queue_size", SAFE_WRAP(&CScriptGameObject::SetQueueSize))
 		//		.def("best_hit",					&CScriptGameObject::GetBestHit)
 		//		.def("best_sound",					&CScriptGameObject::GetBestSound)
-		.def("best_danger", SAFE_WRAP(&CScriptGameObject::GetBestDanger))
-		.def("best_enemy", SAFE_WRAP(&CScriptGameObject::GetBestEnemy))
-		.def("best_item", SAFE_WRAP(&CScriptGameObject::GetBestItem))
+		.def("best_danger", &CScriptGameObject::GetBestDanger)
+		.def("best_enemy", &CScriptGameObject::GetBestEnemy)
+		.def("best_item", &CScriptGameObject::GetBestItem)
 		.def("action_count", &CScriptGameObject::GetActionCount)
 		.def("action_by_index", SAFE_WRAP(&CScriptGameObject::GetActionByIndex))
 
@@ -220,20 +222,20 @@ class_<CScriptGameObject> script_register_game_object1(class_<CScriptGameObject>
 		.def("motivation_action_manager", &script_action_planner)
 
 		// basemonster
-		.def("set_force_anti_aim", SAFE_WRAP(&CScriptGameObject::set_force_anti_aim))
-		.def("get_force_anti_aim", SAFE_WRAP(&CScriptGameObject::get_force_anti_aim))
+		.def("set_force_anti_aim", &CScriptGameObject::set_force_anti_aim)
+		.def("get_force_anti_aim", &CScriptGameObject::get_force_anti_aim)
 
-		.def("set_override_animation", SAFE_WRAP((void (CScriptGameObject::*)(pcstr))(&CScriptGameObject::set_override_animation)))
-		.def("set_override_animation", SAFE_WRAP((void (CScriptGameObject::*)(u32, u32))(&CScriptGameObject::set_override_animation)))
-		.def("clear_override_animation", SAFE_WRAP(&CScriptGameObject::clear_override_animation))
+		.def("set_override_animation", (void (CScriptGameObject::*)(pcstr))(&CScriptGameObject::set_override_animation))
+		.def("set_override_animation", (void (CScriptGameObject::*)(u32, u32))(&CScriptGameObject::set_override_animation))
+		.def("clear_override_animation", &CScriptGameObject::clear_override_animation)
 
 		// burer
-		.def("burer_set_force_gravi_attack", SAFE_WRAP(&CScriptGameObject::burer_set_force_gravi_attack))
-		.def("burer_get_force_gravi_attack", SAFE_WRAP(&CScriptGameObject::burer_get_force_gravi_attack))
+		.def("burer_set_force_gravi_attack", &CScriptGameObject::burer_set_force_gravi_attack)
+		.def("burer_get_force_gravi_attack", &CScriptGameObject::burer_get_force_gravi_attack)
 
 		// poltergeist
-		.def("poltergeist_set_actor_ignore", SAFE_WRAP(&CScriptGameObject::poltergeist_set_actor_ignore))
-		.def("poltergeist_get_actor_ignore", SAFE_WRAP(&CScriptGameObject::poltergeist_get_actor_ignore))
+		.def("poltergeist_set_actor_ignore", &CScriptGameObject::poltergeist_set_actor_ignore)
+		.def("poltergeist_get_actor_ignore", &CScriptGameObject::poltergeist_get_actor_ignore)
 
 		// bloodsucker
 		.def("force_visibility_state", SAFE_WRAP(&CScriptGameObject::force_visibility_state))
@@ -253,14 +255,14 @@ class_<CScriptGameObject> script_register_game_object1(class_<CScriptGameObject>
 		.def("fake_death_stand_up", SAFE_WRAP(&CScriptGameObject::fake_death_stand_up))
 
 		// base monster
-		.def("skip_transfer_enemy", SAFE_WRAP(&CScriptGameObject::skip_transfer_enemy))
-		.def("set_home", SAFE_WRAP((void (CScriptGameObject::*)(LPCSTR, float, float, bool, float))(&CScriptGameObject::set_home)))
-		.def("set_home", SAFE_WRAP((void (CScriptGameObject::*)(u32, float, float, bool, float))(&CScriptGameObject::set_home)))
-		.def("remove_home", SAFE_WRAP(&CScriptGameObject::remove_home))
-		.def("berserk", SAFE_WRAP(&CScriptGameObject::berserk))
+		.def("skip_transfer_enemy", &CScriptGameObject::skip_transfer_enemy)
+		.def("set_home", (void (CScriptGameObject::*)(LPCSTR, float, float, bool, float))(&CScriptGameObject::set_home))
+		.def("set_home", (void (CScriptGameObject::*)(u32, float, float, bool, float))(&CScriptGameObject::set_home))
+		.def("remove_home", &CScriptGameObject::remove_home)
+		.def("berserk", &CScriptGameObject::berserk)
 		.def("can_script_capture", &CScriptGameObject::can_script_capture)
-		.def("set_custom_panic_threshold", SAFE_WRAP(&CScriptGameObject::set_custom_panic_threshold))
-		.def("set_default_panic_threshold", SAFE_WRAP(&CScriptGameObject::set_default_panic_threshold))
+		.def("set_custom_panic_threshold", &CScriptGameObject::set_custom_panic_threshold)
+		.def("set_default_panic_threshold", &CScriptGameObject::set_default_panic_threshold)
 
 		// inventory owner
 		.def("get_current_outfit", SAFE_WRAP(&CScriptGameObject::GetCurrentOutfit))
@@ -274,7 +276,7 @@ class_<CScriptGameObject> script_register_game_object1(class_<CScriptGameObject>
 		.def("can_select_weapon", SAFE_WRAP((bool (CScriptGameObject::*)() const)&CScriptGameObject::can_select_weapon))
 		.def("can_select_weapon", SAFE_WRAP((void (CScriptGameObject::*)(bool))&CScriptGameObject::can_select_weapon))
 		// searchlight
-		.def("get_current_direction", SAFE_WRAP(&CScriptGameObject::GetCurrentDirection))
+		.def("get_current_direction", &CScriptGameObject::GetCurrentDirection)
 
 		// movement manager
 		.def("set_body_state", SAFE_WRAP(&CScriptGameObject::set_body_state))
@@ -330,16 +332,16 @@ class_<CScriptGameObject> script_register_game_object1(class_<CScriptGameObject>
 
 		.def("head_orientation", SAFE_WRAP(&CScriptGameObject::head_orientation))
 
-		.def("set_actor_position", SAFE_WRAP(&CScriptGameObject::SetActorPosition))
-		.def("set_actor_direction", SAFE_WRAP((void (CScriptGameObject::*)(float)) &CScriptGameObject::SetActorDirection))
-		.def("set_actor_direction", SAFE_WRAP((void (CScriptGameObject::*)(float, float))& CScriptGameObject::SetActorDirection))
-		.def("set_actor_direction", SAFE_WRAP((void (CScriptGameObject::*)(float, float, float))& CScriptGameObject::SetActorDirection))
-		.def("set_actor_direction", SAFE_WRAP((void (CScriptGameObject::*)(const Fvector&))&CScriptGameObject::SetActorDirection))
+		.def("set_actor_position", &CScriptGameObject::SetActorPosition)
+		.def("set_actor_direction", (void (CScriptGameObject::*)(float)) &CScriptGameObject::SetActorDirection)
+		.def("set_actor_direction", (void (CScriptGameObject::*)(float, float))& CScriptGameObject::SetActorDirection)
+		.def("set_actor_direction", (void (CScriptGameObject::*)(float, float, float))& CScriptGameObject::SetActorDirection)
+		.def("set_actor_direction", (void (CScriptGameObject::*)(const Fvector&))&CScriptGameObject::SetActorDirection)
 
-		.def("disable_hit_marks", SAFE_WRAP((void (CScriptGameObject::*)(bool))&CScriptGameObject::DisableHitMarks))
-		.def("disable_hit_marks", SAFE_WRAP((bool (CScriptGameObject::*)() const)&CScriptGameObject::DisableHitMarks))
-		.def("get_movement_speed", SAFE_WRAP(&CScriptGameObject::GetMovementSpeed))
-		.def("set_movement_speed", SAFE_WRAP(&CScriptGameObject::SetMovementSpeed))	// momopate: db.actor:set_momvement_speed(vector vel)
+		.def("disable_hit_marks", (void (CScriptGameObject::*)(bool))&CScriptGameObject::DisableHitMarks)
+		.def("disable_hit_marks", (bool (CScriptGameObject::*)() const)&CScriptGameObject::DisableHitMarks)
+		.def("get_movement_speed", &CScriptGameObject::GetMovementSpeed)
+		.def("set_movement_speed", &CScriptGameObject::SetMovementSpeed)	// momopate: db.actor:set_momvement_speed(vector vel)
 
 		.def("set_npc_position", SAFE_WRAP(&CScriptGameObject::SetNpcPosition))
 
@@ -359,10 +361,10 @@ class_<CScriptGameObject> script_register_game_object1(class_<CScriptGameObject>
 		.def("invulnerable", SAFE_WRAP((bool (CScriptGameObject::*)() const)&CScriptGameObject::invulnerable))
 		.def("invulnerable", SAFE_WRAP((void (CScriptGameObject::*)(bool))&CScriptGameObject::invulnerable))
 
-		.def("get_smart_cover_description", SAFE_WRAP(&CScriptGameObject::get_smart_cover_description))
+		.def("get_smart_cover_description", &CScriptGameObject::get_smart_cover_description)
 		.def("set_visual_name", SAFE_WRAP(&CScriptGameObject::set_visual_name))
-		.def("get_inv_weight", SAFE_WRAP(&CScriptGameObject::get_current_weight))
-		.def("get_inv_max_weight", SAFE_WRAP(&CScriptGameObject::get_max_weight))
+		.def("get_inv_weight", &CScriptGameObject::get_current_weight)
+		.def("get_inv_max_weight", &CScriptGameObject::get_max_weight)
 		.def("get_visual_name", SAFE_WRAP(&CScriptGameObject::get_visual_name))
 
 		.def("can_throw_grenades", SAFE_WRAP((bool (CScriptGameObject::*)() const)&CScriptGameObject::can_throw_grenades))
@@ -443,14 +445,14 @@ class_<CScriptGameObject> script_register_game_object1(class_<CScriptGameObject>
 		.def("death_sound_enabled", SAFE_WRAP((bool (CScriptGameObject::*)() const)&CScriptGameObject::death_sound_enabled))
 
 		.def("register_door_for_npc", SAFE_WRAP(&CScriptGameObject::register_door))
-		.def("unregister_door_for_npc", SAFE_WRAP(&CScriptGameObject::unregister_door))
-		.def("on_door_is_open", SAFE_WRAP(&CScriptGameObject::on_door_is_open))
-		.def("on_door_is_closed", SAFE_WRAP(&CScriptGameObject::on_door_is_closed))
-		.def("lock_door_for_npc", SAFE_WRAP(&CScriptGameObject::lock_door_for_npc))
-		.def("unlock_door_for_npc", SAFE_WRAP(&CScriptGameObject::unlock_door_for_npc))
-		.def("is_door_locked_for_npc", SAFE_WRAP(&CScriptGameObject::is_door_locked_for_npc))
-		.def("is_door_blocked_by_npc", SAFE_WRAP(&CScriptGameObject::is_door_blocked_by_npc))
+		.def("unregister_door_for_npc", &CScriptGameObject::unregister_door)
+		.def("on_door_is_open", &CScriptGameObject::on_door_is_open)
+		.def("on_door_is_closed", &CScriptGameObject::on_door_is_closed)
+		.def("lock_door_for_npc", &CScriptGameObject::lock_door_for_npc)
+		.def("unlock_door_for_npc", &CScriptGameObject::unlock_door_for_npc)
+		.def("is_door_locked_for_npc", &CScriptGameObject::is_door_locked_for_npc)
+		.def("is_door_blocked_by_npc", &CScriptGameObject::is_door_blocked_by_npc)
 		.def("is_weapon_going_to_be_strapped", SAFE_WRAP(&CScriptGameObject::is_weapon_going_to_be_strapped))
 
-		.def("reload_weapon", SAFE_WRAP(&CScriptGameObject::reload_weapon));
+		.def("reload_weapon", &CScriptGameObject::reload_weapon);
 }

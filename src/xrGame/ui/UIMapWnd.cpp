@@ -978,14 +978,21 @@ void CUIMapWnd::Reset()
 void CUIMapWnd::SpotSelected(CUIWindow* w)
 {
 	CMapSpot* sp = smart_cast<CMapSpot*>(w);
-	if (!sp)
+	if (!sp || !sp->MapLocation())
 	{
 		return;
 	}
+	CMapLocation* ml = sp->MapLocation();
 
-	CGameTask* t = Level().GameTaskManager().HasGameTask(sp->MapLocation(), true);
+	CGameTask* t = Level().GameTaskManager().HasGameTask(ml, true);
 	if (t)
 	{
 		Level().GameTaskManager().SetActiveTask(t);
 	}
+
+	::luabind::functor<void> funct;
+	if (ai().script_engine().functor("pda.map_spot_selected", funct))
+		funct(ml->ObjectID(),
+			ml->GetLevelName().c_str(),
+			ml->spot_type);
 }

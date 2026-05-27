@@ -57,6 +57,7 @@
 
 using namespace StalkerSpace;
 
+float g_ai_reload_threshold = 0.5f;
 
 static float const DANGER_DISTANCE = 3.f;
 static u32 const DANGER_INTERVAL = 120000;
@@ -660,7 +661,7 @@ bool CAI_Stalker::ready_to_detour()
 	if (!weapon)
 		return (false);
 
-	return (weapon->GetAmmoElapsed() > weapon->GetAmmoMagSize() / 2);
+	return ((float)weapon->GetAmmoElapsed() > (float)weapon->GetAmmoMagSize() * g_ai_reload_threshold);
 }
 
 class ray_query_param

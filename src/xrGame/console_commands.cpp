@@ -146,6 +146,7 @@ namespace crash_saving {
 }
 extern BOOL pda_map_zoom_in_to_mouse;
 extern BOOL pda_map_zoom_out_to_mouse;
+extern BOOL pda_show_map_labels;
 extern BOOL mouseWheelChangeWeapon;
 extern BOOL mouseWheelInvertZoom;
 extern BOOL mouseWheelInvertChangeWeapons;
@@ -174,6 +175,7 @@ extern BOOL interruptFireOnAimToggle;
 extern BOOL mt_UpdateWeaponSounds;
 
 extern BOOL alifeObjectHangingLampIgnoreMatchConfiguration;
+extern BOOL duplicate_story_id_crash;
 
 extern BOOL spawn_antifreeze;
 extern BOOL spawn_antifreeze_debug;
@@ -182,6 +184,7 @@ extern float IK_CALC_DIST;
 extern float IK_CALC_SSA;
 extern float IK_ALWAYS_CALC_DIST;
 extern BOOL r_optimize_calculate_bones;
+extern BOOL r_optimize_torch;
 
 extern BOOL g_legs_enabled;
 extern float legs_fwd_offset;
@@ -189,6 +192,28 @@ extern float legs_spine_offset_y;
 extern BOOL legs_in_demo_record;
 extern BOOL legs_in_low_crouch;
 extern BOOL legs_attach_to_camera;
+extern BOOL legs_render_attachments_shadow;
+
+extern BOOL r__actor_shadow_in_demo_record;
+
+extern int enemy_manager_useful_cache_time;
+
+extern u32 ENEMY_INERTIA_TIME_TO_SOMEBODY;
+extern u32 ENEMY_INERTIA_TIME_TO_ACTOR;
+extern u32 ENEMY_INERTIA_TIME_FROM_ACTOR;
+extern u32 ENEMY_INERTIA_TIME_SEARCH;
+
+extern float g_ai_vision_speed_boost;
+extern float g_ai_reload_threshold;
+extern float g_ai_aim_fire_angle;
+int g_ai_hold_position_inertia_base = 1000;
+int g_ai_hold_position_inertia_random = 2000;
+int g_ai_grenade_throw_delay_base = 1000;
+int g_ai_grenade_throw_delay_step = 500;
+extern u32 g_ai_aim_inertia_time;
+extern u32 g_ai_aim_queue_inertia_time;
+extern float g_ai_danger_ricochet_score;
+BOOL g_ai_move_to_cover_run = FALSE;
 
 extern CrosshairSettings g_crosshair_camera_near;
 extern CrosshairSettings g_crosshair_camera_far;
@@ -251,6 +276,9 @@ extern float recon_maxspeed;
 
 extern float wallmark_range_static;
 extern float wallmark_range_skeleton;
+
+extern float movement_manager_move_along_path_query_pos_threshold;
+extern float movement_manager_move_along_path_query_pos_threshold_sqr;
 
 ENGINE_API extern float g_console_sensitive;
 
@@ -844,6 +872,7 @@ extern float offsetZ;
 extern float viewportNearOffset;
 extern int firstPersonDeathPositionSmoothing;
 extern int firstPersonDeathDirectionSmoothing;
+extern float firstPersonDeathHeadScale;
 
 class CCC_FPDDirectionOffset : public CCC_Vector3
 {
@@ -2382,6 +2411,23 @@ public:
 	}
 };
 
+class CCC_MovePathQueryPosThreshold : public CCC_Float
+{
+public:
+    CCC_MovePathQueryPosThreshold(LPCSTR N) :
+        CCC_Float(N, &movement_manager_move_along_path_query_pos_threshold, 0.f, 2.f)
+    {
+    };
+
+    virtual void Execute(LPCSTR args)
+    {
+        CCC_Float::Execute(args);
+
+        movement_manager_move_along_path_query_pos_threshold = std::atof(args);
+        movement_manager_move_along_path_query_pos_threshold_sqr = movement_manager_move_along_path_query_pos_threshold * movement_manager_move_along_path_query_pos_threshold;
+    }
+};
+
 void CCC_RegisterCommands()
 {
 	//Not needed for a singleplayer-only mod
@@ -2634,6 +2680,34 @@ void CCC_RegisterCommands()
     CMD4(CCC_Integer, "g_legs_in_demo_record", &legs_in_demo_record, 0, 1);
     CMD4(CCC_Integer, "g_legs_in_low_crouch", &legs_in_low_crouch, 0, 1);
     CMD4(CCC_Integer, "g_legs_attach_to_camera", &legs_attach_to_camera, 0, 1);
+    CMD4(CCC_Integer, "g_legs_render_attachments_shadow", &legs_render_attachments_shadow, 0, 1);
+
+    CMD4(CCC_Integer, "r__actor_shadow_in_demo_record", &r__actor_shadow_in_demo_record, 0, 1);
+
+    CMD4(CCC_Integer, "g_enemy_manager_useful_cache_time", &enemy_manager_useful_cache_time, -1, 500);
+
+    CMD4(CCC_Integer, "ai_enemy_inertia_time_to_somebody", (int*)&ENEMY_INERTIA_TIME_TO_SOMEBODY, 0, 120000);
+    CMD4(CCC_Integer, "ai_enemy_inertia_time_to_actor", (int*)&ENEMY_INERTIA_TIME_TO_ACTOR, 0, 120000);
+    CMD4(CCC_Integer, "ai_enemy_inertia_time_from_actor", (int*)&ENEMY_INERTIA_TIME_FROM_ACTOR, 0, 120000);
+    CMD4(CCC_Integer, "ai_search_inertia_time", (int*)&ENEMY_INERTIA_TIME_SEARCH, 0, 120000);
+
+    CMD4(CCC_Integer, "ai_hold_position_inertia_base", &g_ai_hold_position_inertia_base, 0, 120000);
+    CMD4(CCC_Integer, "ai_hold_position_inertia_random", &g_ai_hold_position_inertia_random, 0, 120000);
+    CMD4(CCC_Integer, "ai_grenade_throw_delay_base", &g_ai_grenade_throw_delay_base, 0, 10000);
+    CMD4(CCC_Integer, "ai_grenade_throw_delay_step", &g_ai_grenade_throw_delay_step, 0, 10000);
+
+    extern u32 g_ai_aim_inertia_time;
+    extern u32 g_ai_aim_queue_inertia_time;
+    CMD4(CCC_Integer, "ai_aim_inertia_time", (int*)&g_ai_aim_inertia_time, 0, 10000);
+    CMD4(CCC_Integer, "ai_aim_queue_inertia_time", (int*)&g_ai_aim_queue_inertia_time, 0, 10000);
+    CMD4(CCC_Float, "ai_danger_ricochet_score", &g_ai_danger_ricochet_score, 0.0f, 10000.0f);
+	
+	extern BOOL g_ai_move_to_cover_run;
+	CMD4(CCC_Integer, "ai_move_to_cover_run", &g_ai_move_to_cover_run, 0, 1);
+
+    CMD4(CCC_Float, "ai_vision_speed_boost", &g_ai_vision_speed_boost, 0.1f, 10.0f);
+    CMD4(CCC_Float, "ai_reload_threshold", &g_ai_reload_threshold, 0.01f, 1.0f);
+    CMD4(CCC_Float, "ai_aim_fire_angle", &g_ai_aim_fire_angle, 0.0f, PI);
 
 	CMD3(CCC_Mask, "g_firepos", &psActorFlags, AF_FIREPOS);
 	CMD3(CCC_Mask, "g_firepos_zoom", &psActorFlags, AF_FIREPOS_ZOOM);
@@ -2656,6 +2730,9 @@ void CCC_RegisterCommands()
 
 	CMD4(CCC_Integer, "g_decouple_horz_recoil", &g_decouple_horz_recoil, 0, 1);
 	CMD4(CCC_Integer, "g_use_non_linear_inertia", &g_use_non_linear_inertia, 0, 1);
+
+    extern XRPHYSICS_API BOOL g_clamp_actor_camera_collision;
+    CMD4(CCC_Integer, "g_clamp_actor_camera_collision", &g_clamp_actor_camera_collision, 0, 1);
 
 	CMD4(CCC_Float, "g_recon_show_speed", &recon_show_speed, 0.f, 20.f);
 	CMD4(CCC_Float, "g_recon_hide_speed", &recon_hide_speed, 0.f, 20.f);
@@ -2915,6 +2992,7 @@ void CCC_RegisterCommands()
 	CMD4(CCC_Float, "ik_calc_ssa", &IK_CALC_SSA, 0.001f, 0.02f);
 	CMD4(CCC_Float, "ik_always_calc_dist", &IK_ALWAYS_CALC_DIST, 10, 50);
 	CMD4(CCC_Integer, "r__optimize_calculate_bones", &r_optimize_calculate_bones, 0, 1);
+	CMD4(CCC_Integer, "r__optimize_torch", &r_optimize_torch, 0, 1);
 
 	CMD4(CCC_Integer, "g_progressive_stamina_cost", &progressiveStaminaCost, 0, 1);
 	CMD4(CCC_Integer, "g_npcs_look_at_actor", &NPCsLookAtActor, 0, 1);
@@ -2987,7 +3065,8 @@ void CCC_RegisterCommands()
 	CMD1(CCC_FPDPositionOffset, "first_person_death_position_offset");
 	CMD4(CCC_Integer, "first_person_death_position_smoothing", &firstPersonDeathPositionSmoothing, 1, 30);
 	CMD4(CCC_Integer, "first_person_death_direction_smoothing", &firstPersonDeathDirectionSmoothing, 1, 60);
-	CMD4(CCC_Float, "first_person_death_near_plane_offset", &viewportNearOffset, -.1f, .5f);
+    CMD4(CCC_Float, "first_person_death_near_plane_offset", &viewportNearOffset, -.1f, .5f);
+    CMD4(CCC_Float, "first_person_death_head_scale", &firstPersonDeathHeadScale, 1.f, 10.f);
 
 	//legs 
 
@@ -2996,6 +3075,7 @@ void CCC_RegisterCommands()
 	// PDA commands
 	CMD4(CCC_Integer, "pda_map_zoom_in_to_mouse", &pda_map_zoom_in_to_mouse, 0, 1);
 	CMD4(CCC_Integer, "pda_map_zoom_out_to_mouse", &pda_map_zoom_out_to_mouse, 0, 1);
+	CMD4(CCC_Integer, "pda_show_map_labels", &pda_show_map_labels, 0, 1);
 
 	// Mouse Wheel
 	CMD4(CCC_Integer, "mouse_wheel_change_weapon", &mouseWheelChangeWeapon, 0, 1);
@@ -3030,6 +3110,9 @@ void CCC_RegisterCommands()
 
 	// Ignore "no renderer type set for hanging-lamp" error
 	CMD4(CCC_Integer, "hanging_lamp_ignore_match_configuration", &alifeObjectHangingLampIgnoreMatchConfiguration, 0, 1);
+
+    // Ignore "Specified story object is already in the Story registry!: error
+    CMD4(CCC_Integer, "duplicate_story_id_crash", &duplicate_story_id_crash, 0, 1);
 
 	// Poltergeists spawn corpses on death
 	CMD4(CCC_Integer, "poltergeist_spawn_corpse_on_death", &poltergeist_spawn_corpse_on_death, 0, 1);
@@ -3070,6 +3153,7 @@ void CCC_RegisterCommands()
 	CMD4(CCC_Float, "g_wallmark_range_static", &wallmark_range_static, 0.f, 1000.f);
 	CMD4(CCC_Float, "g_wallmark_range_skeleton", &wallmark_range_skeleton, 0.f, 1000.f);
 
+	CMD1(CCC_MovePathQueryPosThreshold, "movement_manager_move_along_path_query_pos_threshold");
     CMD4(CCC_Integer, "show_actor_body", &showActorBody, 0, 2);
     CMD4(CCC_Integer, "disable_actor_body_rotation_delay", &disableActorBodyRotationDelay, 0, 1);
 }

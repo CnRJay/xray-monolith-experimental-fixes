@@ -16,6 +16,8 @@
 #include "actor.h"
 #include "object_broker.h"
 
+float g_ai_danger_ricochet_score = 3000.f;
+
 struct CDangerPredicate
 {
 	const CObject* m_object;
@@ -203,7 +205,7 @@ float CDangerManager::do_evaluate(const CDangerObject& object) const
 	case CDangerObject::eDangerTypeBulletRicochet:
 		{
 			// I perceived bullet(knife) ricochet
-			result += 3000.f;
+			result += g_ai_danger_ricochet_score;
 			break;
 		}
 	case CDangerObject::eDangerTypeAttackSound:
@@ -296,16 +298,8 @@ void CDangerManager::add(const CSoundObject& object)
 
 	if ((object.m_sound_type & SOUND_TYPE_INJURING) == SOUND_TYPE_INJURING)
 	{
-		bool do_add = true;
-		if (object.m_object)
-		{
-			const CActor* actor = smart_cast<const CActor*>(object.m_object);
-			if (actor && !m_object->is_relation_enemy(actor))
-				do_add = false;
-		}
-		if (do_add)
-			add(CDangerObject(obj, object.m_object_params.m_position, object.m_level_time,
-			                  CDangerObject::eDangerTypeEntityAttacked, CDangerObject::eDangerPerceiveTypeSound));
+		add(CDangerObject(obj, object.m_object_params.m_position, object.m_level_time,
+		                  CDangerObject::eDangerTypeEntityAttacked, CDangerObject::eDangerPerceiveTypeSound));
 		return;
 	}
 

@@ -711,12 +711,13 @@ void CEnvironment::load_weathers() {
 
     env.reserve(sections.size());
 
-    sections_type::const_iterator i = sections.begin();
-    sections_type::const_iterator e = sections.end();
-    for (; i != e; ++i) {
-      CEnvDescriptor *object = create_descriptor((*i)->Name, config);
-      env.push_back(object);
-    }
+		sections_type::const_iterator i = sections.begin();
+		sections_type::const_iterator e = sections.end();
+		for (; i != e; ++i)
+		{
+			CEnvDescriptor* object = create_descriptor((*i).Name, config);
+			env.push_back(object);
+		}
 
     CInifile::Destroy(config);
   }
@@ -766,12 +767,13 @@ void CEnvironment::load_weather_effects() {
     env.reserve(sections.size() + 2);
     env.push_back(create_descriptor("00:00:00", false));
 
-    sections_type::const_iterator i = sections.begin();
-    sections_type::const_iterator e = sections.end();
-    for (; i != e; ++i) {
-      CEnvDescriptor *object = create_descriptor((*i)->Name, config);
-      env.push_back(object);
-    }
+		sections_type::const_iterator i = sections.begin();
+		sections_type::const_iterator e = sections.end();
+		for (; i != e; ++i)
+		{
+			CEnvDescriptor* object = create_descriptor((*i).Name, config);
+			env.push_back(object);
+		}
 
     CInifile::Destroy(config);
 

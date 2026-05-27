@@ -137,8 +137,8 @@ public:
 	virtual void set_volumetric_intensity(float fValue) { m_volumetric_intensity = ps_ssfx_volumetric.y; }
 	virtual void set_volumetric_distance(float fValue) { m_volumetric_distance = 1.0f; }
 
-	virtual void set_position(const Fvector& P);
-	virtual void set_rotation(const Fvector& D, const Fvector& R);
+	virtual void set_position(const Fvector& P, const float eps = EPS);
+	virtual void set_rotation(const Fvector& D, const Fvector& R, const float eps = EPS);
 	virtual void set_cone(float angle);
 	virtual void set_range(float R);
 

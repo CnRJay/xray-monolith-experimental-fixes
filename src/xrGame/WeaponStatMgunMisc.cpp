@@ -48,6 +48,30 @@ void CWeaponStatMgun::OnEvent(NET_Packet &P, u16 type)
 	}
 }
 
+void CWeaponStatMgun::OverrideRangeFOV(const CGameObject* npc, float& range)
+{
+    /*
+        The default visibility range isn't enough for stationary machine guns.
+        Max max_view_distance of danger mental state is 114m after all calculation in object_visible_distance() - update_range_fov().
+        It also affects other place that use update_range_fov().
+        It makes gunner:see(target) return false in LUA.
+        This overrider allows changing start_range in update_range_fov() effectively changing visibility range.
+        For now it's used for machine gunners only. It allow gunners to engage actor from further away.
+    */
+    if (m_on_range_fov_callback.size() == 0)
+        return;
+    ::luabind::functor<::luabind::object> lua_function;
+    if (ai().script_engine().functor(m_on_range_fov_callback.c_str(), lua_function) == false)
+        return;
+    ::luabind::object lua_var = ::luabind::newtable(ai().script_engine().lua());
+    lua_var["range"] = range;
+    ::luabind::object lua_res = lua_function(lua_game_object(), npc->lua_game_object(), lua_var);
+    if (lua_res && lua_res.type() == LUA_TTABLE)
+    {
+        range = ::luabind::object_cast<float>(lua_res["range"]);
+    }
+}
+
 /*----------------------------------------------------------------------------------------------------
 	SStmAnimWeapon
 ----------------------------------------------------------------------------------------------------*/

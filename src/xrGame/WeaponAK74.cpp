@@ -133,6 +133,9 @@ void CWeaponAK74::script_register	(lua_State *L)
 			.def("GetZoomRotateTime", &CWeapon::GetZoomRotateTime)
 			.def("SetZoomRotateTime", &CWeapon::SetZoomRotateTime)
 
+            // verdatim
+            .def("ForceSetZoomType", &CWeapon::ForceSetZoomType)
+
 			// demonized: World model on stalkers adjustments
 			.def("Set_mOffset", &CWeapon::set_mOffset)
 			.def("Set_mStrapOffset", &CWeapon::set_mStrapOffset)

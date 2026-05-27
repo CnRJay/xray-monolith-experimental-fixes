@@ -14,9 +14,9 @@ using namespace luabind;
 class_<CScriptGameObject> script_register_game_object_trader(class_<CScriptGameObject> &&instance)
 {
 	return std::move(instance)
-		.def("set_trader_global_anim", SAFE_WRAP(&CScriptGameObject::set_trader_global_anim))
-		.def("set_trader_head_anim", SAFE_WRAP(&CScriptGameObject::set_trader_head_anim))
-		.def("set_trader_sound", SAFE_WRAP(&CScriptGameObject::set_trader_sound))
-		.def("external_sound_start", SAFE_WRAP(&CScriptGameObject::external_sound_start))
-		.def("external_sound_stop", SAFE_WRAP(&CScriptGameObject::external_sound_stop));
+		.def("set_trader_global_anim", &CScriptGameObject::set_trader_global_anim)
+		.def("set_trader_head_anim", &CScriptGameObject::set_trader_head_anim)
+		.def("set_trader_sound", &CScriptGameObject::set_trader_sound)
+		.def("external_sound_start", &CScriptGameObject::external_sound_start)
+		.def("external_sound_stop", &CScriptGameObject::external_sound_stop);
 }

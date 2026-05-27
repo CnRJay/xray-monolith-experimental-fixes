@@ -1060,27 +1060,28 @@ void CActor::g_Physics(Fvector& _accel, float jump, float dt)
 
 	if (Local() && g_Alive())
 	{
-		if (character_physics_support()->movement()->gcontact_Was)
-			Cameras().AddCamEffector(xr_new<CEffectorFall>(character_physics_support()->movement()->gcontact_Power));
+        CPHMovementControl* const mctrl = character_physics_support()->movement();
 
-		if (!fis_zero(character_physics_support()->movement()->gcontact_HealthLost))
+		if (mctrl->gcontact_Was)
+			Cameras().AddCamEffector(xr_new<CEffectorFall>(mctrl->gcontact_Power));
+
+		if (!fis_zero(mctrl->gcontact_HealthLost))
 		{
-			VERIFY(character_physics_support());
-			VERIFY(character_physics_support()->movement());
-			ICollisionDamageInfo* di = character_physics_support()->movement()->CollisionDamageInfo();
+			ICollisionDamageInfo* di = mctrl->CollisionDamageInfo();
 			VERIFY(di);
 			bool b_hit_initiated = di->GetAndResetInitiated();
+            CObject* initiator = mctrl->gcontact_Initiator ? mctrl->gcontact_Initiator : di->DamageInitiator();
 			Fvector hdir;
 			di->HitDir(hdir);
-			SetHitInfo(this, nullptr, 0, Fvector().set(0, 0, 0), hdir);
+			SetHitInfo(initiator, nullptr, 0, Fvector().set(0, 0, 0), hdir);
 			//				Hit	(m_PhysicMovementControl->gcontact_HealthLost,hdir,di->DamageInitiator(),m_PhysicMovementControl->ContactBone(),di->HitPos(),0.f,ALife::eHitTypeStrike);//s16(6 + 2*::Random.randI(0,2))
 			if (Level().CurrentControlEntity() == this)
 			{
-				SHit HDS = SHit(character_physics_support()->movement()->gcontact_HealthLost,
+				SHit HDS = SHit(mctrl->gcontact_HealthLost,
 				                //.								0.0f,
 				                hdir,
-				                di->DamageInitiator(),
-				                character_physics_support()->movement()->ContactBone(),
+				                initiator,
+				                mctrl->ContactBone(),
 				                di->HitPos(),
 				                0.f,
 				                di->HitType(),
@@ -1090,8 +1091,8 @@ void CActor::g_Physics(Fvector& _accel, float jump, float dt)
 
 				NET_Packet l_P;
 				HDS.GenHeader(GE_HIT, ID());
-				HDS.whoID = di->DamageInitiator()->ID();
-				HDS.weaponID = di->DamageInitiator()->ID();
+				HDS.whoID = initiator->ID();
+				HDS.weaponID = initiator->ID();
 				HDS.Write_Packet(l_P);
 
 				u_EventSend(l_P);
@@ -2136,10 +2137,14 @@ void CActor::RenderCamAttached()
 	}
 }
 
+#include "../xrEngine/FDemoRecord.h"
+extern xr_unordered_set<CDemoRecord*> pDemoRecords;
 extern Flags32 ps_actor_shadow_flags;
-
+BOOL r__actor_shadow_in_demo_record = TRUE;
 bool CActor::AllowActorShadow()
 {
+    if (!r__actor_shadow_in_demo_record && !pDemoRecords.empty()) return false;
+    if (!r__actor_shadow_in_demo_record && m_FPCam) return false;
 	if (!ps_actor_shadow_flags.test(1)) return false;
 	if (::Render->get_generation() != ::Render->GENERATION_R2) return false;
 
@@ -2151,19 +2156,28 @@ bool CActor::AllowActorShadow()
 }
 
 #include "debug_renderer.h"
-#include "../xrEngine/FDemoRecord.h"
-extern xr_unordered_set<CDemoRecord*> pDemoRecords;
 BOOL legs_in_demo_record = FALSE;
 BOOL legs_in_low_crouch = FALSE;
+BOOL legs_render_attachments_shadow = TRUE;
 extern BOOL g_legs_enabled;
+
+bool canRenderLegs(CActor* actor, CHolderCustom* m_holder) noexcept
+{
+    return g_legs_enabled
+        && (legs_in_low_crouch || !(actor->MovingState() & mcCrouch && actor->MovingState() & mcAccel))
+        && g_player_hud
+        && !m_holder
+        && (legs_in_demo_record || pDemoRecords.empty())
+        && showActorBody == 0
+        && !actor->m_FPCam;
+};
+
 void CActor::renderable_Render()
 {
 	VERIFY(_valid(XFORM()));
 
-    static auto canRenderLegs = [](CActor* actor, CHolderCustom* m_holder)
-    {
-        return g_legs_enabled && (legs_in_low_crouch || !(actor->mstate_real & mcCrouch && actor->mstate_real & mcAccel)) && g_player_hud && !m_holder && (legs_in_demo_record || pDemoRecords.empty()) && showActorBody == 0;
-    };
+    // leg shadows are disabled for DX8 and DX9
+    bool validRendererForShadow = (::Render->get_generation() == ::Render->GENERATION_R2) && (::Render->get_dx_level() != 0x00090000);
 
 	if (cam_active == eacFirstEye)
 	{
@@ -2189,46 +2203,67 @@ void CActor::renderable_Render()
 		}
 		else if (AllowActorShadow()) // render actor shadow
 		{
-            if (canRenderLegs(this, m_holder))
+            if (validRendererForShadow)
             {
-                Fvector diff(XFORMShadow.c);
-                diff.sub(XFORM().c);
-                float m = diff.magnitude();
-                diff.normalize_safe();
-
-                // Render full body from legs controller without hiding bones for shadow correctness
-                // Solves potential issues with manipulating actor's XFORM
-                m_legs_controller.update(this, true);
-                m_legs_controller.render();
-
-                // Ideally the active item also should be duplicated but leave this for now
-                // Move active item
-                PIItem pItem = inventory().ActiveItem();
-                if (pItem)
+                static u32 renderFrame = 0;
+                bool needAdjust = false;
+                if (Device.dwFrame != renderFrame)
                 {
-                    auto& v = pItem->object();
-                    v.XFORM().c.mad(diff, m);
-                    v.renderable_Render();
+                    renderFrame = Device.dwFrame;
+                    needAdjust = true;
                 }
-
-                // Move torch
-                auto I = attachedItem(CLSID_DEVICE_TORCH);
-                if (I)
+                
+                if (canRenderLegs(this, m_holder))
                 {
-                    auto& v = I->object();
-                    v.XFORM().c.mad(diff, m);
-                    v.renderable_Render();
-                }
+                    Fvector diff(XFORMShadow.c);
+                    diff.sub(XFORM().c);
+                    float m = diff.magnitude();
+                    diff.normalize_safe();
 
-                // Move bolt
-                if (inventory().GetActiveSlot() == BOLT_SLOT)
-                {
-                    auto bI = inventory().ItemFromSlot(BOLT_SLOT);
-                    if (bI)
+                    // Render full body from legs controller without hiding bones for shadow correctness
+                    // Solves potential issues with manipulating actor's XFORM
+                        m_legs_controller.update(this, true);
+                        m_legs_controller.render();
+
+                        // Ideally the active item also should be duplicated but leave this for now
+                        // Move active item
+                        PIItem pItem = inventory().ActiveItem();
+                    if (pItem)
                     {
-                        auto& v = bI->object();
-                        v.XFORM().c.mad(diff, m);
+                        auto& v = pItem->object();
+                        if (needAdjust)
+                            v.XFORM().c.mad(diff, m);
+                        v.renderable_Render();
                     }
+
+                    // Move torch
+                    if (legs_render_attachments_shadow)
+                    {
+                        for (const auto& I : m_attached_objects)
+                        {
+                            auto& v = I->object();
+                            if (needAdjust)
+                                v.XFORM().c.mad(diff, m);
+                            v.renderable_Render();
+                        }
+                    }
+
+                    // Move bolt
+                    if (inventory().GetActiveSlot() == BOLT_SLOT)
+                    {
+                        auto bI = inventory().ItemFromSlot(BOLT_SLOT);
+                        if (bI)
+                        {
+                            auto& v = bI->object();
+                            if (needAdjust)
+                                v.XFORM().c.mad(diff, m);
+                        }
+                    }
+                }
+                else
+                {
+                    inherited::renderable_Render();
+                    CInventoryOwner::renderable_Render();
                 }
             }
             else
@@ -2251,6 +2286,9 @@ BOOL CActor::renderable_ShadowGenerate()
 {
 	if (m_holder)
 		return FALSE;
+
+    if (::Render->get_generation() == ::Render->GENERATION_R1 && cam_active == eacFirstEye && canRenderLegs(this, m_holder))
+        return FALSE;
 
 	return inherited::renderable_ShadowGenerate();
 }

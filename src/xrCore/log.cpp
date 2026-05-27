@@ -216,26 +216,32 @@ void AddOne(const char* split)
 	// DUMP_PHASE;
 	{
 		// demonized: add timestamps to log
-        // Optimized string construction
-        std::string t;
-        t.reserve(xr_strlen(split) + 32);
-
+		std::string t = split;
 		if (logTimestamps) {
-			if (split[0] != 0 && is_console_mark((Console_mark)split[0])) {
-                t += split[0];
-                t += " [";
-                t += timeInHMSMMM();
-                t += "] ";
-                t += (split + 1); // Skip the mark
-			} else {
-                t += "[";
-                t += timeInHMSMMM();
-                t += "] ";
-                t += split;
-            }
-		} else {
-            t = split;
-        }
+			std::string c = "";
+			if (t.length() > 0 && is_console_mark((Console_mark)t[0])) {
+				c += t[0];
+				c += " ";
+				t.erase(0, 1);
+			}
+			t = c + "[" + timeInHMSMMM() + "] " + t;
+		}
+		auto temp = shared_str(t.c_str());
+		static shared_str last_str;
+		static int items_count;
+
+		if (last_str.equal(temp))
+		{
+			xr_string tmp = temp.c_str();
+
+			if (items_count == 0)
+				items_count = 2;
+			else
+				items_count++;
+
+			tmp += " [";
+			tmp += std::to_string(items_count).c_str();
+			tmp += "]";
 
         // Push to Async Queue
         {

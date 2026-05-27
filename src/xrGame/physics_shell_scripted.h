@@ -40,7 +40,9 @@ public:
 	bool IsBreakingBlocked() { return physics_impl().IsBreakingBlocked(); }
 	bool isBreakable() { return physics_impl().isBreakable(); }
 	void get_LinearVel(Fvector& velocity) const { physics_impl().get_LinearVel(velocity); }
+	void set_LinearVel(Fvector& velocity) { physics_impl().set_LinearVel(velocity); }
 	void get_AngularVel(Fvector& velocity) const { physics_impl().get_AngularVel(velocity); }
+	void set_AngularVel(Fvector& velocity) { physics_impl().set_AngularVel(velocity); }
 	void freeze();
 	void unfreeze();
 DECLARE_SCRIPT_REGISTER_FUNCTION

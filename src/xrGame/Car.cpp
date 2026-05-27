@@ -314,17 +314,17 @@ BOOL CCar::net_Spawn(CSE_Abstract* DC)
 	m_zoom_factor_def = READ_IF_EXISTS(ini, r_float, cfg, "zoom_factor_def", 1.0F);
 	m_zoom_factor_aim = READ_IF_EXISTS(ini, r_float, cfg, "zoom_factor_aim", 1.0F);
 
-	if (ini->line_exist(cfg, "camera_first"))
+	if (ini->line_exist("camera", "cam_first"))
 	{
-		camera[ectFirst]->Load(ini->r_string(cfg, "camera_first"));
+		camera[ectFirst]->Load(ini->r_string("camera", "cam_first"));
 	}
-	if (ini->line_exist(cfg, "camera_chase"))
+	if (ini->line_exist("camera", "cam_chase"))
 	{
-		camera[ectChase]->Load(ini->r_string(cfg, "camera_chase"));
+		camera[ectChase]->Load(ini->r_string("camera", "cam_chase"));
 	}
-	if (ini->line_exist(cfg, "camera_free"))
+	if (ini->line_exist("camera", "cam_free"))
 	{
-		camera[ectFree]->Load(ini->r_string(cfg, "camera_free"));
+		camera[ectFree]->Load(ini->r_string("camera", "cam_free"));
 	}
 
 	m_remote_control = !!READ_IF_EXISTS(ini, r_bool, cfg, "remote_control", FALSE);

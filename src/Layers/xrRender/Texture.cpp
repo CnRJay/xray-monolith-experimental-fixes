@@ -17,11 +17,16 @@ xrCriticalSection fs_lock;
 // #include "std_classes.h"
 // #include "xr_avi.h"
 
-void fix_texture_name(LPSTR fn) {
-  LPSTR _ext = strext(fn);
-  if (_ext && (0 == stricmp(_ext, ".tga") || 0 == stricmp(_ext, ".dds") ||
-               0 == stricmp(_ext, ".bmp") || 0 == stricmp(_ext, ".ogm")))
-    *_ext = 0;
+void fix_texture_name(LPSTR fn)
+{
+	LPSTR _ext = strext(fn);
+	if (_ext &&
+		(0 == stricmp(_ext, ".tga") ||
+			0 == stricmp(_ext, ".dds") ||
+			0 == stricmp(_ext, ".bmp") ||
+			0 == stricmp(_ext, ".ogm") ||
+            0 == stricmp(_ext, ".gif")))
+		*_ext = 0;
 }
 
 extern ENGINE_API int g_current_renderer;

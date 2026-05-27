@@ -563,6 +563,11 @@ bool CUIXmlInit::InitProgressBar(CUIXml& xml_doc, LPCSTR path,
 
 	pWnd->InitProgressBar(pos, size, mode);
 
+    if (xml_doc.ReadAttribInt(path, index, "snap_no_delay") == 1)
+    {
+        pWnd->SetSnapNoDelay(true);
+    }
+
 	float min = xml_doc.ReadAttribFlt(path, index, "min");
 	float max = xml_doc.ReadAttribFlt(path, index, "max");
 	float ppos = xml_doc.ReadAttribFlt(path, index, "pos");

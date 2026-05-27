@@ -57,6 +57,28 @@ _G.game_objects_without_actor_iter = function()
 	end
 end
 
+-- Game objects binder callback.net_spawn_after
+-- Bind a function to run right after engine net_Spawn.
+--[[ Example:
+function CObjectBinder:net_spawn(se_abstract)
+	if not (object_binder.net_spawn(self,se_abstract)) then
+		return false
+	end
+	self.object:set_callback(callback.net_spawn_after,self.net_spawn_after,self)
+	return true
+end
+
+function CObjectBinder:net_destroy()
+	self.object:set_callback(callback.net_spawn_after,nil)
+	object_binder.net_destroy(self)
+end
+
+function CObjectBinder:net_spawn_after()
+	-- Run your codes here.
+	-- Resources created in engine net_Spawn are available for use.
+end
+--]]
+
 -- Pseudogiant callbacks
 AddScriptCallback("pseudogiant_on_start_stomp_animation")
 AddScriptCallback("pseudogiant_before_stomp")
@@ -248,6 +270,21 @@ _G.COnRightClickMap = function(property_ui, map_table)
 	pda.map_spot_property.id = map_table.object_id
 	pda.map_spot_property.level_name = map_table.level_name
 	SendScriptCallback("on_map_right_click", property_ui, map_table)
+end
+
+--[[
+
+On left click on PDA map spot callback
+Params are id, level_name, spot_type
+	id - alife object id of the spot, 65535 if none
+	level_name - name of the level the spot belongs to
+	spot_type - icon id from map_spots XML
+
+--]]
+
+AddScriptCallback("on_map_spot_selected")
+function pda.map_spot_selected(id, level_name, spot_type)
+	SendScriptCallback("on_map_spot_selected", id, level_name, spot_type)
 end
 
 -- On receive game news callback
@@ -479,11 +516,30 @@ _G.CSE_ALifeDynamicObject_on_unregister = function(id)
 	SendScriptCallback("server_object_on_unregister", alife_object(id))
 end
 
+_G.server_objects_registry = {}
+function server_object_on_register(obj)
+	server_objects_registry[obj.id] = obj
+end
+function server_object_on_unregister(obj)
+	server_objects_registry[obj.id] = nil
+end
+
 -- If this is called, Lua called an exported LuaBind method that will result in engine getting a fatal error, leading to semibroken Lua state, ie. "Busy Hands" 
 AddScriptCallback("on_luabind_fatal_error")
 local LuaFatalErrorUIInstance = nil
 local on_luabind_fatal_error_triggered = false
+local in_main_menu = false
 _G.COnLuaBindFatalError = function(offender)
+	-- Don't engage when actor is gone, it doesn't matter at this point
+	-- The engine would still log the error
+	if not db.actor then
+		return
+	end
+
+	if in_main_menu then
+		return
+	end
+
 	if on_luabind_fatal_error_triggered then
 		return
 	end
@@ -554,9 +610,59 @@ function LuaFatalErrorUI:OnMsgNo()
 	device():pause(false)
 end
 
+function main_menu_on_init()
+	in_main_menu = true
+end
+
+function main_menu_on_quit()
+	in_main_menu = false
+end
+
+-- Orleon
+AddScriptCallback("actor_on_item_sell")
+AddScriptCallback("actor_on_item_buy")
+
 function on_game_start()
+	RegisterScriptCallback("main_menu_on_init", main_menu_on_init)
+	RegisterScriptCallback("main_menu_on_quit", main_menu_on_quit)
 	RegisterScriptCallback("actor_on_first_update", actor_on_first_update)
 	RegisterScriptCallback("ActorMenu_on_item_after_move", ActorMenu_on_item_after_move)
 	RegisterScriptCallback("game_object_on_net_spawn", game_object_on_net_spawn)
 	RegisterScriptCallback("game_object_on_net_destroy", game_object_on_net_destroy)
+	RegisterScriptCallback("server_object_on_register", server_object_on_register)
+	RegisterScriptCallback("server_object_on_unregister", server_object_on_unregister)
+
+	-- Orleon, patch later for compatibility
+	ui_inventory_UIInventory_TMode_Sell = ui_inventory.UIInventory.TMode_Sell
+	ui_inventory.UIInventory.TMode_Sell = function(self)
+	    self.on_sell_callback_flag = true
+	    ui_inventory_UIInventory_TMode_Sell(self)
+	    self.on_sell_callback_flag = false
+	end
+
+	ui_inventory_UIInventory_TMode_Buy = ui_inventory.UIInventory.TMode_Buy
+	ui_inventory.UIInventory.TMode_Buy = function(self)
+	    self.on_buy_callback_flag = true
+	    ui_inventory_UIInventory_TMode_Buy(self)
+	    self.on_buy_callback_flag = false
+	end
+
+	ui_inventory_UIInventory_On_Item_Exchange = ui_inventory.UIInventory.On_Item_Exchange
+	ui_inventory.UIInventory.On_Item_Exchange = function(self, npc_from, npc_to, obj)
+	    if self.on_sell_callback_flag then
+	        local cc = self.CC["actor_trade"]
+	        if cc then
+	            local sell_cost = utils_item.get_item_cost(obj, cc.trade_profile)
+	            SendScriptCallback("actor_on_item_sell", obj, sell_cost, npc_to)
+	        end
+	    end
+	    if self.on_buy_callback_flag then
+	        local cc = self.CC["npc_trade"]
+	        if cc then
+	            local buy_cost = utils_item.get_item_cost(obj, cc.trade_profile)
+	            SendScriptCallback("actor_on_item_buy", obj, buy_cost, npc_from)
+	        end
+	    end
+	    ui_inventory_UIInventory_On_Item_Exchange(self, npc_from, npc_to, obj)
+	end
 end

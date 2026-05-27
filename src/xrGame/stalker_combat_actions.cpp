@@ -10,6 +10,8 @@
 #include "stalker_combat_actions.h"
 #include "ai/stalker/ai_stalker.h"
 #include "script_game_object.h"
+
+extern BOOL g_ai_move_to_cover_run;
 #include "stalker_decision_space.h"
 #include "inventory.h"
 #include "cover_evaluators.h"
@@ -48,7 +50,7 @@
 const float TEMP_DANGER_DISTANCE = 5.f;
 const u32 TEMP_DANGER_INTERVAL = 120000;
 
-const float CLOSE_MOVE_DISTANCE = -10.f;
+const float CLOSE_MOVE_DISTANCE = 1.5f;
 
 const u32 CROUCH_LOOK_OUT_DELTA = 5000;
 
@@ -513,7 +515,7 @@ void CStalkerActionTakeCover::initialize()
 
 	m_body_state = object().movement().body_state();
 	//	m_movement_type								= Random.randI(2) ? eMovementTypeRun : eMovementTypeWalk;
-	m_movement_type = eMovementTypeWalk;
+	m_movement_type = g_ai_move_to_cover_run ? eMovementTypeRun : eMovementTypeWalk;
 
 	object().movement().set_desired_direction(0);
 	object().movement().set_path_type(MovementManager::ePathTypeLevelPath);
@@ -596,7 +598,33 @@ void CStalkerActionTakeCover::execute()
 	}
 	else
 	{
-		object().movement().set_nearest_accessible_position();
+		bool teammate_cover_found = false;
+		if (object().agent_manager().member().members().size() > 1) {
+			for (auto& it : object().agent_manager().member().members()) {
+				CAI_Stalker* teammate = &it->object();
+				if (teammate->ID() == object().ID()) continue;
+				
+				if (teammate->memory().enemy().selected()) {
+					Fvector teammate_pos = teammate->Position();
+					Fvector teammate_dir = teammate->Direction();
+					
+					Fvector stack_pos;
+					stack_pos.mad(teammate_pos, teammate_dir, -1.2f);
+					
+					u32 target_vertex_id = ai().level_graph().vertex_id(stack_pos);
+					if (ai().level_graph().valid_vertex_id(target_vertex_id) && ai().level_graph().is_accessible(target_vertex_id)) {
+						object().movement().set_level_dest_vertex(target_vertex_id);
+						object().movement().set_desired_position(&stack_pos);
+						teammate_cover_found = true;
+						break;
+					}
+				}
+			}
+		}
+		
+		if (!teammate_cover_found) {
+			object().movement().set_nearest_accessible_position();
+		}
 		object().brain().affect_cover(true);
 	}
 
@@ -667,7 +695,7 @@ void CStalkerActionLookOut::initialize()
 		                                   ? eBodyStateCrouch
 		                                   : eBodyStateStand);
 #endif
-	object().movement().set_movement_type(eMovementTypeWalk);
+	object().movement().set_movement_type(g_ai_move_to_cover_run ? eMovementTypeRun : eMovementTypeWalk);
 	object().movement().set_nearest_accessible_position();
 
 	if (object().ready_to_detour())
@@ -743,7 +771,8 @@ void CStalkerActionLookOut::execute()
 	object().best_cover(mem_object.m_object_params.m_position);
 	//-Alundaio
 
-	if (current_cover(m_object) >= 3.f)
+	float dist_to_enemy = object().Position().distance_to(mem_object.m_object_params.m_position);
+	if (current_cover(m_object) >= dist_to_enemy)
 	{
 		object().movement().set_nearest_accessible_position();
 		m_storage->set_property(eWorldPropertyLookedOut, true);
@@ -779,6 +808,9 @@ void CStalkerActionLookOut::execute()
 // CStalkerActionHoldPosition
 //////////////////////////////////////////////////////////////////////////
 
+extern int g_ai_hold_position_inertia_base;
+extern int g_ai_hold_position_inertia_random;
+
 CStalkerActionHoldPosition::CStalkerActionHoldPosition(CAI_Stalker* object, LPCSTR action_name) :
 	inherited(object, action_name)
 {
@@ -806,7 +838,7 @@ void CStalkerActionHoldPosition::initialize()
 
 	aim_ready();
 
-	set_inertia_time(1000 + ::Random32.random(2000));
+	set_inertia_time(g_ai_hold_position_inertia_base + ::Random32.random(g_ai_hold_position_inertia_random));
 	object().brain().affect_cover(true);
 }
 

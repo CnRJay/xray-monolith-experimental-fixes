@@ -264,6 +264,7 @@ private:
 
 	float fireDispersionOwnerScale;
 	LPCSTR m_on_before_use_callback;
+    shared_str m_on_range_fov_callback;
 
 	void CreateSkeleton(CSE_Abstract *po);
 	virtual void PhDataUpdate(float step) {};
@@ -318,6 +319,8 @@ public:
 	void SetActorOffsets(Fvector vec) { m_actor_offsets.set(vec); }
 	LPCSTR GetAnimation(int id) { return m_animation.GetAnimation(id); }
 	void SetAnimation(int id, LPCSTR anim) { m_animation.SetAnimation(id, anim); }
+
+    void OverrideRangeFOV(const CGameObject* npc, float& range);
 
 	/* Barrels APIs */
 	SStmBarrel *Barrel(LPCSTR name);

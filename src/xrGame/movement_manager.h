@@ -158,6 +158,7 @@ protected:
 
 protected:
 	NEAREST_OBJECTS m_nearest_objects;
+    Fvector m_nearest_objects_query_pos;
 
 protected:
 	float m_speed;

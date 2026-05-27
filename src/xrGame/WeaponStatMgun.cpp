@@ -98,6 +98,7 @@ CWeaponStatMgun::CWeaponStatMgun()
 
 	fireDispersionOwnerScale = 1.0F;
 	m_on_before_use_callback = nullptr;
+    m_on_range_fov_callback = "";
 #endif
 
 	m_firing_disabled = false;
@@ -246,6 +247,10 @@ void CWeaponStatMgun::Load(LPCSTR section)
 	{
 		m_on_before_use_callback = READ_IF_EXISTS(pSettings, r_string, cNameSect_str(), "on_before_use", "");
 	}
+    if (pSettings->line_exist(cNameSect_str(), "on_range_fov"))
+    {
+        m_on_range_fov_callback = READ_IF_EXISTS(pSettings, r_string, cNameSect_str(), "on_range_fov", "");
+    }
 
 	UpdateBulletVisibility(iAmmoElapsed);
 

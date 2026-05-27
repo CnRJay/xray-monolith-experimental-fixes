@@ -54,28 +54,42 @@ bool CSE_ALifeOnlineOfflineGroup::need_update(CSE_ALifeDynamicObject* object)
 
 void CSE_ALifeOnlineOfflineGroup::update()
 {
-	if (m_bOnline)
-	{
-		MEMBER* commander = (*m_members.begin()).second;
-		o_Position = commander->o_Position;
-		m_tNodeID = commander->m_tNodeID;
-		m_tGraphID = commander->m_tGraphID;
-	}
-	if (!bfActive())
-		return;
+    try
+    {
+        if (m_bOnline)
+        {
+            MEMBER* commander = (*m_members.begin()).second;
+            if (commander)
+            {
+                o_Position = commander->o_Position;
+                m_tNodeID = commander->m_tNodeID;
+                m_tGraphID = commander->m_tGraphID;
+            }
+        }
+        if (!bfActive())
+            return;
 
-	brain().update();
+        brain().update();
 
-	MEMBERS::iterator I = m_members.begin();
-	MEMBERS::iterator E = m_members.end();
-	for (; I != E; ++I)
-	{
-		((*I).second)->o_Position = o_Position;
-		((*I).second)->m_tNodeID = m_tNodeID;
-		((*I).second)->m_tGraphID = m_tGraphID;
-		((*I).second)->m_fDistance = m_fDistance;
-	}
-	return;
+        MEMBERS::iterator I = m_members.begin();
+        MEMBERS::iterator E = m_members.end();
+        for (; I != E; ++I)
+        {
+            MEMBER* ptr = ((*I).second);
+            if (ptr)
+            {
+                ptr->o_Position = o_Position;
+                ptr->m_tNodeID = m_tNodeID;
+                ptr->m_tGraphID = m_tGraphID;
+                ptr->m_fDistance = m_fDistance;
+            }
+
+        }
+    }
+    catch (...)
+    {
+
+    }
 }
 
 void CSE_ALifeOnlineOfflineGroup::on_location_change() const
@@ -170,10 +184,13 @@ bool CSE_ALifeOnlineOfflineGroup::synchronize_location()
 	if (m_bOnline)
 	{
 		MEMBER* member = (*m_members.begin()).second;
-		o_Position = member->o_Position;
-		m_tNodeID = member->m_tNodeID;
-		m_tGraphID = member->m_tGraphID;
-		m_fDistance = member->m_fDistance;
+        if (member)
+        {
+            o_Position = member->o_Position;
+            m_tNodeID = member->m_tNodeID;
+            m_tGraphID = member->m_tGraphID;
+            m_fDistance = member->m_fDistance;
+        }
 	}
 
 	return (true);

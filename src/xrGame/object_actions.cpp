@@ -982,6 +982,9 @@ CObjectActionThrowMissile::CObjectActionThrowMissile(CInventoryItem* item, CAI_S
 {
 }
 
+extern int g_ai_grenade_throw_delay_base;
+extern int g_ai_grenade_throw_delay_step;
+
 void CObjectActionThrowMissile::initialize()
 {
 	inherited::initialize();
@@ -995,23 +998,23 @@ void CObjectActionThrowMissile::initialize()
 	float distance = object().throw_target().distance_to(object().Position());
 	if (distance > 45)
 	{
-		set_inertia_time(2500);
+		set_inertia_time(g_ai_grenade_throw_delay_base + g_ai_grenade_throw_delay_step * 3);
 		return;
 	}
 
 	if (distance > 30)
 	{
-		set_inertia_time(2000);
+		set_inertia_time(g_ai_grenade_throw_delay_base + g_ai_grenade_throw_delay_step * 2);
 		return;
 	}
 
 	if (distance > 15)
 	{
-		set_inertia_time(1500);
+		set_inertia_time(g_ai_grenade_throw_delay_base + g_ai_grenade_throw_delay_step);
 		return;
 	}
 
-	set_inertia_time(1000);
+	set_inertia_time(g_ai_grenade_throw_delay_base);
 }
 
 void CObjectActionThrowMissile::execute()

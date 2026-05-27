@@ -349,6 +349,8 @@ public:
 	void Destroy(void);
 	void Reset(bool precache = true);
 
+	bool ChangeOutputMonitor(HMONITOR hTargetMon);
+
 	void Initialize(void);
 	void ShutDown(void);
 

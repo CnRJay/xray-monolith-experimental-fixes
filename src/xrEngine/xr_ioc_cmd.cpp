@@ -14,6 +14,7 @@
 #include "../Include/xrRender/RenderDeviceRender.h"
 
 #include "xr_object.h"
+#include "MonitorList.h"
 
 xr_token* vid_quality_token = nullptr;
 
@@ -473,8 +474,11 @@ public:
 		int cnt = sscanf(args, "%dx%d", &_w, &_h);
 		if (cnt == 2)
 		{
+			const bool changed = (psCurrentVidMode[0] != _w) || (psCurrentVidMode[1] != _h);
 			psCurrentVidMode[0] = _w;
 			psCurrentVidMode[1] = _h;
+			if (changed && Device.b_is_Ready)
+				Device.Reset();
 		}
 		else
 		{
@@ -813,6 +817,64 @@ public:
 	}
 };
 #endif
+
+
+#ifndef DEDICATED_SERVER
+class CCC_VidMonitor : public CCC_Token
+{
+	typedef CCC_Token inherited;
+	u32 _dummy;
+public:
+	CCC_VidMonitor(LPCSTR N) : inherited(N, &_dummy, NULL)
+	{
+		bLowerCaseArgs = FALSE;
+	}
+
+	virtual ~CCC_VidMonitor()
+	{
+	}
+
+	virtual void Execute(LPCSTR args) override
+	{
+		if (!Device.b_is_Ready)
+		{
+			vid_monitor_name = args;
+			ResetStartupMonitor();
+			return;
+		}
+
+		vid_monitor_name = args;
+
+		HMONITOR h = ResolveSelectedMonitor();
+		if (!h)
+		{
+			POINT p;
+			GetCursorPos(&p);
+			h = MonitorFromPoint(p, MONITOR_DEFAULTTOPRIMARY);
+		}
+
+		if (!Device.ChangeOutputMonitor(h))
+			Msg("! vid_monitor: live switch unavailable; restart to apply '%s'", args);
+	}
+
+	virtual void Status(TStatus& S)
+	{
+		xr_strcpy(S, sizeof(S), vid_monitor_name.c_str());
+	}
+
+	virtual xr_token* GetToken()
+	{
+		tokens = vid_monitor_token;
+		return inherited::GetToken();
+	}
+
+	virtual void Save(IWriter* F)
+	{
+		F->w_printf("%s %s\r\n", cName, vid_monitor_name.c_str());
+	}
+};
+#endif
+
 //-----------------------------------------------------------------------
 class CCC_ExclusiveMode : public IConsole_Command
 {
@@ -1028,6 +1090,9 @@ void CCC_Register()
 
 	// General video control
 	CMD1(CCC_VidMode, "vid_mode");
+#ifndef DEDICATED_SERVER
+	CMD1(CCC_VidMonitor, "vid_monitor");
+#endif
 
 #ifdef DEBUG
     CMD3(CCC_Token, "vid_bpp", &psCurrentBPP, vid_bpp_token);

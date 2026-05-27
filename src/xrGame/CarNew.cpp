@@ -85,6 +85,8 @@ BOOL CCar::Fly_net_Spawn(CSE_Abstract *DC)
 						}
 					}
 				}
+
+				I.E->set_DynamicLimits(default_l_limit, default_w_limit * 1000.F);
 			}
 		}
 		R_ASSERT3(m_rotor_bones.size(), "fly_definition no rotors", cNameSect_str());
@@ -246,7 +248,7 @@ void CCar::Fly_RotorUpdate()
 			if (I.spinning != true)
 			{
 				I.spinning = true;
-				I.J->SetForceAndVelocity(m_rotor_force_max, m_rotor_speed_max * ((I.clockwise) ? 1 : -1), 1);
+                I.J->SetForceAndVelocity(m_rotor_force_max, (I.clockwise) ? m_rotor_speed_max : -m_rotor_speed_max, 1);
 			}
 		}
 	}

@@ -34,6 +34,7 @@
 
         pda_map_zoom_in_to_mouse // Enable map zoom in relative to cursor
         pda_map_zoom_out_to_mouse // Enable map zoom out relative to cursor
+        pda_show_map_labels // Show level name labels on the global PDA map if configured in game_maps_single.ltx
 
         mouse_wheel_change_weapon // Enable changing weapons with mouse wheel
         mouse_wheel_invert_zoom // Invert mouse wheel
@@ -95,6 +96,11 @@
         table get_string_table() // Returns all translated strings in [string id] = string text format 
         player_hud* get_player_hud()
 
+        // MT only
+        string active_tutorial_name()
+        class class_info(object) // Returns luabind class with information about object's class: name, methods, attributes
+        string r_file_as_string(string path)
+
         -- color getters / setters
         ClrGetA(number argb)
         ClrGetR(number argb)
@@ -111,7 +117,10 @@
     }
 
     alife() {
+        number object_count()
         void iterate_objects(function(se_obj))
+        void iterate_level_objects_of_clsid(number script_clsid, function(se_obj)) -- walks actor's current-level CSE registry filtered by m_script_clsid; functor returns true to stop early; must not release the currently iterated entity
+        void force_update() -- forces an immediate alife scheduled update cycle
     }
 
     game {
@@ -121,6 +130,8 @@
         function ui2world_offscreen(Fvector2 pos) -> Fvector result, u16 object_id
         change_game_news_show_time(CUIWindow* UIWindow, float show_time)
         update_pda_news_from_uiwindow(CUIWindow* UIWindow)
+
+        bool motion_exists(string model_path, string motion_name) -- Loads a HUD model temporarily and checks whether it contains a named cycle motion. Caller must ensure the file exists first — game crashes on a missing path.
     }
 
     ini_file() {
@@ -148,8 +159,23 @@
         CUIMessagesWindow get_messages_menu()
     }
 
+    // MT only
+    class cse_alife_item_weapon {
+        function clone_upgrades(cse_alife_item_weapon*)
+    }
+
+    // MT only
+    class cse_alife_level_changer : cse_alife_space_restrictor {
+        property dest_game_vertex_id    // u16
+        property dest_level_vertex_id   // u32
+        property dest_position          // Fvector
+    }
+
     class CUIProgressBar {
         CUIStatic GetProgressStatic()
+		bool GetSnapNoDelay() Get the status of "SnapNoDelay"
+		void SetSnapNoDelay() Enable: progress visual displays progress position instantly. No longer progressively increase/descrease until meeting the new position.
+		void SnapProgressPos() Snap progress visual to current progress position.
     }
 
     class CUIStatic {
@@ -179,6 +205,31 @@
         property m_QuickSlotText4
 
         table GetQuickSlotIcons()
+    }
+
+    // MT only
+    class CMapManager {
+        void RemoveMapLocationByObjectID(u16 id)
+        void RemoveMapLocation(CMapLocation* ml)
+        void DisableAllPointers()
+    }
+    
+    // MT only
+    class CMapLocation {
+        bool HintEnabled()
+        string GetHint()
+        void SetHint(string hint)
+        bool PointerEnabled()
+        void EnablePointer()
+        void DisablePointer()
+        bool Collidable()
+        bool SpotEnabled()
+        void EnableSpot()
+        void DisableSpot()
+        string GetLevelName()
+        Fvector2 GetPosition()
+        u16 ObjectID()
+        Fvector3 GetLastPosition()
     }
 
     class render_device {
@@ -263,6 +314,10 @@
         float get_music_volume()
         void set_music_volume(float)
 
+        float get_weather_weight()
+        void set_weather_weight(float)
+        void set_weather_smooth(string)
+
         // Camera, position is x,y,z vector, direction is head,pitch,roll vector in RADIANS
         void set_cam_custom_position_direction(Fvector position, Fvector direction, int smoothing, bool hudDraw, bool hudAffect)
         void set_cam_custom_position_direction(Fvector position, Fvector direction, int smoothing, bool hudDraw)
@@ -304,6 +359,14 @@
             text: string, text when spot is hovered
         // }
 
+        void map_pan_to(LPCSTR level_name, float x, float z, bool zoom_in)
+        void map_pan_to_level(LPCSTR level_name, bool zoom_in)
+
+        // MT only
+        CMapManager* get_map_manager()
+        void patrol_path_add(string patrol_path, CPatrolPath* path)
+        void patrol_path_remove(string patrol_path)
+
         add_bullet(Fvector pos, Fvector dir, float speed, float power, float impulse, u16 sender, ALife::EHitType hit_type, float max_dist, LPCSTR ammo_sect, float air_resistance)
 
         add_bullet(table t)
@@ -334,6 +397,8 @@
     // obj:get_physics_shell()
     class PHShell {
         void apply_torque(float roll, float yaw, float pitch)
+		void set_linear_vel(vector)
+		void set_angular_vel(vector)
     }
 
     class Fvector {
@@ -486,6 +551,8 @@
         function set_enable_movement_collision(bool)
         function character_dialogs()
         function memory_remove_links(game_object)
+        function get_object_visible_distance(game_object)
+        function get_object_luminocity(game_object)
 
         // Artefact
         function get_artefact_additional_inventory_weight()
@@ -713,6 +780,9 @@
         // Get and set the zoom_rotate_time (time in seconds to fully ADS) field for a given weapon
         function GetZoomRotateTime()
         function SetZoomRotateTime(float)
+
+		// Forcibly set the zoom type for the weapon
+		function ForceSetZoomType(float)
     }
 
     class CWeaponKnife : CWeapon {
@@ -751,6 +821,7 @@
         function get_object() : game_object
         function get_distance() : float
         function get_element() : int (number of triangle)
+        function get_normal() : vector
     }
 
     class script_rq_result {

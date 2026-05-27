@@ -452,6 +452,11 @@ void set_process_time(CALifeSimulator* self, int micro)
 	self->set_process_time(micro);
 }
 
+void force_update(CALifeSimulator* self)
+{
+	self->update_scheduled(true);
+}
+
 // demonized: iterate alife objects, functor style
 void CALifeSimulator__iterate_objects(const CALifeSimulator* self, const luabind::functor<bool>& functor)
 {
@@ -466,6 +471,19 @@ void CALifeSimulator__iterate_objects_without_actor(const CALifeSimulator* self,
 	const CALifeObjectRegistry& objects = self->objects();
 	for (const auto& se_obj : objects.objects()) {
 		if (se_obj.first != 0 && functor(se_obj.second)) break;
+	}
+}
+
+// iterate alife objects on actor's current level filtered by script clsid;
+// functor must not release iterated object (would invalidate iterator)
+void CALifeSimulator__iterate_level_objects_of_clsid(
+	const CALifeSimulator* self, int script_clsid_val, const luabind::functor<bool>& functor)
+{
+	if (!self->graph().level_exists()) return;
+	const auto& level_reg = self->graph().level();
+	for (const auto& entry : level_reg.objects()) {
+		if (entry.second->m_script_clsid != script_clsid_val) continue;
+		if (functor(entry.second)) break;
 	}
 }
 
@@ -523,6 +541,11 @@ alife_object_without_actor_iterator alife_object_without_actor_iter(const CALife
 ALife::_OBJECT_ID alife_max_id(const CALifeSimulator* self)
 {
 	return self->objects().max_id;
+}
+
+ALife::_OBJECT_ID alife_object_count(const CALifeSimulator* self)
+{
+    return self->objects().objects().size();
 }
 
 ::luabind::object alife_object_ids(const CALifeSimulator* self, const bool keytable = false, const bool withActor = false)
@@ -624,13 +647,16 @@ void CALifeSimulator::script_register(lua_State* L)
 		.def("register", &reprocess_spawn)
 		.def("set_objects_per_update", &set_objects_per_update)
 		.def("set_process_time", &set_process_time)
+		.def("force_update", &force_update)
 		.def("get_children", &get_children, return_stl_iterator)
 		//Alundaio: END
 
 		// demonized: iterate alife objects
+        .def("object_count", &alife_object_count)
 		.def("object_ids", &alife_object_ids)
 		.def("objects", &alife_objects)
 		.def("iterate_objects", &CALifeSimulator__iterate_objects)
+		.def("iterate_level_objects_of_clsid", &CALifeSimulator__iterate_level_objects_of_clsid)
 		/*.def("iterate_objects_without_actor", &CALifeSimulator__iterate_objects_without_actor)
 		.def("objects_iter", &alife_object_iter)
 		.def("objects_without_actor_iter", &alife_object_without_actor_iter)*/

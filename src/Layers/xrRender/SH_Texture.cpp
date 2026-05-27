@@ -9,6 +9,7 @@
 
 #include "../../xrEngine/tntQAVI.h"
 #include "../../xrEngine/xrTheora_Surface.h"
+#include "gifPlayer.h"
 
 #include "dxRenderDeviceRender.h"
 
@@ -29,6 +30,7 @@ CTexture::CTexture() {
   pSurface = nullptr;
   pAVI = nullptr;
   pTheora = nullptr;
+  gifPlayer = nullptr;
   desc_cache = 0;
   seqMSPF = 0;
   flags.MemoryUsage = 0;
@@ -61,15 +63,13 @@ ID3DBaseTexture *CTexture::surface_get() {
   return pSurface;
 }
 
-void CTexture::PostLoad() {
-  if (pTheora)
-    bind = fastdelegate::FastDelegate1<u32>(this, &CTexture::apply_theora);
-  else if (pAVI)
-    bind = fastdelegate::FastDelegate1<u32>(this, &CTexture::apply_avi);
-  else if (!seqDATA.empty())
-    bind = fastdelegate::FastDelegate1<u32>(this, &CTexture::apply_seq);
-  else
-    bind = fastdelegate::FastDelegate1<u32>(this, &CTexture::apply_normal);
+void CTexture::PostLoad()
+{
+	if (pTheora) bind = fastdelegate::FastDelegate1<u32>(this, &CTexture::apply_theora);
+	else if (pAVI) bind = fastdelegate::FastDelegate1<u32>(this, &CTexture::apply_avi);
+	else if (!seqDATA.empty()) bind = fastdelegate::FastDelegate1<u32>(this, &CTexture::apply_seq);
+    else if (gifPlayer) bind = fastdelegate::FastDelegate1<u32>(this, &CTexture::apply_gif);
+	else bind = fastdelegate::FastDelegate1<u32>(this, &CTexture::apply_normal);
 }
 
 void CTexture::apply_load(u32 dwStage) {
@@ -140,8 +140,21 @@ void CTexture::apply_seq(u32 dwStage) {
   CHK_DX(HW.pDevice->SetTexture(dwStage, pSurface));
 };
 
-void CTexture::apply_normal(u32 dwStage) {
-  CHK_DX(HW.pDevice->SetTexture(dwStage, pSurface));
+void CTexture::apply_gif(u32 dwStage)
+{
+    if (gifPlayer->UpdateFrame())
+    {
+        const CGIFAnimationPlayer::Frame* const gifFrame = gifPlayer->GetActiveFrame();
+        R_ASSERT(gifFrame);
+
+        pSurface = gifFrame->surface;
+    }
+    CHK_DX(HW.pDevice->SetTexture(dwStage, pSurface));
+}
+
+void CTexture::apply_normal(u32 dwStage)
+{
+	CHK_DX(HW.pDevice->SetTexture(dwStage,pSurface));
 };
 
 void CTexture::Preload() {
@@ -249,29 +262,53 @@ void CTexture::Load() {
           u32 fps = atoi(buffer);
           seqMSPF = 1000 / fps;
 
-          while (!_fs->eof()) {
-            _fs->r_string(buffer, sizeof(buffer));
-            _Trim(buffer);
-            if (buffer[0]) {
-              // Load another texture
-              u32 mem = 0;
-              pSurface = ::RImplementation.texture_load(buffer, mem);
-              if (pSurface) {
-                // pSurface->SetPriority	(PRIORITY_LOW);
-                seqDATA.push_back(pSurface);
-                flags.MemoryUsage += mem;
-              }
+			while (!_fs->eof())
+			{
+				_fs->r_string(buffer, sizeof(buffer));
+				_Trim(buffer);
+				if (buffer[0])
+				{
+					// Load another texture
+					u32 mem = 0;
+					pSurface = ::RImplementation.texture_load(buffer, mem);
+					if (pSurface)
+					{
+						// pSurface->SetPriority	(PRIORITY_LOW);
+						seqDATA.push_back(pSurface);
+						flags.MemoryUsage += mem;
+					}
+				}
+			}
+			pSurface = 0;
+            fs_lock.Enter();
+			FS.r_close(_fs);
+            fs_lock.Leave();
+		}
+        else if (FS.exist(fn, "$game_textures$", *cName, ".gif"))
+        {
+            fs_lock.Leave();
+            gifPlayer = xr_new<CGIFAnimationPlayer>();
+            if (!gifPlayer->Load(fn))
+            {
+                xr_delete(gifPlayer);
+                pSurface = nullptr;
             }
-          }
-          pSurface = 0;
-          fs_lock.Enter();
-          FS.r_close(_fs);
-          fs_lock.Leave();
-        } else {
-          fs_lock.Leave();
-          // Normal texture
-          u32 mem = 0;
-          pSurface = ::RImplementation.texture_load(*cName, mem);
+            else
+            {
+                flags.MemoryUsage = gifPlayer->GetUsedMemory();
+
+                gifPlayer->Play();
+
+                const CGIFAnimationPlayer::Frame* const gifFrame = gifPlayer->GetActiveFrame();
+                pSurface = gifFrame->surface;
+            }
+        }
+		else
+		{
+            fs_lock.Leave();
+			// Normal texture
+			u32 mem = 0;
+			pSurface = ::RImplementation.texture_load(*cName, mem);
 
           // Calc memory usage and preload into vid-mem
           if (pSurface) {
@@ -305,6 +342,12 @@ void CTexture::Unload() {
     pSurface = 0;
   }
   flags.MemoryUsage = 0;
+
+    if (gifPlayer)
+    {
+        xr_delete(gifPlayer);
+        pSurface = nullptr;
+    }
 
 #ifdef DEBUG
   _SHOW_REF(msg_buff, pSurface);
