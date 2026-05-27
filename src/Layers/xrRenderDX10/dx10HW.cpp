@@ -1090,6 +1090,7 @@ void CHW::OnAppActivate()
 
 	if (m_pSwapChain && !is_windowed)
 	{
+#if defined(USE_DX11)
         ShowWindow(m_hWnd, SW_RESTORE);
 #elif defined(USE_DX10)
         ShowWindow(m_ChainDesc.OutputWindow, SW_RESTORE);
