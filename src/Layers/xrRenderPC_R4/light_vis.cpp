@@ -11,97 +11,97 @@ const u32 cullfragments = 4;
 
 void light::vis_prepare()
 {
-    PIX_EVENT(LIGHT_PREPARE);
-    if (int(indirect_photons) != ps_r2_GI_photons) gi_generate();
+	PIX_EVENT(LIGHT_PREPARE);
+	if (int(indirect_photons) != ps_r2_GI_photons) gi_generate();
 
-    //	. test is sheduled for future	= keep old result
-    //	. test time comes :)
-    //		. camera inside light volume	= visible,	shedule for 'small' interval
-    //		. perform testing				= ???,		pending
+	//	. test is sheduled for future	= keep old result
+	//	. test time comes :)
+	//		. camera inside light volume	= visible,	shedule for 'small' interval
+	//		. perform testing				= ???,		pending
 
-    u32 frame = Device.dwFrame;
-    if (frame < vis.frame2test)
-        return; // Not time to test
+	u32 frame = Device.dwFrame;
+	if (frame < vis.frame2test)
+		return; // Not time to test
 
-    // Don't issue queries from inside the bounding sphere. CULL_CCW culls all
-    // back-facing surfaces from inside, returning 0 fragments and falsely hiding
-    // the light when that stale result is later processed with always=false.
-    if (Device.vCameraPosition.distance_to(spatial.sphere.P) < spatial.sphere.R)
-        return;
+	// Don't issue queries from inside the bounding sphere. CULL_CCW culls all
+	// back-facing surfaces from inside, returning 0 fragments and falsely hiding
+	// the light when that stale result is later processed with always=false.
+	if (Device.vCameraPosition.distance_to(spatial.sphere.P) < spatial.sphere.R)
+		return;
 
-    if (vis.r4_queries.empty())
-        vis.queryframe = frame;
+	if (vis.r4_queries.empty())
+		vis.queryframe = frame;
 
-    if (frame != vis.queryframe)
-        return; // Queries have already been sent
+	if (frame != vis.queryframe)
+		return; // Queries have already been sent
 
-    R_occlusion::occq_try_result r;
-    xform_calc();
-    vis.query_order = RImplementation.occq_begin(vis.query_id);
-    vis.r4_queries.push_back({vis.query_id, r});
-    RImplementation.Target->draw_occq_volume(this);
-    RImplementation.occq_end(vis.query_id);
+	R_occlusion::occq_try_result r;
+	xform_calc();
+	vis.query_order = RImplementation.occq_begin(vis.query_id);
+	vis.r4_queries.push_back({vis.query_id, r});
+	RImplementation.Target->draw_occq_volume(this);
+	RImplementation.occq_end(vis.query_id);
 }
 
 void light::vis_update()
 {
-    auto frame = Device.dwFrame;
+	auto frame = Device.dwFrame;
 
-    auto light_to_player = Fvector(Device.vCameraPosition).sub(position);
-    auto distance = light_to_player.magnitude();
-    // Use the spatial bounding sphere (not just apex range) so spot/omnipart lights
-    // whose sphere center is offset from position are handled correctly.
-    // 1.5x margin absorbs the 1-2 frame GPU query latency at the sphere boundary.
-    auto inside_dist = Device.vCameraPosition.distance_to(spatial.sphere.P) < spatial.sphere.R * 1.5f;
-    auto inside_fov  = acos(light_to_player.normalize().dotproduct(direction.normalize())) < deg2rad(120.0f * 0.5);
-    auto critical_dist = distance < 1.0;
+	auto light_to_player = Fvector(Device.vCameraPosition).sub(position);
+	auto distance = light_to_player.magnitude();
+	// Use the spatial bounding sphere (not just apex range) so spot/omnipart lights
+	// whose sphere center is offset from position are handled correctly.
+	// 1.5x margin absorbs the 1-2 frame GPU query latency at the sphere boundary.
+	auto inside_dist = Device.vCameraPosition.distance_to(spatial.sphere.P) < spatial.sphere.R * 1.5f;
+	auto inside_fov  = acos(light_to_player.normalize().dotproduct(direction.normalize())) < deg2rad(120.0f * 0.5);
+	auto critical_dist = distance < 1.0;
 
 	auto always = critical_dist || (inside_dist && inside_fov);
 
-    if (scope_debug >= 3) {
-        auto p = Fvector(direction.normalize()).mul(range).add(position);
-        auto c = color_rgba_f(inside_dist && inside_fov, inside_dist && !inside_fov, inside_fov && !inside_dist, 1.0);
-        CDebugRenderer().draw_aabb(p, 0.05, 0.05, 0.05, c, false);
-    }
+	if (scope_debug >= 3) {
+		auto p = Fvector(direction.normalize()).mul(range).add(position);
+		auto c = color_rgba_f(inside_dist && inside_fov, inside_dist && !inside_fov, inside_fov && !inside_dist, 1.0);
+		CDebugRenderer().draw_aabb(p, 0.05, 0.05, 0.05, c, false);
+	}
 
-    if (always) {
-        // Light could potentially be visible with a pending query
-        //    so we force it on here.
-        vis.visible = true;
-        vis.visible_frags = RImplementation.Target->Width * RImplementation.Target->Height;
-    }
+	if (always) {
+		// Light could potentially be visible with a pending query
+		//    so we force it on here.
+		vis.visible = true;
+		vis.visible_frags = RImplementation.Target->Width * RImplementation.Target->Height;
+	}
 
-    //	. not pending	->>> return (early out)
-    //	. test-result:	visible:
-    //		. shedule for 'large' interval
-    //	. test-result:	invisible:
-    //		. shedule for 'next-frame' interval
-    if (vis.r4_queries.empty()) return;
+	//	. not pending	->>> return (early out)
+	//	. test-result:	visible:
+	//		. shedule for 'large' interval
+	//	. test-result:	invisible:
+	//		. shedule for 'next-frame' interval
+	if (vis.r4_queries.empty()) return;
 
-    // Non blocking vis check.
-    // Possible minor delays with light visiblity changes
-    for (auto &q : vis.r4_queries) {
-        if (!q.second.complete) {
-            auto r = RImplementation.occq_try_get(q.first);
-            if (r.complete) q.second = r;
-            else return;
-        }
-    }
+	// Non blocking vis check.
+	// Possible minor delays with light visiblity changes
+	for (auto &q : vis.r4_queries) {
+		if (!q.second.complete) {
+			auto r = RImplementation.occq_try_get(q.first);
+			if (r.complete) q.second = r;
+			else return;
+		}
+	}
 
-    if (!always) vis.visible_frags = 0;
-    for (auto &q : vis.r4_queries) {
-        vis.visible_frags += q.second.fragments;
-    }
-    vis.r4_queries.clear();
+	if (!always) vis.visible_frags = 0;
+	for (auto &q : vis.r4_queries) {
+		vis.visible_frags += q.second.fragments;
+	}
+	vis.r4_queries.clear();
 
-    vis.visible = vis.visible_frags > cullfragments;
-    vis.pending = false;
-    if (vis.visible)
-    {
-        vis.frame2test = frame + ::Random.randI(delay_large_min, delay_large_max);
-    }
-    else
-    {
-        vis.frame2test = frame + 1;
-    }
+	vis.visible = vis.visible_frags > cullfragments;
+	vis.pending = false;
+	if (vis.visible)
+	{
+		vis.frame2test = frame + ::Random.randI(delay_large_min, delay_large_max);
+	}
+	else
+	{
+		vis.frame2test = frame + 1;
+	}
 }
