@@ -25,12 +25,3 @@ void CRenderTarget::draw_volume(light* L)
 	}
 }
 
-void CRenderTarget::draw_occq_volume(light* L)
-{
-	Fmatrix xform;
-	xform.scale(L->spatial.sphere.R, L->spatial.sphere.R, L->spatial.sphere.R);
-	xform.c = L->spatial.sphere.P;
-	RCache.set_xform_world(xform);
-	RCache.set_Geometry(g_accum_point);
-	RCache.Render(D3DPT_TRIANGLELIST, 0, 0, DU_SPHERE_NUMVERTEX, 0, DU_SPHERE_NUMFACES);
-}

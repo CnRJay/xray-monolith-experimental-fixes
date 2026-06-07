@@ -24,7 +24,12 @@ void light::vis_prepare()
 		return; // Not time to test
 
 	if (Device.vCameraPosition.distance_to(spatial.sphere.P) < spatial.sphere.R)
+	{
+		vis.visible = true;
+		vis.r4_queries.clear();
+		vis.frame2test = frame + ::Random.randI(delay_small_min, delay_small_max);
 		return;
+	}
 
 	if (vis.r4_queries.empty())
 		vis.queryframe = frame;
@@ -34,9 +39,10 @@ void light::vis_prepare()
 	
 	R_occlusion::occq_try_result r;
 	xform_calc();
+	RCache.set_xform_world(m_xform);
 	vis.query_order = RImplementation.occq_begin(vis.query_id);
 	vis.r4_queries.push_back({vis.query_id, r});
-	RImplementation.Target->draw_occq_volume(this);
+	RImplementation.Target->draw_volume(this);
 	RImplementation.occq_end(vis.query_id);
 }
 
