@@ -676,8 +676,8 @@ void CRender::combineLightingAndBloom()
 	auto unbind_s_base = []() -> void {
 		ID3D11ShaderResourceView* crv[1] = {nullptr};
 		HW.pContext->PSSetShaderResources(0, 1, crv);
-		SRVSManager.SetPSResource(0, nullptr); // sync cache with direct write, or accum_spot may skip rebinding s_smap
-		};
+		SRVSManager.SetPSResource(0, nullptr);
+	};
 
 	{
 		PIX_EVENT(DEFER_SELF_ILLUM);

@@ -23,9 +23,6 @@ void light::vis_prepare()
 	if (frame < vis.frame2test)
 		return; // Not time to test
 
-	// Don't issue queries from inside the bounding sphere. CULL_CCW culls all
-	// back-facing surfaces from inside, returning 0 fragments and falsely hiding
-	// the light when that stale result is later processed with always=false.
 	if (Device.vCameraPosition.distance_to(spatial.sphere.P) < spatial.sphere.R)
 		return;
 
@@ -49,9 +46,6 @@ void light::vis_update()
 
 	auto light_to_player = Fvector(Device.vCameraPosition).sub(position);
 	auto distance = light_to_player.magnitude();
-	// Use the spatial bounding sphere (not just apex range) so spot/omnipart lights
-	// whose sphere center is offset from position are handled correctly.
-	// 1.5x margin absorbs the 1-2 frame GPU query latency at the sphere boundary.
 	auto inside_dist = Device.vCameraPosition.distance_to(spatial.sphere.P) < spatial.sphere.R * 1.5f;
 	auto inside_fov  = acos(light_to_player.normalize().dotproduct(direction.normalize())) < deg2rad(120.0f * 0.5);
 	auto critical_dist = distance < 1.0;

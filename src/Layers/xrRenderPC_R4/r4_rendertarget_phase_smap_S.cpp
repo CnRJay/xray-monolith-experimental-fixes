@@ -19,8 +19,6 @@ void CRenderTarget::phase_smap_spot(light* L)
 	    //else								u_setrt	(rt_smap_surf, nullptr, NULL, rt_smap_ZB);
 	else
 		VERIFY(!"Use HW SMap only for DX10!");
-	// Binding rt_smap_depth as DSV causes D3D11 to silently unbind s_smap (slot 0).
-	// Sync the cache so accum_spot doesn't skip rebinding s_smap afterwards.
 	SRVSManager.SetPSResource(0, nullptr);
 	D3D_VIEWPORT VP = {(float)L->X.S.posX, (float)L->X.S.posY, (float)L->X.S.size, (float)L->X.S.size, 0, 1};
 	//CHK_DX								(HW.pDevice->SetViewport(&VP));
