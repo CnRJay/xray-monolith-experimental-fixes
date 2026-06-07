@@ -55,7 +55,7 @@ public:
 	IBlender* b_hdr10_bloom_downsample;
 	IBlender* b_hdr10_bloom_blur;
 	IBlender* b_hdr10_bloom_upsample;
-
+	
 	IBlender* b_hdr10_lens_flare_downsample;
 	IBlender* b_hdr10_lens_flare_fgen;
 	IBlender* b_hdr10_lens_flare_blur;
@@ -230,12 +230,12 @@ public:
 		Fmatrix Matrix_previous, Matrix_current;
 		Fmatrix Matrix_HUD_previous, Matrix_HUD_current;
 		Fvector3 Position_previous;
-	} Previous[2];
+	} Previous[2];	
 
 	PreviousData* GetPrevious() {
 		return &Previous[Device.m_SecondViewport.IsSVPFrame()];
 	}
-
+	
 	ref_shader s_ssfx_dumb;
 
 	//	Igor: for async screenshots
@@ -354,7 +354,7 @@ private:
 	ref_shader s_hdr10_bloom_downsample;
 	ref_shader s_hdr10_bloom_blur;
 	ref_shader s_hdr10_bloom_upsample;
-
+	
 	ref_shader s_hdr10_lens_flare_downsample;
 	ref_shader s_hdr10_lens_flare_fgen;
 	ref_shader s_hdr10_lens_flare_blur;
@@ -439,7 +439,7 @@ public:
 	void u_setrt(const ref_rt& _1, const ref_rt& _2, const ref_rt& _3, ID3DDepthStencilView* zb);
 	void u_setrt(const ref_rt& _1, const ref_rt& _2, ID3DDepthStencilView* zb);
 	void u_setrt(u32 W, u32 H, ID3DRenderTargetView* _1, ID3DRenderTargetView* _2, ID3DRenderTargetView* _3,
-		ID3DDepthStencilView* zb);
+             ID3DDepthStencilView* zb);
 	void u_calc_tc_noise(Fvector2& p0, Fvector2& p1);
 	void u_calc_tc_duality_ss(Fvector2& r0, Fvector2& r1, Fvector2& l0, Fvector2& l1);
 	BOOL u_need_PP();

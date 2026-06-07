@@ -16,7 +16,7 @@ void CRenderTarget::phase_smap_spot(light* L)
 	// Targets + viewport
 	//	TODO: DX10: CHeck if we don't need old-style SMAP
 	if (RImplementation.o.HW_smap) u_setrt(rt_smap_surf, nullptr, NULL, rt_smap_depth->pZRT);
-	    //else								u_setrt	(rt_smap_surf, nullptr, NULL, rt_smap_ZB);
+		//else								u_setrt	(rt_smap_surf, nullptr, NULL, rt_smap_ZB);
 	else
 		VERIFY(!"Use HW SMap only for DX10!");
 	SRVSManager.SetPSResource(0, nullptr);
