@@ -24,3 +24,4 @@ void CRenderTarget::draw_volume(light* L)
 		break;
 	}
 }
+

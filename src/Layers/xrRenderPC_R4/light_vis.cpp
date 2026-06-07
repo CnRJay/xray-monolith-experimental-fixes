@@ -23,6 +23,14 @@ void light::vis_prepare()
 	if (frame < vis.frame2test)
 		return; // Not time to test
 
+	if (Device.vCameraPosition.distance_to(spatial.sphere.P) < spatial.sphere.R)
+	{
+		vis.visible = true;
+		vis.r4_queries.clear();
+		vis.frame2test = frame + ::Random.randI(delay_small_min, delay_small_max);
+		return;
+	}
+
 	if (vis.r4_queries.empty())
 		vis.queryframe = frame;
 
@@ -44,7 +52,7 @@ void light::vis_update()
 
 	auto light_to_player = Fvector(Device.vCameraPosition).sub(position);
 	auto distance = light_to_player.magnitude();
-	auto inside_dist = distance < range;
+	auto inside_dist = Device.vCameraPosition.distance_to(spatial.sphere.P) < spatial.sphere.R * 1.5f;
 	auto inside_fov  = acos(light_to_player.normalize().dotproduct(direction.normalize())) < deg2rad(120.0f * 0.5);
 	auto critical_dist = distance < 1.0;
 
