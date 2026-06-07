@@ -34,6 +34,7 @@ void light::vis_prepare()
 
 	if (frame != vis.queryframe)
 		return; // Queries have already been sent
+
 	R_occlusion::occq_try_result r;
 	xform_calc();
 	vis.query_order = RImplementation.occq_begin(vis.query_id);
@@ -62,6 +63,7 @@ void light::vis_update()
 		auto c = color_rgba_f(inside_dist && inside_fov, inside_dist && !inside_fov, inside_fov && !inside_dist, 1.0);
 		CDebugRenderer().draw_aabb(p, 0.05, 0.05, 0.05, c, false);
 	}
+
 	if (always) {
 		// Light could potentially be visible with a pending query
 		//    so we force it on here.
