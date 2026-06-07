@@ -409,7 +409,7 @@ void CRender::renderGBuffer() {
     View = 0;
 
     render_main(main_ft, true);
-
+	
 	set_Recorder(nullptr);
 	r_pmask(true, false); // disable priority "1"
 	Device.Statistic->RenderCALC.End();
