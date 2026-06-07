@@ -31,7 +31,7 @@ void light::vis_prepare()
 
 	if (frame != vis.queryframe)
 		return; // Queries have already been sent
-
+    
 	R_occlusion::occq_try_result r;
 	xform_calc();
 	vis.query_order = RImplementation.occq_begin(vis.query_id);
