@@ -164,7 +164,6 @@
         function clone_upgrades(cse_alife_item_weapon*)
     }
 
-    // MT only
     class cse_alife_level_changer : cse_alife_space_restrictor {
         property dest_game_vertex_id    // u16
         property dest_level_vertex_id   // u32
@@ -392,6 +391,9 @@
         function remove_attachment(string)
         function remove_attachment(script_attachment)
         function iterate_attachments(function)
+
+        // MT only
+        function scheduler_flush(bool)
     }
 
     // obj:get_physics_shell()
@@ -541,6 +543,9 @@
         function get_actor_default_action_for_object()
 		function set_actor_box_y_offset(u32 box_num, float offset) --box_num:0 for stand, 1 for crouch, 2 for prone;
 
+        // Stalker and Monster
+        function invalidate_restrictions()
+
         // Stalker NPCs
         function get_enable_anomalies_pathfinding()
         function set_enable_anomalies_pathfinding(bool)
@@ -553,6 +558,12 @@
         function memory_remove_links(game_object)
         function get_object_visible_distance(game_object)
         function get_object_luminocity(game_object)
+
+        // Space Restrictors
+        function force_set_restrictor_type(number)
+
+        // Anomalies
+        function is_enabled_anomaly()
 
         // Artefact
         function get_artefact_additional_inventory_weight()

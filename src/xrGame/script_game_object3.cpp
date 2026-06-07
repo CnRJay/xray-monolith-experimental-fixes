@@ -1052,6 +1052,13 @@ void CScriptGameObject::DisableAnomaly()
 	zone->ZoneDisable();
 }
 
+bool CScriptGameObject::IsEnabledAnomaly()
+{
+    CCustomZone* zone = smart_cast<CCustomZone*>(&object());
+    THROW(zone);
+    return zone->IsEnabled();
+}
+
 void CScriptGameObject::ChangeAnomalyIdlePart(LPCSTR name, bool bIdleLight)
 {
 	CCustomZone* zone = smart_cast<CCustomZone*>(&object());
@@ -1966,6 +1973,53 @@ void CScriptGameObject::SetRestrictionType(u8 typ)
 		if (typ != RestrictionSpace::eRestrictorTypeNone)
 			Level().space_restriction_manager().register_restrictor(restr, RestrictionSpace::ERestrictorTypes(typ));
 	}
+}
+
+void CScriptGameObject::ForceSetRestrictionType(u8 typ)
+{
+	CSpaceRestrictor* restr = smart_cast<CSpaceRestrictor*>(&object());
+	if (!restr)
+		return;
+
+	RestrictionSpace::ERestrictorTypes new_type = RestrictionSpace::ERestrictorTypes(typ);
+	switch (new_type)
+	{
+	    case RestrictionSpace::eDefaultRestrictorTypeNone:
+	    case RestrictionSpace::eDefaultRestrictorTypeOut:
+	    case RestrictionSpace::eDefaultRestrictorTypeIn:
+	    case RestrictionSpace::eRestrictorTypeNone:
+	    case RestrictionSpace::eRestrictorTypeIn:
+	    case RestrictionSpace::eRestrictorTypeOut:
+		    break;
+	    default:
+		    ai().script_engine().script_log(ScriptStorage::eLuaMessageTypeError,
+			    make_string("CGameObject [%s]: invalid restrictor type [%u]!", object().cNameSect().c_str(), typ).c_str());
+		    return;
+	}
+
+	RestrictionSpace::ERestrictorTypes old_type = RestrictionSpace::ERestrictorTypes(restr->m_space_restrictor_type);
+    if (old_type == new_type)
+        return;
+
+	if (old_type != RestrictionSpace::eRestrictorTypeNone)
+		Level().space_restriction_manager().unregister_restrictor(restr);
+
+	restr->m_space_restrictor_type = typ;
+	if (new_type != RestrictionSpace::eRestrictorTypeNone)
+		Level().space_restriction_manager().register_restrictor(restr, new_type);
+}
+
+void CScriptGameObject::InvalidateRestrictions()
+{
+	CCustomMonster* monster = smart_cast<CCustomMonster*>(&object());
+	if (!monster)
+	{
+		ai().script_engine().script_log(ScriptStorage::eLuaMessageTypeError,
+			make_string("CGameObject [%s]: cannot invalidate restrictions (not a CCustomMonster)!", object().cNameSect().c_str()).c_str());
+		return;
+	}
+
+	monster->movement().restrictions().actual(false);
 }
 
 // demonized: add getters and setters for pathfinding for npcs around anomalies and damage for npcs

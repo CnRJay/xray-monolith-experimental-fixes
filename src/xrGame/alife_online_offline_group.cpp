@@ -56,7 +56,8 @@ void CSE_ALifeOnlineOfflineGroup::update()
 {
     try
     {
-        if (m_bOnline)
+        m_members.begin(); // force actualize
+        if (m_bOnline && !m_members.empty())
         {
             MEMBER* commander = (*m_members.begin()).second;
             if (commander)
@@ -181,7 +182,8 @@ CSE_ALifeOnlineOfflineGroup::MEMBER* CSE_ALifeOnlineOfflineGroup::member(ALife::
 
 bool CSE_ALifeOnlineOfflineGroup::synchronize_location()
 {
-	if (m_bOnline)
+    m_members.begin(); // force actualize
+	if (m_bOnline && !m_members.empty())
 	{
 		MEMBER* member = (*m_members.begin()).second;
         if (member)

@@ -865,94 +865,100 @@
 		<text>Minimum distance to start looking (g_npcs_look_at_actor_min_distance)</text>
 	</string>
 	<string id="ui_mm_modded_exes_gameplay_stalkers_ai_vision_speed_boost">
-		<text>AI Vision Speed Boost Multiplier (ai_vision_speed_boost)</text>
+		<text>Stalkers Vision Speed Boost Multiplier (ai_vision_speed_boost)</text>
 	</string>
 	<string id="ui_mm_modded_exes_gameplay_stalkers_ai_vision_speed_boost_desc">
 		<text>Multiplies the rate at which NPCs recognize targets that step into their field of view.\n \nHigher values (e.g., 2.0x) make NPCs spot enemies much faster. Lower values give the player more time to duck back into cover before being fully detected.</text>
 	</string>
 	<string id="ui_mm_modded_exes_gameplay_stalkers_ai_reload_threshold">
-		<text>AI Detour/Reload Ammo Threshold (ai_reload_threshold)</text>
+		<text>Stalkers Detour/Reload Ammo Threshold (ai_reload_threshold)</text>
 	</string>
 	<string id="ui_mm_modded_exes_gameplay_stalkers_ai_reload_threshold_desc">
 		<text>The percentage of magazine capacity remaining before an NPC decides to retreat, take cover, or stop shooting to reload.\n \nLowering this (e.g. 0.2 = 20%) makes NPCs more aggressive and likely to empty their magazines before falling back.</text>
 	</string>
 	<string id="ui_mm_modded_exes_gameplay_stalkers_ai_aim_fire_angle">
-		<text>AI Reaction Fire Angle (radians) (ai_aim_fire_angle)</text>
+		<text>Stalkers Reaction Fire Angle (radians) (ai_aim_fire_angle)</text>
 	</string>
 	<string id="ui_mm_modded_exes_gameplay_stalkers_ai_aim_fire_angle_desc">
 		<text>The maximum angle (in radians) an NPC must be turned toward their target before they begin firing.\n \nValues Reference:\n - 0.17 (10 deg)\n - 0.35 (20 deg)\n - 0.39 (22.5 deg - Default)\n - 0.52 (30 deg)\n - 0.70 (40 deg)\n - 1.04 (60 deg)\n - 1.57 (90 deg)\n \nHigher values make NPCs much more reactive, allowing them to "spray and pray" while turning instead of waiting to be perfectly aligned.</text>
 	</string>
 	<string id="ui_mm_modded_exes_gameplay_stalkers_ai_enemy_inertia_time_to_somebody">
-		<text>AI Enemy Inertia: To Somebody (ms) (ai_enemy_inertia_time_to_somebody)</text>
+		<text>Stalkers Enemy Inertia: To Somebody (ms) (ai_enemy_inertia_time_to_somebody)</text>
 	</string>
 	<string id="ui_mm_modded_exes_gameplay_stalkers_ai_enemy_inertia_time_to_somebody_desc">
 		<text>Controls how long an NPC "sticks" to their current NPC target before being allowed to switch to a different NPC.\n \nHigh values prevent NPCs from rapidly switching targets in large squad battles (flickering behavior). Low values make them extremely reactive to new threats from other NPCs.</text>
 	</string>
 	<string id="ui_mm_modded_exes_gameplay_stalkers_ai_enemy_inertia_time_to_actor">
-		<text>AI Enemy Inertia: To Actor (ms) (ai_enemy_inertia_time_to_actor)</text>
+		<text>Stalkers Enemy Inertia: To Actor (ms) (ai_enemy_inertia_time_to_actor)</text>
 	</string>
 	<string id="ui_mm_modded_exes_gameplay_stalkers_ai_enemy_inertia_time_to_actor_desc">
 		<text>Controls the delay before an NPC can switch their focus from another target to the Player.\n \nSetting this to 0 (default) means NPCs will drop everything to shoot the player the moment they are detected. Increasing this gives the player a "grace period" if the NPC is already busy fighting someone else.</text>
 	</string>
 	<string id="ui_mm_modded_exes_gameplay_stalkers_ai_enemy_inertia_time_from_actor">
-		<text>AI Enemy Inertia: From Actor (ms) (ai_enemy_inertia_time_from_actor)</text>
+		<text>Stalkers Enemy Inertia: From Actor (ms) (ai_enemy_inertia_time_from_actor)</text>
 	</string>
 	<string id="ui_mm_modded_exes_gameplay_stalkers_ai_enemy_inertia_time_from_actor_desc">
 		<text>Controls how long an NPC remains focused on the Player before they are willing to switch to a different threat (like a mutant or another NPC).\n \nHigh values make NPCs "obsessed" with the player, ignoring other enemies until the player is dead or hidden for a long time. Low values allow them to be easily distracted by other fights.</text>
 	</string>
 	<string id="ui_mm_modded_exes_gameplay_stalkers_ai_search_inertia_time">
-		<text>AI Search Inertia Time (ms) (ai_search_inertia_time)</text>
+		<text>Stalkers Search Inertia Time (ms) (ai_search_inertia_time)</text>
 	</string>
 	<string id="ui_mm_modded_exes_gameplay_stalkers_ai_search_inertia_time_desc">
 		<text>Sets the duration an NPC will remain in the "Search/Ambush" state after losing visual contact with a target.\n \nHigh values (default 15s) make NPCs stay alert and camp corners or cover for a long time. Low values make them give up quickly and return to idle/patrol states sooner.</text>
 	</string>
 	<string id="ui_mm_modded_exes_gameplay_stalkers_ai_hold_position_inertia_base">
-		<text>AI Hold Position Inertia Base (ms) (ai_hold_position_inertia_base)</text>
+		<text>Stalkers Hold Position Inertia Base (ms) (ai_hold_position_inertia_base)</text>
 	</string>
 	<string id="ui_mm_modded_exes_gameplay_stalkers_ai_hold_position_inertia_base_desc">
 		<text>The minimum base time an NPC will hold their position in combat before deciding to move, flank, or retreat.\n \nDefault: 1000. \n \nLower values make NPCs reconsider their tactical position much faster, resulting in more dynamic and less static firefights.</text>
 	</string>
 	<string id="ui_mm_modded_exes_gameplay_stalkers_ai_hold_position_inertia_random">
-		<text>AI Hold Position Inertia Random (ms) (ai_hold_position_inertia_random)</text>
+		<text>Stalkers Hold Position Inertia Random (ms) (ai_hold_position_inertia_random)</text>
 	</string>
 	<string id="ui_mm_modded_exes_gameplay_stalkers_ai_hold_position_inertia_random_desc">
 		<text>A random amount of time added on top of the base inertia to make NPC hold times unpredictable.\n \nDefault: 2000. \n \nLower values make NPCs more consistently aggressive, while higher values introduce more variation (some will push fast, others will hold longer).</text>
 	</string>
 	<string id="ui_mm_modded_exes_gameplay_stalkers_ai_grenade_throw_delay_base">
-		<text>AI Grenade Throw Delay Base (ms) (ai_grenade_throw_delay_base)</text>
+		<text>Stalkers Grenade Throw Delay Base (ms) (ai_grenade_throw_delay_base)</text>
 	</string>
 	<string id="ui_mm_modded_exes_gameplay_stalkers_ai_grenade_throw_delay_base_desc">
 		<text>The base inertia time (in milliseconds) it takes an NPC to throw a grenade when the target is close (under 15m).\n \nDefault: 1000. \n \nLower values make grenade throws significantly faster, reducing the time NPCs stand exposed.</text>
 	</string>
 	<string id="ui_mm_modded_exes_gameplay_stalkers_ai_grenade_throw_delay_step">
-		<text>AI Grenade Throw Delay Step (ms) (ai_grenade_throw_delay_step)</text>
+		<text>Stalkers Grenade Throw Delay Step (ms) (ai_grenade_throw_delay_step)</text>
 	</string>
 	<string id="ui_mm_modded_exes_gameplay_stalkers_ai_grenade_throw_delay_step_desc">
 		<text>The additional delay added for each 15m distance threshold (e.g. 15-30m, 30-45m, 45m+).\n \nDefault: 500. \n \nThis simulates the extra time needed to aim and wind up a longer throw.</text>
 	</string>
 	<string id="ui_mm_modded_exes_gameplay_stalkers_ai_aim_inertia_time">
-		<text>AI Aiming Speed (ms) (ai_aim_inertia_time)</text>
+		<text>Stalkers Aiming Speed (ms) (ai_aim_inertia_time)</text>
 	</string>
 	<string id="ui_mm_modded_exes_gameplay_stalkers_ai_aim_inertia_time_desc">
 		<text>The inertia time required for an NPC to aim their weapon before firing.\n \nDefault: 500. \n \nLower values allow NPCs to shoulder their weapon and fire much faster.</text>
 	</string>
 	<string id="ui_mm_modded_exes_gameplay_stalkers_ai_aim_queue_inertia_time">
-		<text>AI Burst Fire Delay (ms) (ai_aim_queue_inertia_time)</text>
+		<text>Stalkers Burst Fire Delay (ms) (ai_aim_queue_inertia_time)</text>
 	</string>
 	<string id="ui_mm_modded_exes_gameplay_stalkers_ai_aim_queue_inertia_time_desc">
 		<text>The delay between burst shots when an NPC is firing.\n \nDefault: 300. \n \nLower values make NPC burst fire significantly faster.</text>
 	</string>
 	<string id="ui_mm_modded_exes_gameplay_stalkers_ai_danger_ricochet_score">
-		<text>AI Danger Ricochet Score (ai_danger_ricochet_score)</text>
+		<text>Stalkers Danger Ricochet Score (ai_danger_ricochet_score)</text>
 	</string>
 	<string id="ui_mm_modded_exes_gameplay_stalkers_ai_danger_ricochet_score_desc">
 		<text>The evaluation score for bullet/knife ricochets near an NPC.\n \nDefault: 3000. \n \nIn the engine, a LOWER score means HIGHER priority. Lowering this value forces the AI to treat near-misses with higher urgency, instantly entering a combat-ready state rather than slowly investigating the impact.</text>
 	</string>
 	<string id="ui_mm_modded_exes_gameplay_stalkers_ai_move_to_cover_run">
-		<text>AI Run To Cover (ai_move_to_cover_run)</text>
+		<text>Stalkers Run To Cover (ai_move_to_cover_run)</text>
 	</string>
 	<string id="ui_mm_modded_exes_gameplay_stalkers_ai_move_to_cover_run_desc">
 		<text>If enabled, NPCs will run instead of walk when taking cover during combat. This makes firefights more dynamic and prevents NPCs from slowly walking while under fire.</text>
+	</string>
+	<string id="ui_mm_modded_exes_gameplay_stalkers_ai_enhanced_vision">
+		<text>Stalkers Enhanced Vision (ai_enhanced_vision)</text>
+	</string>
+	<string id="ui_mm_modded_exes_gameplay_stalkers_ai_enhanced_vision_desc">
+		<text>If enabled, NPCs will have less restrictions to consider an enemy visible, possibly resulting in seeing through walls.</text>
 	</string>
 
 	<!-- Monsters -->
@@ -1074,6 +1080,9 @@
 	<string id="ui_mm_modded_exes_optimizations_mt_scheduler">
 		<text>Multithreaded scheduler (mt_scheduler)</text>
 	</string>
+	<string id="ui_mm_modded_exes_optimizations_mt_schedulerRT">
+		<text>Multithreaded scheduler for real time objects (mt_schedulerRT)</text>
+	</string>
 	<string id="ui_mm_modded_exes_optimizations_scheduler_batch_size">
 		<text>Scheduler batch size (scheduler_batch_size)</text>
 	</string>
@@ -1100,6 +1109,12 @@
 	</string>
 	<string id="ui_mm_modded_exes_optimizations_r2_shadow_omnipart_vischeck_desc">
 		<text>Increases performance by checking visibility for lights that are created from point lights and skipping invisible of those ones</text>
+	</string>
+	<string id="ui_mm_modded_exes_optimizations_r__hom_dynamic">
+		<text>HOM visibility test for dynamic objects (r__hom_dynamic)</text>
+	</string>
+	<string id="ui_mm_modded_exes_optimizations_r__hom_dynamic_desc">
+		<text>Might increase performance by checking visibility via HOM for dynamic objects</text>
 	</string>
 
 	<string id="ui_mm_modded_exes_optimizations_spawn_antifreeze">
