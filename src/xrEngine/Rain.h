@@ -98,6 +98,8 @@ private:
 	BOOL RayPick(const Fvector& s, const Fvector& d, float& range, collide::rq_target tgt);
 	void RenewItem(Item& dest, float height, BOOL bHit);
 	void Prepare(Fvector2& offset, Fvector3& axis, float Wind_Vel, float Wind_Dir);
+	void UpdateItemsMT();
+	xrCriticalSection rainCS;
 public:
 	CEffect_Rain();
 	~CEffect_Rain();

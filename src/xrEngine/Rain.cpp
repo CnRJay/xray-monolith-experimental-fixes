@@ -244,6 +244,18 @@ void CEffect_Rain::OnFrame()
 		clamp(rain_volume, .1f, 1.f);
 		snd_Ambient.set_volume(rain_volume);
 	}
+
+	if (state == stWorking)
+	{
+		Device.seqParallel.push_back(fastdelegate::FastDelegate0<>(this, &CEffect_Rain::UpdateItemsMT));
+	}
+}
+
+void CEffect_Rain::UpdateItemsMT()
+{
+	rainCS.Enter();
+	m_pRender->Update(*this);
+	rainCS.Leave();
 }
 
 //#include "xr_input.h"
@@ -253,7 +265,9 @@ void CEffect_Rain::Render()
 	if (!g_pGameLevel) return;
 #endif
 
+	rainCS.Enter();
 	m_pRender->Render(*this);
+	rainCS.Leave();
 
 	/*
 	float factor = g_pGamePersistent->Environment().CurrentEnv->rain_density;
