@@ -147,13 +147,9 @@ str_value* str_container::dock(str_c value)
 {
 	if (0 == value) return 0;
 
-	cs.Enter();
-
 #ifdef DEBUG_MEMORY_MANAGER
-    Memory.stat_strdock++;
+	Memory.stat_strdock++;
 #endif // DEBUG_MEMORY_MANAGER
-
-	str_value* result = 0;
 
 	// calc len
 	u32 s_len = xr_strlen(value);
@@ -167,84 +163,101 @@ str_value* str_container::dock(str_c value)
 	sv->dwLength = s_len;
 	sv->dwCRC = crc32(value, s_len);
 
-	// search
+	str_value* result = 0;
+
+	// Acquire Shared Lock
+	cs.AcquireShared();
 	result = impl->find(sv, value);
+	cs.ReleaseShared();
 
 #ifdef DEBUG
-    bool is_leaked_string = !xr_strcmp(value, "enter leaked string here");
+	bool is_leaked_string = !xr_strcmp(value, "enter leaked string here");
 #endif //DEBUG
 
 	// it may be the case, string is not found or has "non-exact" match
 	if (0 == result
 #ifdef DEBUG
-        || is_leaked_string
+		|| is_leaked_string
 #endif //DEBUG
 	)
 	{
-		result = (str_value*)Memory.mem_alloc(HEADER + s_len_with_zero
+		// Acquire Exclusive Lock
+		cs.AcquireExclusive();
+
+		// Double-check under Exclusive Lock
+		result = impl->find(sv, value);
+
+		if (0 == result
+#ifdef DEBUG
+			|| is_leaked_string
+#endif //DEBUG
+		)
+		{
+			result = (str_value*)Memory.mem_alloc(HEADER + s_len_with_zero
 #ifdef DEBUG_MEMORY_NAME
-                                              , "storage: sstring"
+												  , "storage: sstring"
 #endif // DEBUG_MEMORY_NAME
-		);
+			);
 
 #ifdef DEBUG
-        static int num_leaked_string = 0;
-        if (is_leaked_string)
-        {
-            ++num_leaked_string;
-            Msg("leaked_string: %d 0x%08x", num_leaked_string, result);
-        }
+			static int num_leaked_string = 0;
+			if (is_leaked_string)
+			{
+				++num_leaked_string;
+				Msg("leaked_string: %d 0x%08x", num_leaked_string, result);
+			}
 #endif // DEBUG
 
-		result->dwReference = 0;
-		result->dwLength = sv->dwLength;
-		result->dwCRC = sv->dwCRC;
-		CopyMemory(result->value, value, s_len_with_zero);
+			result->dwReference = 0;
+			result->dwLength = sv->dwLength;
+			result->dwCRC = sv->dwCRC;
+			CopyMemory(result->value, value, s_len_with_zero);
 
-		impl->insert(result);
+			impl->insert(result);
+		}
+		cs.ReleaseExclusive();
 	}
-	cs.Leave();
 
 	return result;
 }
 
 void str_container::clean()
 {
-	cs.Enter();
+	cs.AcquireExclusive();
 	impl->clean();
-	cs.Leave();
+	cs.ReleaseExclusive();
 }
 
 void str_container::verify()
 {
-	cs.Enter();
+	cs.AcquireExclusive();
 	impl->verify();
-	cs.Leave();
+	cs.ReleaseExclusive();
 }
 
 void str_container::dump()
 {
-	cs.Enter();
+	cs.AcquireExclusive();
 	FILE* F = fopen("d:\\$str_dump$.txt", "w");
 	impl->dump(F);
 	fclose(F);
-	cs.Leave();
+	cs.ReleaseExclusive();
 }
 
 void str_container::dump(IWriter* W)
 {
-	cs.Enter();
+	cs.AcquireExclusive();
 	impl->dump(W);
-	cs.Leave();
+	cs.ReleaseExclusive();
 }
 
 u32 str_container::stat_economy(u32& count)
 {
-	cs.Enter();
+	cs.AcquireExclusive();
 	int counter = 0;
 	counter -= sizeof(*this);
 	counter += impl->stat_economy(count);
-	cs.Leave();
+	cs.ReleaseExclusive();
 	return u32(counter);
 }
 
@@ -276,24 +289,9 @@ str_value* str_container::dock(str_c value)
 {
     if (0 == value) return 0;
 
-    cs.Enter();
-
-    // ++impl->num_docs;
-// if ( impl->num_docs == 10000000 )
-// {
-// Msg("shared_strings");
-// g_find_chunk_counter.flush();
-// }
-//
-// //#ifdef FIND_CHUNK_BENCHMARK_ENABLE
-// find_chunk_auto_timer timer;
-// //#endif // FIND_CHUNK_BENCHMARK_ENABLE
-
 #ifdef DEBUG_MEMORY_MANAGER
     Memory.stat_strdock++;
 #endif // DEBUG_MEMORY_MANAGER
-
-    str_value* result = 0;
 
     // calc len
     u32 s_len = xr_strlen(value);
@@ -307,6 +305,11 @@ str_value* str_container::dock(str_c value)
     sv->dwLength = s_len;
     sv->dwCRC = crc32(value, s_len);
     sv->next = nullptr;
+
+    str_value* result = 0;
+
+    // Acquire Shared Lock
+    cs.AcquireShared();
 
     // search
     str_container_impl::cdb::iterator I = impl->container.find(sv); // only integer compares :)
@@ -324,48 +327,66 @@ str_value* str_container::dock(str_c value)
         }
     }
 
+    cs.ReleaseShared();
+
     bool is_leaked_string = !xr_strcmp(value, "enter leaked string here");
 
     // it may be the case, string is not found or has "non-exact" match
     if (0 == result || is_leaked_string)
     {
-        // Insert string
-        // DUMP_PHASE;
+        // Acquire Exclusive Lock
+        cs.AcquireExclusive();
 
-        result = (str_value*)Memory.mem_alloc(HEADER + s_len_with_zero
-#ifdef DEBUG_MEMORY_NAME
-                                              , "storage: sstring"
-#endif // DEBUG_MEMORY_NAME
-                                             );
-
-        static int num11 = 0;
-
-        if (is_leaked_string)
+        // Double-check search under Exclusive Lock
+        I = impl->container.find(sv);
+        if (I != impl->container.end())
         {
-            ++num11;
-            Msg("leaked_string: %d 0x%08x", num11, result);
+            for (; I != impl->container.end() && (*I)->dwCRC == sv->dwCRC; ++I)
+            {
+                str_value* V = (*I);
+                if (V->dwLength != sv->dwLength) continue;
+                if (0 != memcmp(V->value, value, s_len)) continue;
+                result = V; // found
+                break;
+            }
         }
 
-        // DUMP_PHASE;
+        if (0 == result || is_leaked_string)
+        {
+            // Insert string
+            result = (str_value*)Memory.mem_alloc(HEADER + s_len_with_zero
+#ifdef DEBUG_MEMORY_NAME
+                                                  , "storage: sstring"
+#endif // DEBUG_MEMORY_NAME
+                                                 );
 
-        result->dwReference = 0;
-        result->dwLength = sv->dwLength;
-        result->dwCRC = sv->dwCRC;
-        result->next = nullptr;
+            static int num11 = 0;
 
-        CopyMemory(result->value, value, s_len_with_zero);
+            if (is_leaked_string)
+            {
+                ++num11;
+                Msg("leaked_string: %d 0x%08x", num11, result);
+            }
 
-        impl->container.insert(result);
+            result->dwReference = 0;
+            result->dwLength = sv->dwLength;
+            result->dwCRC = sv->dwCRC;
+            result->next = nullptr;
+
+            CopyMemory(result->value, value, s_len_with_zero);
+
+            impl->container.insert(result);
+        }
+
+        cs.ReleaseExclusive();
     }
-
-    cs.Leave();
 
     return result;
 }
 
 void str_container::clean()
 {
-    cs.Enter();
+    cs.AcquireExclusive();
     str_container_impl::cdb::iterator it = impl->container.begin();
     str_container_impl::cdb::iterator end = impl->container.end();
     for (; it != end;)
@@ -385,12 +406,12 @@ void str_container::clean()
         }
     }
     if (impl->container.empty()) impl->container.clear();
-    cs.Leave();
+    cs.ReleaseExclusive();
 }
 
 void str_container::verify()
 {
-    cs.Enter();
+    cs.AcquireExclusive();
     str_container_impl::cdb::iterator it = impl->container.begin();
     str_container_impl::cdb::iterator end = impl->container.end();
     for (; it != end; ++it)
@@ -401,24 +422,24 @@ void str_container::verify()
         R_ASSERT3(crc == sv->dwCRC, "CorePanic: read-only memory corruption (shared_strings)", itoa(sv->dwCRC, crc_str, 16));
         R_ASSERT3(sv->dwLength == xr_strlen(sv->value), "CorePanic: read-only memory corruption (shared_strings, internal structures)", sv->value);
     }
-    cs.Leave();
+    cs.ReleaseExclusive();
 }
 
 void str_container::dump()
 {
-    cs.Enter();
+    cs.AcquireExclusive();
     str_container_impl::cdb::iterator it = impl->container.begin();
     str_container_impl::cdb::iterator end = impl->container.end();
     FILE* F = fopen("d:\\$str_dump$.txt", "w");
     for (; it != end; it++)
         fprintf(F, "ref[%4d]-len[%3d]-crc[%8X] : %s\n", (*it)->dwReference, (*it)->dwLength, (*it)->dwCRC, (*it)->value);
     fclose(F);
-    cs.Leave();
+    cs.ReleaseExclusive();
 }
 
 u32 str_container::stat_economy()
 {
-    cs.Enter();
+    cs.AcquireExclusive();
     str_container_impl::cdb::iterator it = impl->container.begin();
     str_container_impl::cdb::iterator end = impl->container.end();
     int counter = 0;
@@ -431,7 +452,7 @@ u32 str_container::stat_economy()
         counter -= node_size;
         counter += int((int((*it)->dwReference) - 1)*int((*it)->dwLength + 1));
     }
-    cs.Leave();
+    cs.ReleaseExclusive();
 
     return u32(counter);
 }

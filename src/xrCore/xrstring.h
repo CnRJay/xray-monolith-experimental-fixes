@@ -38,7 +38,7 @@ class IWriter;
 class XRCORE_API str_container
 {
 private:
-	xrCriticalSection cs;
+	xrSRWLock cs;
 	str_container_impl* impl;
 public:
 	str_container();
@@ -50,9 +50,6 @@ public:
 	void dump(IWriter* W);
 	void verify();
 	u32 stat_economy(u32& count);
-#ifdef PROFILE_CRITICAL_SECTIONS
-    str_container ():cs(MUTEX_PROFILE_ID(str_container)) {}
-#endif // PROFILE_CRITICAL_SECTIONS
 };
 
 XRCORE_API extern str_container* g_pStringContainer;
