@@ -5,6 +5,7 @@
 #include		"skeletoncustom.h"
 #include		"animation.h"
 #include		"../../xrEngine/SkeletonMotions.h"
+#include		"../../xrCore/xrSyncronize.h"
 
 #include		"../../Include/xrRender/KinematicsAnimated.h"
 
@@ -19,6 +20,7 @@ public:
 private:
 	BlendSVec Blend;
 public:
+	xrSRWLock blend_lock;
 
 	// methods
 	IC BlendSVec& blend_vector() { return Blend; }
