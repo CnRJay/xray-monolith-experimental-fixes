@@ -5,6 +5,7 @@
 #include "../xrRender/dxParticleCustom.h"
 #include <tbb/spin_mutex.h>
 #include <vector>
+#include "../../xrCore/xrSyncronize.h"
 
 namespace PS
 {
@@ -161,6 +162,7 @@ namespace PS
 
 		Flags8 m_RT_Flags;
 	public:
+		xrCriticalSection onframe_lock;
 		CParticleGroup();
 		virtual ~CParticleGroup();
 		virtual void OnFrame(u32 dt);

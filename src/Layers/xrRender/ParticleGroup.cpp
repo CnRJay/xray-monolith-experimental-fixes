@@ -603,12 +603,17 @@ u32 CParticleGroup::SItem::ParticlesCount() {
 //------------------------------------------------------------------------------
 // Particle Group part
 //------------------------------------------------------------------------------
-CParticleGroup::CParticleGroup() {
+CParticleGroup::CParticleGroup()
+#ifdef PROFILE_CRITICAL_SECTIONS
+  : onframe_lock(MUTEX_PROFILE_ID(CParticleGroup::onframe_lock))
+#endif // PROFILE_CRITICAL_SECTIONS
+{
   m_RT_Flags.zero();
   m_InitialPosition.set(0, 0, 0);
 }
 
 CParticleGroup::~CParticleGroup() {
+  xrCriticalSectionGuard guard(onframe_lock);
   // Msg ("!!! destoy PG");
   for (u32 i = 0; i < items.size(); i++)
     items[i].Clear();
@@ -616,6 +621,7 @@ CParticleGroup::~CParticleGroup() {
 }
 
 void CParticleGroup::OnFrame(u32 u_dt) {
+  xrCriticalSectionGuard guard(onframe_lock);
   PROF_EVENT("Particles:GroupUpdate");
   if (m_Def && m_RT_Flags.is(flRT_Playing)) {
     float ct = m_CurrentTime;
@@ -687,6 +693,7 @@ void CParticleGroup::OnFrame(u32 u_dt) {
 
 void CParticleGroup::UpdateParent(const Fmatrix &m, const Fvector &velocity,
                                   BOOL bXFORM) {
+  xrCriticalSectionGuard guard(onframe_lock);
   m_InitialPosition = m.c;
   for (SItemVecIt i_it = items.begin(); i_it != items.end(); i_it++) {
       if (i_it->_effect) // Check if effect is valid
@@ -695,6 +702,7 @@ void CParticleGroup::UpdateParent(const Fmatrix &m, const Fvector &velocity,
 }
 
 BOOL CParticleGroup::Compile(CPGDef *def) {
+  xrCriticalSectionGuard guard(onframe_lock);
   m_Def = def;
   // destroy existing
   for (SItemVecIt i_it = items.begin(); i_it != items.end(); i_it++)
@@ -718,12 +726,14 @@ BOOL CParticleGroup::Compile(CPGDef *def) {
 }
 
 void CParticleGroup::Play() {
+  xrCriticalSectionGuard guard(onframe_lock);
   m_CurrentTime = 0;
   m_RT_Flags.set(flRT_DefferedStop, FALSE);
   m_RT_Flags.set(flRT_Playing, TRUE);
 }
 
 void CParticleGroup::Stop(BOOL bDefferedStop) {
+  xrCriticalSectionGuard guard(onframe_lock);
   if (bDefferedStop) {
     m_RT_Flags.set(flRT_DefferedStop, TRUE);
   } else {
@@ -734,16 +744,19 @@ void CParticleGroup::Stop(BOOL bDefferedStop) {
 }
 
 void CParticleGroup::OnDeviceCreate() {
+  xrCriticalSectionGuard guard(onframe_lock);
   for (SItemVecIt i_it = items.begin(); i_it != items.end(); i_it++)
     i_it->OnDeviceCreate();
 }
 
 void CParticleGroup::OnDeviceDestroy() {
+  xrCriticalSectionGuard guard(onframe_lock);
   for (SItemVecIt i_it = items.begin(); i_it != items.end(); i_it++)
     i_it->OnDeviceDestroy();
 }
 
 u32 CParticleGroup::ParticlesCount() {
+  xrCriticalSectionGuard guard(onframe_lock);
   int p_count = 0;
   for (SItemVecIt i_it = items.begin(); i_it != items.end(); i_it++)
     p_count += i_it->ParticlesCount();
@@ -751,6 +764,7 @@ u32 CParticleGroup::ParticlesCount() {
 }
 
 void CParticleGroup::SetHudMode(BOOL b) {
+  xrCriticalSectionGuard guard(onframe_lock);
   for (SItemVecIt i_it = items.begin(); i_it != items.end(); ++i_it) {
     CParticleEffect *E = static_cast<CParticleEffect *>(i_it->_effect);
     E->SetHudMode(b);
@@ -758,6 +772,7 @@ void CParticleGroup::SetHudMode(BOOL b) {
 }
 
 BOOL CParticleGroup::GetHudMode() {
+  xrCriticalSectionGuard guard(onframe_lock);
   if (items.size()) {
     CParticleEffect *E = static_cast<CParticleEffect *>(items[0]._effect);
     return E->GetHudMode();
