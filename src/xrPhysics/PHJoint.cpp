@@ -622,6 +622,8 @@ void CPHJoint::SetLimitsVsSecondElement(const float low, const float high, const
 void CPHJoint::Create()
 {
 	if (bActive) return;
+	xrCriticalSectionGuard guard(&JointCS);
+	if (bActive) return;
 	switch (eType)
 	{
 	case ball: CreateBall();
@@ -664,6 +666,8 @@ void CPHJoint::Activate()
 
 void CPHJoint::Deactivate()
 {
+	if (!bActive) return;
+	xrCriticalSectionGuard guard(&JointCS);
 	if (!bActive) return;
 	switch (eType)
 	{
