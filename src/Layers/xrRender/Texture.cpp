@@ -11,8 +11,6 @@
 
 #include "dxRenderDeviceRender.h"
 
-// Global FS lock for thread-safe texture loading
-xrCriticalSection fs_lock;
 
 // #include "std_classes.h"
 // #include "xr_avi.h"
@@ -292,16 +290,13 @@ ID3DBaseTexture *CRender::texture_load(LPCSTR fRName, u32 &ret_msize) {
   // if (FS.exist(fn,"$game_textures$",fname,	".dds")	&&
   // strstr(fname,"_bump"))	goto _BUMP;
   if (strstr(fname, "_bump")) {
-    fs_lock.Enter();
     if (!FS.exist(fn, "$game_textures$", fname, ".dds")) {
-      fs_lock.Leave();
       goto _BUMP_from_base;
     } else if (strstr(Core.Params, "-no_bump_mode2")) {
       if (strstr(fname, "_bump#")) {
         R_ASSERT2(FS.exist(fn, "$game_textures$", "ed\\ed_dummy_bump#", ".dds"),
                   "ed_dummy_bump#");
         S = FS.r_open(fn);
-        fs_lock.Leave();
         R_ASSERT2(S, fn);
         img_size = S->length();
         goto _DDS_2D;
@@ -310,7 +305,6 @@ ID3DBaseTexture *CRender::texture_load(LPCSTR fRName, u32 &ret_msize) {
       R_ASSERT2(FS.exist(fn, "$game_textures$", "ed\\ed_dummy_bump", ".dds"),
                 "ed_dummy_bump");
       S = FS.r_open(fn);
-      fs_lock.Leave();
 
       R_ASSERT2(S, fn);
 
@@ -321,28 +315,21 @@ ID3DBaseTexture *CRender::texture_load(LPCSTR fRName, u32 &ret_msize) {
       R_ASSERT2(FS.exist(fn, "$game_textures$", "ed\\ed_dummy_bump#", ".dds"),
                 "ed_dummy_bump#");
       S = FS.r_open(fn);
-      fs_lock.Leave();
       R_ASSERT2(S, fn);
       img_size = S->length();
       goto _DDS_2D;
     }
-    fs_lock.Leave();
   }
 
-  fs_lock.Enter();
   if (FS.exist(fn, "$level$", fname, ".dds")) {
-    fs_lock.Leave();
     goto _DDS;
   }
   if (FS.exist(fn, "$game_saves$", fname, ".dds")) {
-    fs_lock.Leave();
     goto _DDS;
   }
   if (FS.exist(fn, "$game_textures$", fname, ".dds")) {
-    fs_lock.Leave();
     goto _DDS;
   }
-  fs_lock.Leave();
 
 #ifdef _EDITOR
   ELog.Msg(mtError, "Can't find texture '%s'", fname);
@@ -361,9 +348,7 @@ ID3DBaseTexture *CRender::texture_load(LPCSTR fRName, u32 &ret_msize) {
 _DDS: {
   // Load and get header
   D3DXIMAGE_INFO IMG;
-  fs_lock.Enter();
   S = FS.r_open(fn);
-  fs_lock.Leave();
 #ifdef DEBUG
   Msg("* Loaded: %s[%d]", fn, S->length());
 #endif // DEBUG
@@ -373,9 +358,7 @@ _DDS: {
       D3DXGetImageInfoFromFileInMemory(S->pointer(), S->length(), &IMG);
   if (FAILED(result)) {
     Msg("! Can't get image info for texture '%s'", fn);
-    fs_lock.Enter();
     FS.r_close(S);
-    fs_lock.Leave();
     string_path temp;
     R_ASSERT(FS.exist(temp, "$game_textures$", "ed\\ed_not_existing_texture",
                       ".dds"));
@@ -395,9 +378,7 @@ _DDS_CUBE: {
       IMG.Format,
       (RImplementation.o.no_ram_textures ? D3DPOOL_DEFAULT : D3DPOOL_MANAGED),
       D3DX_DEFAULT, D3DX_DEFAULT, 0, &IMG, 0, &pTextureCUBE);
-  fs_lock.Enter();
   FS.r_close(S);
-  fs_lock.Leave();
 
   if (FAILED(result)) {
     Msg("! Can't load texture '%s'", fn);
@@ -425,9 +406,7 @@ _DDS_2D: {
       HW.pDevice, S->pointer(), S->length(), D3DX_DEFAULT, D3DX_DEFAULT,
       IMG.MipLevels, 0, IMG.Format, D3DPOOL_SYSTEMMEM, D3DX_DEFAULT,
       D3DX_DEFAULT, 0, &IMG, 0, &T_sysmem);
-  fs_lock.Enter();
   FS.r_close(S);
-  fs_lock.Leave();
 
   if (FAILED(result)) {
     Msg("! Can't load texture '%s'", fn);
@@ -565,13 +544,11 @@ _BUMP_from_base: {
   //////////////////
 
   *strstr(fname, "_bump") = 0;
-  fs_lock.Enter();
   R_ASSERT2(FS.exist(fn, "$game_textures$", fname, ".dds"), fname);
 
   // Load   SYS-MEM-surface, bound to device restrictions
   D3DXIMAGE_INFO IMG;
   S = FS.r_open(fn);
-  fs_lock.Leave();
   img_size = S->length();
   ID3DTexture2D *T_base;
   R_CHK2(D3DXCreateTextureFromFileInMemoryEx(
@@ -579,9 +556,7 @@ _BUMP_from_base: {
              D3DX_DEFAULT, 0, D3DFMT_A8R8G8B8, D3DPOOL_SYSTEMMEM, D3DX_DEFAULT,
              D3DX_DEFAULT, 0, &IMG, 0, &T_base),
          fn);
-  fs_lock.Enter();
   FS.r_close(S);
-  fs_lock.Leave();
 
   // Create HW-surface
   ID3DTexture2D *T_normal_1 = 0;

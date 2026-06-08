@@ -15,6 +15,7 @@
 #include "FS_internal.h"
 #include "stream_reader.h"
 #include "file_stream_reader.h"
+#include "_thread_types.h"
 
 const u32 BIG_FILE_READER_WINDOW_SIZE = 1024 * 1024;
 
@@ -136,11 +137,12 @@ void setup_reader(IReader* _r, _open_file& _of)
 	_of._reader = _r;
 }
 
+static xrCriticalSection open_files_lock;
+
 template <typename T>
 void _register_open_file(T* _r, LPCSTR _fname)
 {
-	xrCriticalSection _lock;
-	_lock.Enter();
+	open_files_lock.Enter();
 
 	shared_str f = _fname;
 	_check_open_file(f);
@@ -149,20 +151,19 @@ void _register_open_file(T* _r, LPCSTR _fname)
 	setup_reader(_r, _of);
 	_of._used += 1;
 
-	_lock.Leave();
+	open_files_lock.Leave();
 }
 
 template <typename T>
 void _unregister_open_file(T* _r)
 {
-	xrCriticalSection _lock;
-	_lock.Enter();
+	open_files_lock.Enter();
 
 	xr_vector<_open_file>::iterator it = std::find_if(g_open_files.begin(), g_open_files.end(), eq_pointer<T>(_r));
 	VERIFY(it != g_open_files.end());
 	_open_file& _of = *it;
 	_of._reader = nullptr;
-	_lock.Leave();
+	open_files_lock.Leave();
 }
 
 XRCORE_API void _dump_open_files(int mode)
@@ -202,7 +203,8 @@ XRCORE_API void _dump_open_files(int mode)
 
 CLocatorAPI::CLocatorAPI()
 #ifdef PROFILE_CRITICAL_SECTIONS
-    :m_auth_lock(MUTEX_PROFILE_ID(CLocatorAPI::m_auth_lock))
+    :m_auth_lock(MUTEX_PROFILE_ID(CLocatorAPI::m_auth_lock)),
+     m_register_lock(MUTEX_PROFILE_ID(CLocatorAPI::m_register_lock))
 #endif // PROFILE_CRITICAL_SECTIONS
 {
 	m_Flags.zero();
@@ -222,6 +224,7 @@ CLocatorAPI::~CLocatorAPI()
 
 void CLocatorAPI::Register(LPCSTR name, u32 vfs, u32 crc, u32 ptr, u32 size_real, u32 size_compressed, u32 modif)
 {
+	m_register_lock.Enter();
 	//Msg("Register[%d] [%s]",vfs,name);
 	string256 temp_file_name;
 	xr_strcpy(temp_file_name, sizeof(temp_file_name), name);
@@ -248,6 +251,7 @@ void CLocatorAPI::Register(LPCSTR name, u32 vfs, u32 crc, u32 ptr, u32 size_real
 		// sad but true, performance option
 		// correct way is to erase and then insert new record:
 		const_cast<file&>(*I) = desc;
+		m_register_lock.Leave();
 		return;
 	}
 	else
@@ -284,6 +288,7 @@ void CLocatorAPI::Register(LPCSTR name, u32 vfs, u32 crc, u32 ptr, u32 size_real
 		if (xr_strlen(temp)) temp[xr_strlen(temp) - 1] = 0;
 		vfs_id = 0xffffffff;
 	}
+	m_register_lock.Leave();
 }
 
 IReader* open_chunk(void* ptr, u32 ID)
@@ -518,18 +523,25 @@ void CLocatorAPI::unload_archive(CLocatorAPI::archive& A)
 
 bool CLocatorAPI::load_all_unloaded_archives()
 {
-	archives_it it = m_archives.begin();
-	archives_it it_e = m_archives.end();
 	bool res = false;
-	for (; it != it_e; ++it)
+	xr_vector<archive*> unloaded;
+	for (auto& A : m_archives)
 	{
-		archive& A = *it;
 		if (A.hSrcFile == nullptr)
 		{
-			LoadArchive(A);
+			unloaded.push_back(&A);
 			res = true;
 		}
 	}
+
+	if (res)
+	{
+		concurrency::parallel_for_each(unloaded.begin(), unloaded.end(), [this](archive* A)
+		{
+			LoadArchive(*A);
+		});
+	}
+
 	return res;
 }
 

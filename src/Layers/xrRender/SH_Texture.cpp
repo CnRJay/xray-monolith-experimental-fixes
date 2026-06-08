@@ -17,8 +17,6 @@
 #define PRIORITY_NORMAL 8
 #define PRIORITY_LOW 4
 
-extern xrCriticalSection fs_lock;
-
 void resptrcode_texture::create(LPCSTR _name) {
   _set(DEV->_CreateTexture(_name));
 }
@@ -185,9 +183,7 @@ void CTexture::Load() {
   {
     // Check for OGM
     string_path fn;
-    fs_lock.Enter();
     if (FS.exist(fn, "$game_textures$", *cName, ".ogm")) {
-      fs_lock.Leave();
       // AVI
       pTheora = xr_new<CTheoraSurface>();
       m_play_time = 0xFFFFFFFF;
@@ -218,10 +214,7 @@ void CTexture::Load() {
         }
       }
     } else {
-      fs_lock.Leave();
-      fs_lock.Enter();
       if (FS.exist(fn, "$game_textures$", *cName, ".avi")) {
-        fs_lock.Leave();
         // AVI
         pAVI = xr_new<CAviPlayerCustom>();
 
@@ -245,13 +238,10 @@ void CTexture::Load() {
           }
         }
       } else {
-        fs_lock.Leave();
-        fs_lock.Enter();
         if (FS.exist(fn, "$game_textures$", *cName, ".seq")) {
           // Sequence
           string256 buffer;
           IReader *_fs = FS.r_open(fn);
-          fs_lock.Leave();
 
           flags.seqCycles = FALSE;
           _fs->r_string(buffer, sizeof(buffer));
@@ -280,13 +270,10 @@ void CTexture::Load() {
 				}
 			}
 			pSurface = 0;
-            fs_lock.Enter();
 			FS.r_close(_fs);
-            fs_lock.Leave();
 		}
         else if (FS.exist(fn, "$game_textures$", *cName, ".gif"))
         {
-            fs_lock.Leave();
             gifPlayer = xr_new<CGIFAnimationPlayer>();
             if (!gifPlayer->Load(fn))
             {
@@ -305,7 +292,6 @@ void CTexture::Load() {
         }
 		else
 		{
-            fs_lock.Leave();
 			// Normal texture
 			u32 mem = 0;
 			pSurface = ::RImplementation.texture_load(*cName, mem);
@@ -316,7 +302,6 @@ void CTexture::Load() {
             flags.MemoryUsage = mem;
           }
         }
-        // #endif
       }
     }
   }

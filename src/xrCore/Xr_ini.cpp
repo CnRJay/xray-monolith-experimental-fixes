@@ -265,16 +265,19 @@ IC BOOL is_empty_line_now(IReader* F)
 	return (*a0 == 13) && (*a1 == 10) && (*a2 == 13) && (*a3 == 10);
 };
 
-// Regex pattern cache (added before Load function)
 static const std::regex& GetCachedRegex(const xr_string& pattern)
 {
 	static xr_unordered_flat_map<xr_string, std::regex> g_RegexCache;
+	static xrCriticalSection regex_cache_lock;
+	regex_cache_lock.Enter();
 	auto it = g_RegexCache.find(pattern);
 	if (it == g_RegexCache.end())
 	{
 		auto result = g_RegexCache.emplace(pattern, std::regex(pattern.c_str()));
+		regex_cache_lock.Leave();
 		return result.first->second;
 	}
+	regex_cache_lock.Leave();
 	return it->second;
 }
 

@@ -13,8 +13,6 @@
 
 #include "../xrRender/dxRenderDeviceRender.h"
 
-static xrCriticalSection texture_gpu_lock;
-
 // #include "std_classes.h"
 // #include "xr_avi.h"
 
@@ -448,7 +446,6 @@ _DDS:
 			LoadInfo.pSrcInfo = &IMG;
 
 #ifdef USE_DX11
-			texture_gpu_lock.Enter();
 			HRESULT _hr = D3DX11CreateTextureFromMemory(
 				HW.pDevice,
 				S->pointer(),S->length(),
@@ -457,10 +454,8 @@ _DDS:
 				&pTexture2D,
 				0
 			);
-			texture_gpu_lock.Leave();
 			R_CHK(_hr);
 #else
-			texture_gpu_lock.Enter();
 			HRESULT _hr = D3DX10CreateTextureFromMemory(
 				HW.pDevice,
 				S->pointer(),S->length(),
@@ -469,7 +464,6 @@ _DDS:
 				&pTexture2D,
 				0
 			);
-			texture_gpu_lock.Leave();
 			R_CHK(_hr);
 #endif
 
@@ -534,7 +528,6 @@ _DDS:
 			LoadInfo.pSrcInfo = &IMG;
 
 #ifdef USE_DX11
-			texture_gpu_lock.Enter();
 			HRESULT _hr = D3DX11CreateTextureFromMemory
 			       (
 				       HW.pDevice,S->pointer(),S->length(),
@@ -543,10 +536,8 @@ _DDS:
 				       &pTexture2D,
 				       0
 			       );
-			texture_gpu_lock.Leave();
 			R_CHK2(_hr, fn);
 #else
-			texture_gpu_lock.Enter();
 			HRESULT _hr = D3DX10CreateTextureFromMemory
 			       (
 				       HW.pDevice,S->pointer(),S->length(),
@@ -555,7 +546,6 @@ _DDS:
 				       &pTexture2D,
 				       0
 			       );
-			texture_gpu_lock.Leave();
 			R_CHK2(_hr, fn);
 #endif
 			FS.r_close(S);
