@@ -41,6 +41,7 @@ void CScriptBinder::clear() {
 }
 
 void CScriptBinder::reinit() {
+  PROF_EVENT("CScriptBinder::reinit");
 #ifdef DEBUG_MEMORY_MANAGER
   size_t start = 0;
   if (g_bMEMO)
@@ -66,6 +67,7 @@ void CScriptBinder::reinit() {
 void CScriptBinder::Load(LPCSTR section) {}
 
 void CScriptBinder::reload(LPCSTR section) {
+  PROF_EVENT("CScriptBinder::reload");
 #ifdef DEBUG_MEMORY_MANAGER
   size_t start = 0;
   if (g_bMEMO)
@@ -113,6 +115,7 @@ void CScriptBinder::reload(LPCSTR section) {
 }
 
 BOOL CScriptBinder::net_Spawn(CSE_Abstract *DC) {
+  PROF_EVENT("CScriptBinder::net_Spawn");
 #ifdef DEBUG_MEMORY_MANAGER
   size_t start = 0;
   if (g_bMEMO)

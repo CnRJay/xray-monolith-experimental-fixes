@@ -95,6 +95,7 @@ void CALifeObjectRegistry::save(IWriter& memory_stream)
 
 CSE_ALifeDynamicObject* CALifeObjectRegistry::get_object(IReader& file_stream)
 {
+	PROF_EVENT("CALifeObjectRegistry::get_object");
 	NET_Packet tNetPacket;
 	u16 u_id;
 	// Spawn
@@ -135,6 +136,7 @@ CSE_ALifeDynamicObject* CALifeObjectRegistry::get_object(IReader& file_stream)
 
 void CALifeObjectRegistry::load(IReader& file_stream)
 {
+	PROF_EVENT("CALifeObjectRegistry::load");
 	Msg("* Loading objects...");
 	R_ASSERT2(file_stream.find_chunk(OBJECT_CHUNK_DATA), "Can't find chunk OBJECT_CHUNK_DATA!");
 

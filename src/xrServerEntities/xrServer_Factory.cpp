@@ -8,9 +8,11 @@
 
 #include "stdafx.h"
 #include "object_factory.h"
+#include "../xrCore/profiler.h"
 
 CSE_Abstract* F_entity_Create(LPCSTR section)
 {
+	PROF_EVENT("F_entity_Create");
 	if (!pSettings->section_exist(section)) return nullptr;
 	return (object_factory().server_object(pSettings->r_clsid(section, "class"), section));
 }

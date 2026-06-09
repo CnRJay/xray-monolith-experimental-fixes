@@ -28,6 +28,9 @@ private:
 	IC CStreamReader& operator=(const CStreamReader&);
 
 public:
+	void* m_base_address;
+
+public:
 	IC CStreamReader();
 
 public:

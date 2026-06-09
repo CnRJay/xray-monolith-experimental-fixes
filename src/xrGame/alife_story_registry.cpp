@@ -26,6 +26,7 @@ void CALifeStoryRegistry::add(ALife::_STORY_ID id, CSE_ALifeDynamicObject* objec
 	Msg("Adding Story item ID [%u], Object [%s] at level [%s]",id, object->name_replace(), *ai().game_graph().header().level(ai().game_graph().vertex(object->m_tGraphID)->level_id()).name());
 #endif
 
+#ifdef DEBUG
 	ALife::STORY_P_PAIR_IT I = m_objects.find(id);
 	if (I != m_objects.end())
 	{
@@ -35,6 +36,7 @@ void CALifeStoryRegistry::add(ALife::_STORY_ID id, CSE_ALifeDynamicObject* objec
             Msg("![CALifeStoryRegistry::add] Specified story object is already in the Story registry! item ID [%u], Object [%s]", id, object->name_replace());
 		return;
 	}
+#endif
 
 	m_objects.insert(std::make_pair(id, object));
 }

@@ -1,5 +1,6 @@
 #include "pch_script.h"
 #include "GameObject.h"
+#include "../xrCore/profiler.h"
 //#include "../Include/xrRender/RenderVisual.h"
 #include "../Include/xrRender/RenderVisual.h"
 #include "../xrphysics/PhysicsShell.h"
@@ -267,6 +268,7 @@ void VisualCallback(IKinematics* tpKinematics);
 
 BOOL CGameObject::net_Spawn(CSE_Abstract* DC)
 {
+	PROF_EVENT("CGameObject::net_Spawn");
 	VERIFY(!m_spawned);
 	m_spawned = true;
 	m_spawn_time = Device.dwFrame;
@@ -467,6 +469,7 @@ BOOL CGameObject::net_Spawn(CSE_Abstract* DC)
 	::luabind::functor<void> funct;
 	if (ai().script_engine().functor("_G.CGameObject_NetSpawn", funct))
 	{
+		PROF_EVENT("CGameObject_NetSpawn Lua callback");
 		funct(this->lua_game_object());
 	}
 	return (CScriptBinder::net_Spawn(DC));

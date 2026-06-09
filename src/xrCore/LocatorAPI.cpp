@@ -16,6 +16,7 @@
 #include "stream_reader.h"
 #include "file_stream_reader.h"
 #include "_thread_types.h"
+#include "profiler.h"
 
 const u32 BIG_FILE_READER_WINDOW_SIZE = 1024 * 1024;
 
@@ -342,6 +343,7 @@ IReader* open_chunk(void* ptr, u32 ID)
 
 void CLocatorAPI::LoadArchive(archive& A, LPCSTR entrypoint)
 {
+	PROF_EVENT("LoadArchive");
 	// Create base path
 	string_path fs_entry_point;
 	fs_entry_point[0] = 0;
@@ -453,10 +455,17 @@ void CLocatorAPI::archive::open()
 	R_ASSERT(hSrcMap != INVALID_HANDLE_VALUE);
 	size = GetFileSize(hSrcFile, 0);
 	R_ASSERT(size > 0);
+	m_hSrcMapAddress = MapViewOfFile(hSrcMap, FILE_MAP_READ, 0, 0, 0);
+	R_ASSERT(m_hSrcMapAddress != nullptr);
 }
 
 void CLocatorAPI::archive::close()
 {
+	if (m_hSrcMapAddress)
+	{
+		UnmapViewOfFile(m_hSrcMapAddress);
+		m_hSrcMapAddress = nullptr;
+	}
 	CloseHandle(hSrcMap);
 	hSrcMap = nullptr;
 	CloseHandle(hSrcFile);
@@ -1177,44 +1186,26 @@ void CLocatorAPI::file_from_cache(T*& R, LPSTR fname, const u32& fname_size, con
 
 void CLocatorAPI::file_from_archive(IReader*& R, LPCSTR fname, const file& desc)
 {
+	PROF_EVENT("file_from_archive_reader");
 	// Archived one
 	archive& A = m_archives[desc.vfs];
-	u32 start = (desc.ptr / dwAllocGranularity) * dwAllocGranularity;
-	u32 end = (desc.ptr + desc.size_compressed) / dwAllocGranularity;
-	if ((desc.ptr + desc.size_compressed) % dwAllocGranularity) end += 1;
-	end *= dwAllocGranularity;
-	if (end > A.size) end = A.size;
-	u32 sz = (end - start);
-	u8* ptr = (u8*)MapViewOfFile(A.hSrcMap, FILE_MAP_READ, 0, start, sz);
-	VERIFY3(ptr, "cannot create file mapping on file", fname);
+	R_ASSERT(A.m_hSrcMapAddress != nullptr);
 
-	string512 temp;
-	xr_sprintf(temp, sizeof(temp), "%s:%s", *A.path, fname);
-
-#ifdef FS_DEBUG
-    register_file_mapping(ptr, sz, temp);
-#endif // DEBUG
-
-	u32 ptr_offs = desc.ptr - start;
 	if (desc.size_real == desc.size_compressed)
 	{
-		R = xr_new<CPackReader>(ptr, ptr + ptr_offs, desc.size_real);
+		R = xr_new<IReader>((char*)A.m_hSrcMapAddress + desc.ptr, desc.size_real);
 		return;
 	}
 
 	// Compressed
 	u8* dest = xr_alloc<u8>(desc.size_real);
-	rtc_decompress(dest, desc.size_real, ptr + ptr_offs, desc.size_compressed);
+	rtc_decompress(dest, desc.size_real, (char*)A.m_hSrcMapAddress + desc.ptr, desc.size_compressed);
 	R = xr_new<CTempReader>(dest, desc.size_real, 0);
-	UnmapViewOfFile(ptr);
-
-#ifdef FS_DEBUG
-    unregister_file_mapping(ptr, sz);
-#endif // DEBUG
 }
 
 void CLocatorAPI::file_from_archive(CStreamReader*& R, LPCSTR fname, const file& desc)
 {
+	PROF_EVENT("file_from_archive_stream");
 	archive& A = m_archives[desc.vfs];
 	R_ASSERT2(
 		desc.size_compressed == desc.size_real,
@@ -1225,6 +1216,7 @@ void CLocatorAPI::file_from_archive(CStreamReader*& R, LPCSTR fname, const file&
 	);
 
 	R = xr_new<CStreamReader>();
+	R->m_base_address = A.m_hSrcMapAddress;
 	R->construct(
 		A.hSrcMap,
 		desc.ptr,

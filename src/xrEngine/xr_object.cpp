@@ -2,6 +2,7 @@
 #include "igame_level.h"
 
 #include "xr_object.h"
+#include "../xrCore/profiler.h"
 #include "../xrcdb/xr_area.h"
 #include "render.h"
 #include "xrLevel.h"
@@ -69,17 +70,28 @@ void CObject::cNameSect_set(shared_str N)
 //#include "SkeletonCustom.h"
 void CObject::cNameVisual_set(shared_str N)
 {
+	shared_str normalized_N = N;
+	if (*N && N[0])
+	{
+		string_path tmp;
+		xr_strcpy(tmp, N.c_str());
+		if (strext(tmp))
+			*strext(tmp) = 0;
+		xr_strlwr(tmp);
+		normalized_N = tmp;
+	}
+
 	// check if equal
-	if (*N && *NameVisual)
-		if (N == NameVisual) return;
+	if (*normalized_N && *NameVisual)
+		if (normalized_N == NameVisual) return;
 
 	// replace model
-	if (*N && N[0])
+	if (*normalized_N && normalized_N[0])
 	{
 		IRenderVisual* old_v = renderable.visual;
 
-		NameVisual = N;
-		renderable.visual = Render->model_Create(*N);
+		NameVisual = normalized_N;
+		renderable.visual = Render->model_Create(*normalized_N);
 
 		IKinematics* old_k = old_v ? old_v->dcast_PKinematics() : NULL;
 		IKinematics* new_k = renderable.visual->dcast_PKinematics();
@@ -225,6 +237,7 @@ CObject::~CObject()
 
 void CObject::Load(LPCSTR section)
 {
+	PROF_EVENT("CObject::Load");
 	// Name
 	R_ASSERT(section);
 	cName_set(section);
@@ -246,6 +259,7 @@ void CObject::Load(LPCSTR section)
 
 BOOL CObject::net_Spawn(CSE_Abstract* data)
 {
+	PROF_EVENT("CObject::net_Spawn");
 	PositionStack.clear();
 
 	VERIFY(_valid(renderable.xform));

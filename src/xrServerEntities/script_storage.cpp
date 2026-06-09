@@ -8,6 +8,7 @@
 
 #include "pch_script.h"
 #include "script_storage.h"
+#include "../xrCore/profiler.h"
 #include "script_thread.h"
 #include "../xrCore/mezz_stringbuffer.h"
 #include <stdarg.h>
@@ -819,6 +820,7 @@ static bool unlocalRegex(std::set<std::string>& unlocals, std::string& s, const 
 
 bool CScriptStorage::do_file(LPCSTR caScriptName, LPCSTR caNameSpaceName)
 {
+	PROF_EVENT_DYNAMIC(caScriptName);
 	if (!unlocalizerPassed) {
 		auto file_list = FS.file_list_open("$game_config$", "unlocalizers\\", FS_RootOnly | FS_ListFiles);
 		if (!file_list) {
@@ -913,9 +915,10 @@ bool CScriptStorage::do_file(LPCSTR caScriptName, LPCSTR caNameSpaceName)
 		// Iterate lines and unlocalize variables
 		auto& unlocals = unlocalizers[loweredNameSpaceName];
 
-		/*for (auto& u : unlocals) {
-			Msg("%s", u);
-		}*/
+		const std::regex pattern_func(R"((^local)([\t ]+)(function)([\t ]+)([_a-zA-Z].*)([\t ]*)(\(.*$))");
+		const std::regex pattern_local(R"((^local)([\t ]+)(.*))");
+		const std::regex pattern_comment(R"((.*)--.*)");
+		const std::regex pattern_comment_suffix(R"((.*)(--.*))");
 
 		for (auto& s : tokens) {
 
@@ -926,11 +929,13 @@ bool CScriptStorage::do_file(LPCSTR caScriptName, LPCSTR caNameSpaceName)
 				continue;
 			}
 
-			std::regex pattern;
+			// Pre-filter: only process lines starting with "local " or "local\t"
+			if (s.size() <= 5 || (s.compare(0, 6, "local ") != 0 && s.compare(0, 6, "local\t") != 0)) {
+				continue;
+			}
 
 			//local function x(a,b,c)
-			pattern = std::regex(R"((^local)([\t ]+)(function)([\t ]+)([_a-zA-Z].*)([\t ]*)(\(.*$))");
-			if (unlocalRegex(unlocals, s, pattern, 5, "$3$4$5$6$7")) {
+			if (unlocalRegex(unlocals, s, pattern_func, 5, "$3$4$5$6$7")) {
 				unlocalPerformed = true;
 				continue;
 			}
@@ -939,18 +944,16 @@ bool CScriptStorage::do_file(LPCSTR caScriptName, LPCSTR caNameSpaceName)
 			//local a
 			//local a,b,c = ... (if one of a,b,c is in unlocalizers list - all of them will be unlocalized)
 			//local x; local y; - unsupported yet
-			pattern = std::regex(R"((^local)([\t ]+)(.*))");
-			if (std::regex_match(s, pattern)) {
+			if (std::regex_match(s, pattern_local)) {
 				std::smatch match;
-				std::regex_search(s, match, pattern);
+				std::regex_search(s, match, pattern_local);
 				std::string m = match[3];
 
 				// strip comments
-				std::regex r = std::regex(R"((.*)--.*)");
-				if (std::regex_match(m, r)) {
+				if (std::regex_match(m, pattern_comment)) {
 					//Msg("found comments\n");
 					std::smatch noncomments;
-					std::regex_search(m, noncomments, r);
+					std::regex_search(m, noncomments, pattern_comment);
 					m = noncomments[1];
 				}
 
@@ -963,15 +966,14 @@ bool CScriptStorage::do_file(LPCSTR caScriptName, LPCSTR caNameSpaceName)
 					if (unlocals.find(v) != unlocals.end()) {
 						unlocalPerformed = true;
 						Msg("found variable %s to unlocal", v.c_str());
-						s = std::regex_replace(s, pattern, "$3");
+						s = std::regex_replace(s, pattern_local, "$3");
 						if (!hasValue) {
 
 							// strip comments
-							std::regex r = std::regex(R"((.*)(--.*))");
-							if (std::regex_match(s, r)) {
+							if (std::regex_match(s, pattern_comment_suffix)) {
 								//Msg("found comments\n");
 								std::smatch noncomments;
-								std::regex_search(s, noncomments, r);
+								std::regex_search(s, noncomments, pattern_comment_suffix);
 								s = std::string(noncomments[1]) + "= nil " + std::string(noncomments[2]);
 							} else {
 								s += " = nil";

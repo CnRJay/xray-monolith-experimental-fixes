@@ -13,6 +13,7 @@
 #include "script_process.h"
 #include "../build_config_defines.h"
 #include "script_storage.h"
+#include "../xrCore/profiler.h"
 #include <unordered_map>
 #include <set>
 
@@ -372,13 +373,17 @@ extern bool unlocalizerPassed;
 
 void CScriptEngine::init()
 {
+	PROF_EVENT("CScriptEngine::init");
 #ifdef USE_LUA_STUDIO
     bool lua_studio_connected = !!m_lua_studio_world;
     if (lua_studio_connected)
         m_lua_studio_world->remove		(lua());
 #endif // #ifdef USE_LUA_STUDIO
 
-	CScriptStorage::reinit();
+	{
+		PROF_EVENT("CScriptStorage::reinit");
+		CScriptStorage::reinit();
+	}
 
 #ifdef USE_LUA_STUDIO
     if (m_lua_studio_world || strstr(Core.Params, "-lua_studio")) {
@@ -396,9 +401,15 @@ void CScriptEngine::init()
     }
 #endif // #ifdef USE_LUA_STUDIO
 
-	::luabind::open(lua());
+	{
+		PROF_EVENT("luabind::open");
+		::luabind::open(lua());
+	}
 	setup_callbacks();
-	export_classes(lua());
+	{
+		PROF_EVENT("export_classes");
+		export_classes(lua());
+	}
 	setup_auto_load();
 
 #ifdef DEBUG
@@ -417,16 +428,28 @@ void CScriptEngine::init()
 
 	unlocalizers.clear();
 	unlocalizerPassed = false;
-	bool save = m_reload_modules;
-	m_reload_modules = true;
-	process_file_if_exists("_G", false);
-	m_reload_modules = save;
+	{
+		PROF_EVENT("load_G");
+		bool save = m_reload_modules;
+		m_reload_modules = true;
+		process_file_if_exists("_G", false);
+		m_reload_modules = save;
+	}
 
-	register_script_classes();
-	object_factory().register_script();
+	{
+		PROF_EVENT("register_script_classes");
+		register_script_classes();
+	}
+	{
+		PROF_EVENT("object_factory::register_script");
+		object_factory().register_script();
+	}
 
 #ifdef XRGAME_EXPORTS
-	load_common_scripts();
+	{
+		PROF_EVENT("load_common_scripts");
+		load_common_scripts();
+	}
 #endif
 	m_stack_level = lua_gettop(lua());
 

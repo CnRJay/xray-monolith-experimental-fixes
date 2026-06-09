@@ -37,14 +37,14 @@ CSSafeMapIterator::~CSafeMapIterator()
 TEMPLATE_SPEZIALIZATION
 IC void CSSafeMapIterator::add(const _key_type& id, _data_type* value, bool no_assert)
 {
+#ifdef DEBUG
 	_const_iterator I = m_objects.find(id);
 	if (I != m_objects.end())
 	{
-#ifdef DEBUG
 		THROW2(no_assert, "Specified object has been already found in the registry!");
-#endif
 		return;
 	}
+#endif
 
 	bool addition = m_objects.empty();
 

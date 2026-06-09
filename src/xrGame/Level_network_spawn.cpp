@@ -9,9 +9,11 @@
 #include "client_spawn_manager.h"
 #include "../xrEngine/xr_object.h"
 #include "../xrEngine/IGame_Persistent.h"
+#include "../xrCore/profiler.h"
 
 void CLevel::cl_Process_Spawn(NET_Packet& P)
 {
+	PROF_EVENT("cl_Process_Spawn");
 	// Begin analysis
 	shared_str s_name;
 	P.r_stringZ(s_name);
@@ -86,6 +88,7 @@ void CLevel::g_cl_Spawn(LPCSTR name, u8 rp, u16 flags, Fvector pos)
 
 void CLevel::g_sv_Spawn(CSE_Abstract* E)
 {
+	PROF_EVENT_DYNAMIC(*E->s_name);
 #ifdef DEBUG_MEMORY_MANAGER
 	size_t							E_mem = 0;
 	if (g_bMEMO)	{

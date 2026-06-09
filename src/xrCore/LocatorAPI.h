@@ -34,11 +34,12 @@ public:
 	{
 		shared_str path;
 		void *hSrcFile, *hSrcMap;
+		void* m_hSrcMapAddress;
 		u32 size;
 		CInifile* header;
 		u32 vfs_idx;
 
-		archive() : hSrcFile(nullptr), hSrcMap(nullptr), header(nullptr), size(0), vfs_idx(u32(-1))
+		archive() : hSrcFile(nullptr), hSrcMap(nullptr), m_hSrcMapAddress(nullptr), header(nullptr), size(0), vfs_idx(u32(-1))
 		{
 		}
 

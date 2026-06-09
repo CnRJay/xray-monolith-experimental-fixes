@@ -12,6 +12,7 @@
 #include "game_base.h"
 #include "ai_space.h"
 #include "game_graph.h"
+#include "../xrCore/profiler.h"
 
 #pragma warning(push)
 #pragma warning(disable:4995)
@@ -53,6 +54,7 @@ void CALifeSpawnRegistry::save(IWriter& memory_stream)
 
 void CALifeSpawnRegistry::load(IReader& file_stream, LPCSTR game_name)
 {
+	PROF_EVENT("CALifeSpawnRegistry::load_by_game_name");
 	R_ASSERT(FS.exist(game_name));
 
 	IReader *chunk, *chunk0;
@@ -80,6 +82,7 @@ void CALifeSpawnRegistry::load(IReader& file_stream, LPCSTR game_name)
 
 void CALifeSpawnRegistry::load(LPCSTR spawn_name)
 {
+	PROF_EVENT("CALifeSpawnRegistry::load_by_spawn_name");
 	Msg("* Loading spawn registry...");
 	m_spawn_name = spawn_name;
 	string_path file_name;
@@ -104,6 +107,7 @@ static bool ignore_save_incompatibility()
 
 void CALifeSpawnRegistry::load(IReader& file_stream, xrGUID* save_guid)
 {
+	PROF_EVENT("CALifeSpawnRegistry::load_by_stream");
 	IReader* chunk;
 	chunk = file_stream.open_chunk(0);
 	m_header.load(*chunk);
@@ -174,6 +178,7 @@ void CALifeSpawnRegistry::save_updates(IWriter& stream)
 
 void CALifeSpawnRegistry::load_updates(IReader& stream)
 {
+	PROF_EVENT("CALifeSpawnRegistry::load_updates");
 	u32 vertex_id;
 	for (IReader* chunk = stream.open_chunk_iterator(vertex_id); chunk; chunk = stream.open_chunk_iterator(
 		     vertex_id, chunk))

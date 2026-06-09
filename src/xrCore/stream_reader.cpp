@@ -28,6 +28,15 @@ void CStreamReader::map(const u32& new_offset)
 	VERIFY(new_offset <= m_file_size);
 	m_current_offset_from_start = new_offset;
 
+	if (m_base_address)
+	{
+		m_current_window_size = m_file_size - new_offset;
+		m_current_map_view_of_file = (u8*)m_base_address;
+		m_current_pointer = m_current_map_view_of_file + m_start_offset + new_offset;
+		m_start_pointer = m_current_pointer;
+		return;
+	}
+
 	u32 granularity = FS.dwAllocGranularity;
 	u32 start_offset = m_start_offset + new_offset;
 	u32 pure_start_offset = start_offset;
