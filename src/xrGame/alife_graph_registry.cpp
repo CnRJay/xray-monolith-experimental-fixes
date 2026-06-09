@@ -60,7 +60,7 @@ void CALifeGraphRegistry::update(CSE_ALifeDynamicObject* object)
 	if (m_actor && !m_level)
 		setup_current_level();
 
-	CSE_ALifeInventoryItem* item = smart_cast<CSE_ALifeInventoryItem*>(object);
+	CSE_ALifeInventoryItem* item = object->cast_inventory_item();
 	if (!item || !item->attached())
 		add(object, object->m_tGraphID);
 }

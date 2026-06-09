@@ -16,7 +16,7 @@ CALifeGroupRegistry::~CALifeGroupRegistry()
 
 void CALifeGroupRegistry::add(CSE_ALifeDynamicObject* object)
 {
-	CSE_ALifeOnlineOfflineGroup* group = smart_cast<CSE_ALifeOnlineOfflineGroup*>(object);
+	CSE_ALifeOnlineOfflineGroup* group = object->cast_online_offline_group();
 	if (!group)
 		return;
 

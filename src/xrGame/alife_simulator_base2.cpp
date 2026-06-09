@@ -35,7 +35,7 @@ void CALifeSimulatorBase::register_object(CSE_ALifeDynamicObject* object, bool a
 
 	setup_simulator(object);
 
-	CSE_ALifeInventoryItem* item = smart_cast<CSE_ALifeInventoryItem*>(object);
+	CSE_ALifeInventoryItem* item = object->cast_inventory_item();
 	if (item && item->attached())
 	{
 		CSE_ALifeDynamicObject* II = objects().object(item->base()->ID_Parent);
@@ -59,7 +59,7 @@ void CALifeSimulatorBase::unregister_object(CSE_ALifeDynamicObject* object, bool
 {
 	object->on_unregister();
 
-	CSE_ALifeInventoryItem* item = smart_cast<CSE_ALifeInventoryItem*>(object);
+	CSE_ALifeInventoryItem* item = object->cast_inventory_item();
 	if (item && item->attached())
 		graph().detach(*objects().object(item->base()->ID_Parent), item,
 		               objects().object(item->base()->ID_Parent)->m_tGraphID, alife_query);

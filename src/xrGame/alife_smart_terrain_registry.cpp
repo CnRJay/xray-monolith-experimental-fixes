@@ -16,7 +16,7 @@ CALifeSmartTerrainRegistry::~CALifeSmartTerrainRegistry()
 
 void CALifeSmartTerrainRegistry::add(CSE_ALifeDynamicObject* object)
 {
-	CSE_ALifeSmartZone* zone = smart_cast<CSE_ALifeSmartZone*>(object);
+	CSE_ALifeSmartZone* zone = object->cast_smart_zone();
 	if (!zone)
 		return;
 
