@@ -59,7 +59,7 @@ storage::~storage()
 	Descriptions::const_iterator	I = m_descriptions.begin();
 	Descriptions::const_iterator	E = m_descriptions.end();
 	for ( ; I != E; ++I)
-		VERIFY				(!(*I)->m_ref_count);
+		VERIFY				(!(*I)->intrusive_ref_count());
 #endif // DEBUG
 	delete_data(m_descriptions);
 }

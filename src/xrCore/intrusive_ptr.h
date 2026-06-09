@@ -48,7 +48,7 @@ public:
     {
         if constexpr (Counter == CounterPolicy::Atomic)
         {
-            u32 t = __ref_count.fetch_sub(1, std::memory_order_acq_rel)
+            u32 t = __ref_count.fetch_sub(1, std::memory_order_acq_rel);
             return t - 1;
         }
         else

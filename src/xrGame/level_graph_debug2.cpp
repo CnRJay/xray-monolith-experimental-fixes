@@ -177,7 +177,7 @@ void CLevelGraph::draw_restrictions	()
 	CRandom R;
 
 	for ( ; I != E; ++I) {
-		if (!(*I).second->m_ref_count)
+		if (!(*I).second->intrusive_ref_count())
 			continue;
 		if (!(*I).second->initialized()) continue;
 
