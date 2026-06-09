@@ -20,15 +20,17 @@ class CObject;
 //-----------------------------------------------------------------------------------------------------------
 struct hdrCFORM;
 
+namespace CObjectSpaceThreadData {
+  extern thread_local xrXRC xrc;
+  extern thread_local collide::rq_results r_temp;
+  extern thread_local xr_vector<ISpatial *> r_spatial;
+}
+
 class XRCDB_API CObjectSpace {
 private:
   // Debug
-  xrCriticalSection Lock;
   CDB::MODEL Static;
   Fbox m_BoundingVolume;
-  xrXRC xrc;                       // MT: dangerous
-  collide::rq_results r_temp;      // MT: dangerous
-  xr_vector<ISpatial *> r_spatial; // MT: dangerous
 public:
 #ifdef DEBUG
   FactoryPtr<IObjectSpaceRender> *m_pRender;

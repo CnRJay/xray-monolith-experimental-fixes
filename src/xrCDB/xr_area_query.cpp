@@ -32,13 +32,13 @@ bool CObjectSpace::BoxQuery(Fvector const& box_center,
 	CFrustum frustum;
 	frustum.CreateFromPlanes(planes, sizeof(planes) / sizeof(planes[0]));
 
-	xrc.frustum_options(CDB::OPT_FULL_TEST);
-	xrc.frustum_query(&Static, frustum);
+	CObjectSpaceThreadData::xrc.frustum_options(CDB::OPT_FULL_TEST);
+	CObjectSpaceThreadData::xrc.frustum_query(&Static, frustum);
 
 	if (out_tris)
 	{
-		for (CDB::RESULT* result = xrc.r_begin();
-		     result != xrc.r_end();
+		for (CDB::RESULT* result = CObjectSpaceThreadData::xrc.r_begin();
+		     result != CObjectSpaceThreadData::xrc.r_end();
 		     ++result)
 		{
 			out_tris->push_back(result->verts[0]);
@@ -47,7 +47,7 @@ bool CObjectSpace::BoxQuery(Fvector const& box_center,
 		}
 	}
 
-	return !!xrc.r_count();
+	return !!CObjectSpaceThreadData::xrc.r_count();
 }
 
 

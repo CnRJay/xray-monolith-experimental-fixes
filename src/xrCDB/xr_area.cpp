@@ -17,13 +17,9 @@ using namespace collide;
 // Class	: CObjectSpace
 // Purpose	: stores space slots
 //----------------------------------------------------------------------
-CObjectSpace::CObjectSpace():
-	xrc()
-#ifdef PROFILE_CRITICAL_SECTIONS
-	,Lock(MUTEX_PROFILE_ID(CObjectSpace::Lock))
-#endif // PROFILE_CRITICAL_SECTIONS
+CObjectSpace::CObjectSpace()
 #ifdef DEBUG
-	,m_pRender(0)
+	: m_pRender(0)
 #endif
 {
 #ifdef DEBUG
@@ -83,7 +79,7 @@ int CObjectSpace::GetNearest(xr_vector<CObject*>& q_nearest, const Fvector& poin
 {
 	return (
 		GetNearest(
-			r_spatial,
+			CObjectSpaceThreadData::r_spatial,
 			q_nearest,
 			point,
 			range,
