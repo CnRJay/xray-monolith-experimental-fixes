@@ -8,6 +8,8 @@
 #include "weaponammo.h"
 #include "tracer.h"
 
+#include "../xrEngine/pure_relcase.h"
+
 //коэфициенты и параметры патрона
 struct SBullet_Hit
 {
@@ -108,7 +110,7 @@ public:
 
 class CLevel;
 
-class CBulletManager
+class CBulletManager : private pure_relcase
 {
 private:
 	static float const parent_ignore_distance;
@@ -149,7 +151,7 @@ protected:
 	RStringVec m_ExplodeParticles;
 
 	//список пуль находящихся в данный момент на уровне
-	//.	xrCriticalSection		m_Lock				;
+	xrCriticalSection		m_Lock				;
 
 	BulletVec m_Bullets; // working set, locked
 	BulletVec m_BulletsRendered; // copy for rendering
@@ -253,6 +255,7 @@ public:
 	void CommitEvents(); // @ the start of frame
 	void CommitRenderSet(); // @ the end of frame
 	void Render();
+	void __stdcall net_Relcase(CObject* obj);
 };
 
 struct bullet_test_callback_data

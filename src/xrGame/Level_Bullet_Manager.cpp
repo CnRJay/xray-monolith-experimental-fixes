@@ -152,15 +152,15 @@ void populateBulletTable(::luabind::object &table, const Fvector &position,
   table["element"] = element;
 }
 
-CBulletManager::CBulletManager()
+CBulletManager::CBulletManager() : pure_relcase(&CBulletManager::net_Relcase)
 #if 0 // def PROFILE_CRITICAL_SECTIONS
-	: m_Lock(MUTEX_PROFILE_ID(CBulletManager))
+	, m_Lock(MUTEX_PROFILE_ID(CBulletManager))
 #ifdef DEBUG
 		,m_thread_id(GetCurrentThreadId())
 #endif // #ifdef DEBUG
 #else  // #ifdef PROFILE_CRITICAL_SECTIONS
 #ifdef DEBUG
-    : m_thread_id(GetCurrentThreadId())
+    , m_thread_id(GetCurrentThreadId())
 #endif // #ifdef DEBUG
 #endif // #ifdef PROFILE_CRITICAL_SECTIONS
 {
@@ -247,6 +247,7 @@ void CBulletManager::PlayWhineSound(SBullet *bullet, CObject *object,
 }
 
 void CBulletManager::Clear() {
+  xrCriticalSectionGuard guard(&m_Lock);
   m_Bullets.clear();
   m_Events.clear();
 }
@@ -259,6 +260,7 @@ void CBulletManager::AddBullet(
     ALife::EHitType e_hit_type, float maximum_distance,
     const CCartridge &cartridge, float const air_resistance_factor,
     bool SendHit, bool AimBullet, int iShotNum) {
+  xrCriticalSectionGuard guard(&m_Lock);
 #ifdef DEBUG
   VERIFY(m_thread_id == GetCurrentThreadId());
 #endif
@@ -301,6 +303,7 @@ void CBulletManager::AddBullet(
 }
 
 void CBulletManager::UpdateWorkload() {
+  xrCriticalSectionGuard guard(&m_Lock);
   PROF_EVENT("CBulletManager::UpdateWorkload");
   //	VERIFY						( m_thread_id ==
   // GetCurrentThreadId() );
@@ -1106,7 +1109,10 @@ void CBulletManager::Render() {
 
 void CBulletManager::CommitRenderSet() // @ the end of frame
 {
-  m_BulletsRendered = m_Bullets;
+  {
+    xrCriticalSectionGuard guard(&m_Lock);
+    m_BulletsRendered = m_Bullets;
+  }
   if (g_mt_config.test(mtBullets)) {
     Device.seqParallel.push_back(
         fastdelegate::FastDelegate0<>(this, &CBulletManager::UpdateWorkload));
@@ -1117,6 +1123,7 @@ void CBulletManager::CommitRenderSet() // @ the end of frame
 
 void CBulletManager::CommitEvents() // @ the start of frame
 {
+  xrCriticalSectionGuard guard(&m_Lock);
 	PROF_EVENT("CBulletManager::CommitEvents");
 	if (m_Events.size() > 1000)
 		Msg("! too many bullets during single frame: %d", m_Events.size());
@@ -1188,6 +1195,7 @@ void CBulletManager::CommitEvents() // @ the start of frame
 void CBulletManager::RegisterEvent(EventType Type, BOOL _dynamic,
                                    SBullet *bullet, const Fvector &end_point,
                                    collide::rq_result &R, u16 tgt_material) {
+  xrCriticalSectionGuard guard(&m_Lock);
 #if 0  // def DEBUG
 	if (m_Events.size() > 1000) {
 		static bool breakpoint = true;
@@ -1231,4 +1239,20 @@ void CBulletManager::RegisterEvent(EventType Type, BOOL _dynamic,
   } break;
   }
   lua_lock.Leave();
+}
+
+void __stdcall CBulletManager::net_Relcase(CObject* object)
+{
+  xrCriticalSectionGuard guard(&m_Lock);
+  m_Events.erase(
+      std::remove_if(
+          m_Events.begin(),
+          m_Events.end(),
+          [object](const _event& E)
+          {
+              return (E.dynamic && E.R.O == object);
+          }
+      ),
+      m_Events.end()
+  );
 }
