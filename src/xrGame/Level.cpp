@@ -977,6 +977,8 @@ void CLevel::OnFrame()
 {
 	PROF_EVENT("CLevel::OnFrame()");
 
+	::Render->update_Wallmarks();
+
 #ifdef DEBUG_MEMORY_MANAGER
     debug_memory_guard __guard__;
 #endif

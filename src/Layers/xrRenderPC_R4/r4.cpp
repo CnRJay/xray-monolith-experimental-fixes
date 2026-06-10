@@ -886,7 +886,7 @@ void CRender::clear_static_wallmarks()
 
 void CRender::add_SkeletonWallmark(intrusive_ptr<CSkeletonWallmark> wm)
 {
-	Wallmarks->AddSkeletonWallmark(wm);
+	Wallmarks->AddSkeletonWallmark(std::move(wm));
 }
 
 void CRender::add_SkeletonWallmark(const Fmatrix* xf, CKinematics* obj, ref_shader& sh, const Fvector& start,
@@ -901,6 +901,16 @@ void CRender::add_SkeletonWallmark(const Fmatrix* xf, IKinematics* obj, IWallMar
 	dxWallMarkArray* pWMA = (dxWallMarkArray *)pArray;
 	ref_shader* pShader = pWMA->dxGenerateWallmark();
 	if (pShader) add_SkeletonWallmark(xf, (CKinematics*)obj, *pShader, start, dir, size, ttl, ignore_opt);
+}
+
+void CRender::remove_SkeletonWallmarksFromObject(IKinematics* obj)
+{
+	Wallmarks->RemoveSkeletonWallmarksFromObject((CKinematics*)obj);
+}
+
+void CRender::update_Wallmarks()
+{
+	Wallmarks->UpdateWallmarks();
 }
 
 void CRender::add_Occluder(Fbox2& bb_screenspace)

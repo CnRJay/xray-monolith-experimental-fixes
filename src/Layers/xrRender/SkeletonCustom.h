@@ -29,9 +29,6 @@ class CSkeletonWallmark
   float m_fTimeStart;      // 4
   float m_fTimeEnd;        // 4
 public:
-#ifdef DEBUG
-  u32 used_in_render;
-#endif
   Fsphere m_LocalBounds; // 16		model space
   struct WMFace {
     Fvector3 vert[3];
@@ -48,19 +45,9 @@ public:
   CSkeletonWallmark(CKinematics *p, const Fmatrix *m, ref_shader s,
                     const Fvector &cp, float ts, float te)
       : m_Parent(p), m_XForm(m), m_Shader(s), m_fTimeStart(ts),
-        m_ContactPoint(cp), m_fTimeEnd(te) {
-#ifdef DEBUG
-    used_in_render = u32(-1);
-#endif
-  }
+        m_ContactPoint(cp), m_fTimeEnd(te) {}
 
-  ~CSkeletonWallmark()
-#ifdef DEBUG
-      ;
-#else
-  {
-  }
-#endif
+  ~CSkeletonWallmark() {}
 
   IC CKinematics *Parent() { return m_Parent; }
   void InvalidateParent() { m_Parent = nullptr; }

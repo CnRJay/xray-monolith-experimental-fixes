@@ -277,6 +277,10 @@ extern float recon_maxspeed;
 extern float wallmark_range_static;
 extern float wallmark_range_skeleton;
 
+extern BOOL r_wallmarks_static;
+extern BOOL r_wallmarks_dynamic;
+extern float r_wallmarks_ssa_k;
+
 extern float movement_manager_move_along_path_query_pos_threshold;
 extern float movement_manager_move_along_path_query_pos_threshold_sqr;
 
@@ -3188,6 +3192,11 @@ void CCC_RegisterCommands()
 	// Wallmark distances
 	CMD4(CCC_Float, "g_wallmark_range_static", &wallmark_range_static, 0.f, 1000.f);
 	CMD4(CCC_Float, "g_wallmark_range_skeleton", &wallmark_range_skeleton, 0.f, 1000.f);
+
+	// Wallmark rendering toggles / SSA culling
+	CMD4(CCC_Integer, "r_wallmarks_static", &r_wallmarks_static, 0, 1);
+	CMD4(CCC_Integer, "r_wallmarks_dynamic", &r_wallmarks_dynamic, 0, 1);
+	CMD4(CCC_Float, "r_wallmarks_ssa_k", &r_wallmarks_ssa_k, 0.f, 5.f);
 
 	CMD1(CCC_MovePathQueryPosThreshold, "movement_manager_move_along_path_query_pos_threshold");
     CMD4(CCC_Integer, "show_actor_body", &showActorBody, 0, 2);
