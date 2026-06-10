@@ -98,7 +98,19 @@ void CKinematics::CalculateBones(BOOL bForceExact) {
   RDEVICE.Statistic->Animation.Begin();
 #endif
 
-  Bone_Calculate(bones->at(iRoot), &Fidentity);
+  if (!m_bones_topo.empty() && iRoot == m_bones_topo[0]) {
+    xrCriticalSectionGuard g2(UCalc_Mutex2);
+    for (u16 id : m_bones_topo) {
+      CBoneData *bd = (*bones)[id];
+      CBoneInstance &bi = bone_instances[id];
+      const Fmatrix *parent = (bd->GetParentID() == BI_NONE)
+                                   ? &Fidentity
+                                   : &bone_instances[bd->GetParentID()].mTransform;
+      CLBone(bd, bi, parent, u8(-1));
+    }
+  } else {
+    Bone_Calculate(bones->at(iRoot), &Fidentity);
+  }
 #ifdef DEBUG
   check_kinematics(this, dbg_name.c_str());
   RDEVICE.Statistic->Animation.End();

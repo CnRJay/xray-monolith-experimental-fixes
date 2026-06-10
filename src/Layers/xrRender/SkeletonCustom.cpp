@@ -331,7 +331,21 @@ void CKinematics::Load(const char* N, IReader* data, u32 dwFlags)
 	// reset update frame
 	wm_frame = u32(-1);
 
+	BuildTopologicalOrder();
+
 	LL_Validate();
+}
+
+void CKinematics::BuildTopologicalOrder()
+{
+	m_bones_topo.clear();
+	m_bones_topo.reserve(bones->size());
+	m_bones_topo.push_back(iRoot);
+	for (u32 i = 0; i < m_bones_topo.size(); i++)
+	{
+		for (CBoneData* child : (*bones)[m_bones_topo[i]]->children)
+			m_bones_topo.push_back(child->GetSelfID());
+	}
 }
 
 //--DSR-- SilencerOverheat_start
@@ -435,6 +449,7 @@ void CKinematics::Copy(dxRender_Visual* P)
 	hidden_bones = pFrom->hidden_bones;
 
 	IBoneInstances_Create();
+	BuildTopologicalOrder();
 
 	for (u32 i = 0; i < children.size(); i++)
 		LL_GetChild(i)->SetParent(this);
