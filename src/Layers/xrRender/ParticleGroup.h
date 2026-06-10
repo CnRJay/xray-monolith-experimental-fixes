@@ -91,9 +91,11 @@ namespace PS
 			dxRender_Visual* _effect;
 			VisualVec _children_related;
 			VisualVec _children_free;
+			xr_set<dxRender_Visual*> _children_destroy;
 		public:
 			void Set(dxRender_Visual* e);
 			void Clear();
+			~SItem();
 
 			IC u32 GetVisuals(xr_vector<dxRender_Visual*>& visuals)
 			{
@@ -118,6 +120,9 @@ namespace PS
 			BOOL IsPlaying();
 			void Play();
 			void Stop(BOOL def_stop);
+
+			void DelayDeleteChilds();
+			void ScheduleDelayDeleteChilds();
 		};
 
 		DEFINE_VECTOR(SItem, SItemVec, SItemVecIt)

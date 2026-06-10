@@ -222,6 +222,8 @@ CObject::CObject() :
 	NameSection = nullptr;
 	NameVisual = nullptr;
 
+	m_ForceDestroy = false;
+
 #ifdef DEBUG
     dbg_update_shedule = u32(-1) / 2;
     dbg_update_cl = u32(-1) / 2;

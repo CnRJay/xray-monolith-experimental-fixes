@@ -16,6 +16,7 @@ private:
 	typedef xr_vector<CObject*> Objects;
 
 private:
+	Objects force_destroy_queue;
 	Objects destroy_queue;
 	Objects objects_active;
 	Objects objects_sleeping;
@@ -60,6 +61,9 @@ public:
 
 	void SingleUpdate(CObject* O);
 	void Update(bool bForce);
+	void ProcessDestroyQueue();
+	void ProcessDestroyQueueImpl(Objects& queue);
+	void ClearProcessDestroyQueueFromDevice();
 
 	void net_Register(CObject* O);
 	void net_Unregister(CObject* O);

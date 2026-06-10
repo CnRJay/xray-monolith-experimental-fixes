@@ -190,6 +190,10 @@ void CParticleGroup::SItem::Clear() {
   VisualVec visuals;
   GetVisuals(visuals);
   for (VisualVecIt it = visuals.begin(); it != visuals.end(); it++) {
+    if (_children_destroy.find(*it) != _children_destroy.end()) {
+      *it = 0;
+      continue;
+    }
     //::Render->model_Delete(*it);
     IRenderVisual *pVisual = smart_cast<IRenderVisual *>(*it);
     ::Render->model_Delete(pVisual);
@@ -287,21 +291,46 @@ void CParticleGroup::SItem::Stop(BOOL def_stop) {
     static_cast<CParticleEffect *>(*it)->Stop(def_stop);
   // and delete if !deffered
   if (!def_stop) {
-    for (it = _children_related.begin(); it != _children_related.end(); it++) {
-      //::Render->model_Delete(*it);
-      IRenderVisual *pVisual = smart_cast<IRenderVisual *>(*it);
-      ::Render->model_Delete(pVisual);
-      *it = 0;
-    }
-    for (it = _children_free.begin(); it != _children_free.end(); it++) {
-      //::Render->model_Delete(*it);
-      IRenderVisual *pVisual = smart_cast<IRenderVisual *>(*it);
-      ::Render->model_Delete(pVisual);
-      *it = 0;
-    }
-    _children_related.clear();
-    _children_free.clear();
+    for (it = _children_related.begin(); it != _children_related.end(); it++)
+      _children_destroy.insert(*it);
+    for (it = _children_free.begin(); it != _children_free.end(); it++)
+      _children_destroy.insert(*it);
+    ScheduleDelayDeleteChilds();
   }
+}
+
+CParticleGroup::SItem::~SItem() {
+  if (_children_destroy.empty())
+    return;
+  auto Callback = fastdelegate::MakeDelegate(this, &CParticleGroup::SItem::DelayDeleteChilds);
+  auto Iter = std::find(Device.seqParallelBeforRender.begin(), Device.seqParallelBeforRender.end(), Callback);
+  if (Iter != Device.seqParallelBeforRender.end())
+    Device.seqParallelBeforRender.erase(Iter);
+  DelayDeleteChilds();
+}
+
+void CParticleGroup::SItem::DelayDeleteChilds() {
+  for (dxRender_Visual *Vis : _children_destroy) {
+    auto Iter = std::find(_children_free.begin(), _children_free.end(), Vis);
+    if (Iter != _children_free.end())
+      _children_free.erase(Iter);
+    else {
+      Iter = std::find(_children_related.begin(), _children_related.end(), Vis);
+      if (Iter != _children_related.end())
+        _children_related.erase(Iter);
+    }
+    IRenderVisual *pVisual = smart_cast<IRenderVisual *>(Vis);
+    ::Render->model_Delete_Deffered(pVisual);
+  }
+  _children_destroy.clear();
+}
+
+void CParticleGroup::SItem::ScheduleDelayDeleteChilds() {
+  if (_children_destroy.empty())
+    return;
+  auto Callback = fastdelegate::MakeDelegate(this, &CParticleGroup::SItem::DelayDeleteChilds);
+  if (std::find(Device.seqParallelBeforRender.begin(), Device.seqParallelBeforRender.end(), Callback) == Device.seqParallelBeforRender.end())
+    Device.seqParallelBeforRender.push_back(Callback);
 }
 
 BOOL CParticleGroup::SItem::IsPlaying() {
@@ -388,10 +417,6 @@ void OnGroupParticleDead(void *owner, u32 param, PAPI::Particle &m, u32 idx) {
 }
 
 //------------------------------------------------------------------------------
-struct zero_vis_pred {
-  bool operator()(const dxRender_Visual *x) const { return x == 0; }
-};
-
 void CParticleGroup::SItem::OnFrame(u32 u_dt, const CPGDef::SEffect &def,
                                     Fbox &box, bool &bPlaying) {
   CParticleEffect *E = static_cast<CParticleEffect *>(_effect);
@@ -554,26 +579,16 @@ void CParticleGroup::SItem::OnFrame(u32 u_dt, const CPGDef::SEffect &def,
       bPlaying = true;
     box.merge(body.box);
 
-    // Pass 2: Sequential delete
-    u32 rem_cnt = 0;
-    VisualVecIt it;
-    for (it = _children_free.begin(); it != _children_free.end(); it++) {
+    // Pass 2: Mark finished children for deferred deletion
+    for (VisualVecIt it = _children_free.begin(); it != _children_free.end(); it++) {
       CParticleEffect *E = static_cast<CParticleEffect *>(*it);
-      if (E && !E->IsPlaying()) {
-        rem_cnt++;
-        IRenderVisual *pVisual = smart_cast<IRenderVisual *>(*it);
-        ::Render->model_Delete(pVisual);
-        *it = 0;
-      }
-    }
-    // remove if stopped
-    if (rem_cnt) {
-      VisualVecIt new_end = std::remove_if(
-          _children_free.begin(), _children_free.end(), zero_vis_pred());
-      _children_free.erase(new_end, _children_free.end());
+      if (E && !E->IsPlaying())
+        _children_destroy.insert(*it);
     }
   }
-  
+
+  ScheduleDelayDeleteChilds();
+
   //	Msg("C: %d CS: %d",_children.size(),_children_stopped.size());
 }
 

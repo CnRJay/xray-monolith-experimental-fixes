@@ -45,7 +45,9 @@ private:
 	typedef REGISTRY::iterator REGISTRY_IT;
 private:
 	xr_vector<ModelDef> Models; // Reference / Base
-	xr_vector<dxRender_Visual*> ModelsToDelete; // 
+	xr_vector<dxRender_Visual*> ModelsToDelete; //
+	xr_vector<dxRender_Visual*> ModelsToDeleteDeffer;
+	xrCriticalSection deffered_del_lock;
 	REGISTRY Registry; // Just pairing of pointer / Name
 	POOL Pool; // Unused / Inactive
 	BOOL bLogging;
@@ -71,6 +73,8 @@ public:
 	void Discard(dxRender_Visual* & V, BOOL b_complete);
 	void DeleteInternal(dxRender_Visual* & V, BOOL bDiscard = FALSE);
 	void DeleteQueue();
+	void DeleteDeffered(dxRender_Visual* & V);
+	void DeleteQueuedDeffer();
 
 	void Logging(BOOL bEnable) { bLogging = bEnable; }
 

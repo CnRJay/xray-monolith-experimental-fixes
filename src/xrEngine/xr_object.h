@@ -66,6 +66,8 @@ private:
 	shared_str NameObject;
 	shared_str NameSection;
 	shared_str NameVisual;
+
+	bool m_ForceDestroy;
 protected:
 	// Parentness
 	CObject* Parent;
@@ -170,6 +172,8 @@ public:
 	ICF BOOL getEnabled() const { return Props.bEnabled; }
 	void setDestroy(BOOL _destroy);
 	ICF BOOL getDestroy() const { return Props.bDestroy; }
+	ICF bool getForceDestroy() const { return m_ForceDestroy; }
+	ICF void setForceDestroy() { m_ForceDestroy = true; }
 	ICF void setLocal(BOOL _local) { Props.net_Local = _local ? 1 : 0; }
 	ICF BOOL getLocal() const { return Props.net_Local; }
 	ICF void setSVU(BOOL _svu) { Props.net_SV_Update = _svu ? 1 : 0; }

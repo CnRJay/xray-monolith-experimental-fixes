@@ -458,15 +458,16 @@ void CRender::OnFrame()
 void CRender::OnFrame()
 {
 	Models->DeleteQueue();
+	Models->DeleteQueuedDeffer();
 	if (ps_r2_ls_flags.test(R2FLAG_EXP_MT_CALC))
 	{
 		// MT-details (@front)
 		if (Details)
-			Device.seqParallel.insert(Device.seqParallel.begin(),
+			Device.seqParallelRender.insert(Device.seqParallelRender.begin(),
 				fastdelegate::FastDelegate0<>(Details, &CDetailManager::MT_CALC));
 
 		// MT-HOM (@front)
-		Device.seqParallel.insert(Device.seqParallel.begin(),
+		Device.seqParallelRender.insert(Device.seqParallelRender.begin(),
 			fastdelegate::FastDelegate0<>(&HOM, &CHOM::MT_RENDER));
 	}
 }
@@ -483,6 +484,13 @@ void CRender::model_Delete(IRenderVisual* & V, BOOL bDiscard)
 {
 	dxRender_Visual* pVisual = (dxRender_Visual*)V;
 	Models->Delete(pVisual, bDiscard);
+	V = 0;
+}
+
+void CRender::model_Delete_Deffered(IRenderVisual*& V)
+{
+	dxRender_Visual* pVisual = (dxRender_Visual*)V;
+	Models->DeleteDeffered(pVisual);
 	V = 0;
 }
 

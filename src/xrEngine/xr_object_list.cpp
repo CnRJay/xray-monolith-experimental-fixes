@@ -34,6 +34,12 @@ CObjectList::~CObjectList()
 {
 	R_ASSERT(objects_active.empty());
 	R_ASSERT(objects_sleeping.empty());
+
+	ProcessDestroyQueueImpl(force_destroy_queue);
+	ProcessDestroyQueueImpl(destroy_queue);
+	ClearProcessDestroyQueueFromDevice();
+
+	R_ASSERT(force_destroy_queue.empty());
 	R_ASSERT(destroy_queue.empty());
 	//. R_ASSERT ( map_NETID.empty() );
 }
@@ -270,47 +276,61 @@ void CObjectList::Update(bool bForce)
 	}
 
 	// Destroy
+	ProcessDestroyQueueImpl(force_destroy_queue);
 	if (!destroy_queue.empty())
-	{
-		// Info
-		for (Objects::iterator oit = objects_active.begin(); oit != objects_active.end(); oit++)
-			for (int it = destroy_queue.size() - 1; it >= 0; it--)
-			{
-				(*oit)->net_Relcase(destroy_queue[it]);
-			}
-		for (Objects::iterator oit = objects_sleeping.begin(); oit != objects_sleeping.end(); oit++)
-			for (int it = destroy_queue.size() - 1; it >= 0; it--) (*oit)->net_Relcase(destroy_queue[it]);
+		Device.seqParallelBeforRender.push_back(
+			fastdelegate::MakeDelegate(this, &CObjectList::ProcessDestroyQueue));
+}
 
-		for (int it = destroy_queue.size() - 1; it >= 0; it--) Sound->object_relcase(destroy_queue[it]);
+void CObjectList::ProcessDestroyQueue()
+{
+	ProcessDestroyQueueImpl(destroy_queue);
+}
+
+void CObjectList::ProcessDestroyQueueImpl(Objects& queue)
+{
+	if (queue.empty())
+		return;
+
+	for (int it = queue.size() - 1; it >= 0; it--)
+	{
+		CObject* O = queue[it];
+		// Msg ("Object [%x]", O);
+
+		for (Objects::iterator oit = objects_active.begin(); oit != objects_active.end(); oit++)
+			(*oit)->net_Relcase(O);
+		for (Objects::iterator oit = objects_sleeping.begin(); oit != objects_sleeping.end(); oit++)
+			(*oit)->net_Relcase(O);
+
+		if (Sound)
+			Sound->object_relcase(O);
 
 		RELCASE_CALLBACK_VEC::iterator It = m_relcase_callbacks.begin();
 		RELCASE_CALLBACK_VEC::iterator Ite = m_relcase_callbacks.end();
 		for (; It != Ite; ++It)
 		{
 			VERIFY(*(*It).m_ID == (It - m_relcase_callbacks.begin()));
-			Objects::iterator dIt = destroy_queue.begin();
-			Objects::iterator dIte = destroy_queue.end();
-			for (; dIt != dIte; ++dIt)
-			{
-				(*It).m_Callback(*dIt);
-				g_hud->net_Relcase(*dIt);
-			}
+			(*It).m_Callback(O);
 		}
+		if (g_hud)
+			g_hud->net_Relcase(O);
 
-		// Destroy
-		for (int it = destroy_queue.size() - 1; it >= 0; it--)
-		{
-			CObject* O = destroy_queue[it];
-			// Msg ("Object [%x]", O);
 #ifdef DEBUG
-            if (debug_destroy)
-                Msg("Destroying object[%x][%x] [%d][%s] frame[%d]", fast_dynamic_cast<void*>(O), O, O->ID(), *O->cName(), Device.dwFrame);
+        if (debug_destroy)
+            Msg("Destroying object[%x][%x] [%d][%s] frame[%d]", fast_dynamic_cast<void*>(O), O, O->ID(), *O->cName(), Device.dwFrame);
 #endif // DEBUG
-			O->net_Destroy();
-			Destroy(O);
-		}
-		destroy_queue.clear();
+		O->net_Destroy();
+		Destroy(O);
 	}
+	queue.clear();
+}
+
+void CObjectList::ClearProcessDestroyQueueFromDevice()
+{
+	auto Callback = fastdelegate::MakeDelegate(this, &CObjectList::ProcessDestroyQueue);
+	Device.seqParallelBeforRender.erase(
+		std::remove(Device.seqParallelBeforRender.begin(), Device.seqParallelBeforRender.end(), Callback),
+		Device.seqParallelBeforRender.end());
 }
 
 void CObjectList::net_Register(CObject* O)
@@ -420,11 +440,16 @@ return (it==map_NETID.end())?0:it->second;
 */
 void CObjectList::Load()
 {
-	R_ASSERT(/*map_NETID.empty() &&*/ objects_active.empty() && destroy_queue.empty() && objects_sleeping.empty());
+	R_ASSERT(/*map_NETID.empty() &&*/ objects_active.empty() && force_destroy_queue.empty() &&
+	         destroy_queue.empty() && objects_sleeping.empty());
 }
 
 void CObjectList::Unload()
 {
+	ClearProcessDestroyQueueFromDevice();
+	ProcessDestroyQueueImpl(force_destroy_queue);
+	ProcessDestroyQueueImpl(destroy_queue);
+
 	if (objects_sleeping.size() || objects_active.size())
 		Msg("! objects-leaked: %d", objects_sleeping.size() + objects_active.size());
 
@@ -583,7 +608,10 @@ void CObjectList::register_object_to_destroy(CObject* object_to_destroy)
 #ifdef DEBUG
 	VERIFY(!registered_object_to_destroy(object_to_destroy));
 #endif
-	destroy_queue.push_back(object_to_destroy);
+	if (object_to_destroy->getForceDestroy())
+		force_destroy_queue.push_back(object_to_destroy);
+	else
+		destroy_queue.push_back(object_to_destroy);
 
 	Objects::iterator it = objects_active.begin();
 	Objects::iterator it_e = objects_active.end();
@@ -620,8 +648,13 @@ bool CObjectList::registered_object_to_destroy(const CObject* object_to_destroy)
                    destroy_queue.begin(),
                    destroy_queue.end(),
                    object_to_destroy
-               ) !=
-               destroy_queue.end()
+               ) != destroy_queue.end()
+           ) || (
+               std::find(
+                   force_destroy_queue.begin(),
+                   force_destroy_queue.end(),
+                   object_to_destroy
+               ) != force_destroy_queue.end()
            );
 }
 #endif // DEBUG

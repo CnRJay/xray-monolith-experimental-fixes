@@ -56,6 +56,7 @@ void CLevel::remove_objects()
 			ClientReceive();
 			ProcessGameEvents();
 			Objects.Update(false);
+			Objects.ProcessDestroyQueue();
 #ifdef DEBUG
 			Msg						("Update objects list...");
 #endif // #ifdef DEBUG

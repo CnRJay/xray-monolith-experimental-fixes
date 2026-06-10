@@ -601,6 +601,7 @@ void CMissile::OnEvent(NET_Packet& P, u16 type)
 			{
 				m_fake_missile = nullptr;
 				IsFakeMissile = true;
+				setForceDestroy();
 			}
 
 			CMissile* missile = smart_cast<CMissile*>(Level().Objects.net_Find(id));

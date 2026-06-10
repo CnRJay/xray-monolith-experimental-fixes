@@ -62,7 +62,10 @@ IGame_Level::~IGame_Level()
 void IGame_Level::net_Stop()
 {
 	for (int i = 0; i < 6; i++)
+	{
 		Objects.Update(false);
+		Objects.ProcessDestroyQueue();
+	}
 	// Destroy all objects
 	Objects.Unload();
 	IR_Release();

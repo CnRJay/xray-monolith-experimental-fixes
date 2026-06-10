@@ -297,6 +297,7 @@ public:
 	virtual IRenderVisual* model_CreateChild(LPCSTR name, IReader* data);
 	virtual IRenderVisual* model_Duplicate(IRenderVisual* V);
 	virtual void model_Delete(IRenderVisual* & V, BOOL bDiscard);
+	virtual void model_Delete_Deffered(IRenderVisual*& V);
 	virtual void model_Delete(IRender_DetailModel* & F);
 	virtual void model_Logging(BOOL bEnable) { Models->Logging(bEnable); }
 	virtual void models_Prefetch();

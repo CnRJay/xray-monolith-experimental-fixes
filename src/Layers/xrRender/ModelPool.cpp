@@ -360,6 +360,26 @@ void CModelPool::DeleteQueue()
 	ModelsToDelete.clear();
 }
 
+void CModelPool::DeleteDeffered(dxRender_Visual* & V)
+{
+	if (NULL == V) return;
+	xrCriticalSectionGuard guard(deffered_del_lock);
+	if (std::find(ModelsToDeleteDeffer.begin(), ModelsToDeleteDeffer.end(), V) == ModelsToDeleteDeffer.end())
+		ModelsToDeleteDeffer.push_back(V);
+	V = nullptr;
+}
+
+void CModelPool::DeleteQueuedDeffer()
+{
+	xrCriticalSectionGuard guard(deffered_del_lock);
+	for (dxRender_Visual* Vis : ModelsToDeleteDeffer)
+	{
+		if (Vis)
+			DeleteInternal(Vis);
+	}
+	ModelsToDeleteDeffer.clear();
+}
+
 void CModelPool::Discard(dxRender_Visual* & V, BOOL b_complete)
 {
 	//

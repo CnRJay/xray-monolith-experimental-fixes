@@ -460,6 +460,12 @@ void CRenderDevice::on_idle()
 		g_SASH.StartBenchmark();
 	}
 
+	START_PROFILE("Process seqParallelBeforRender");
+	for (u32 pit = 0; pit < seqParallelBeforRender.size(); pit++)
+		seqParallelBeforRender[pit]();
+	seqParallelBeforRender.clear_not_free();
+	STOP_PROFILE;
+
 	FrameMove();
 
 	// Precache
@@ -511,6 +517,15 @@ void CRenderDevice::on_idle()
 	START_PROFILE("Resume threads");
 	mt_csLeave.Enter();
 	mt_csEnter.Leave();
+	STOP_PROFILE;
+
+	START_PROFILE("Dispatch seqParallelRender");
+	seqParallelRender_tasks.run([this]
+	{
+		for (u32 pit = 0; pit < seqParallelRender.size(); pit++)
+			seqParallelRender[pit]();
+		seqParallelRender.clear_not_free();
+	});
 	STOP_PROFILE;
 
 #ifdef ECO_RENDER // ECO_RENDER START
@@ -575,6 +590,10 @@ void CRenderDevice::on_idle()
 	START_PROFILE("Suspend threads");
 	mt_csEnter.Enter();
 	mt_csLeave.Leave();
+	STOP_PROFILE;
+
+	START_PROFILE("Wait for seqParallelRender");
+	seqParallelRender_tasks.wait();
 	STOP_PROFILE;
 
 	// Ensure, that second thread gets chance to execute anyway
