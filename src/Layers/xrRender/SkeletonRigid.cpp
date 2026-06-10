@@ -50,6 +50,48 @@ void CKinematics::CalculateBones(BOOL bForceExact) {
       bool visibleCheck =
           (perceived_dist < IK_ALWAYS_CALC_DIST) ||
           ::Render->ViewBase.testSphere_dirty(sphere.P, sphere.R);
+
+      // screen space area check
+      bool lowSSA = r_optimize_calculate_bones && canBeOptimized() &&
+                    (ssa < IK_CALC_SSA);
+
+      if ((!visibleCheck || lowSSA) && Device.m_SecondViewport.IsSVPActive()) {
+        const CRenderDevice::MatrixData &svp_m = Device.matrices[1];
+
+        Fmatrix svp_invView;
+        svp_invView.invert(svp_m.mView);
+
+        Fmatrix svp_fullTransform;
+        svp_fullTransform.mul(svp_m.mProject, svp_m.mView);
+
+        float svp_fov, svp_aspect, svp_np, svp_fp;
+        svp_m.mProject.decompose_projection(svp_fov, svp_aspect, svp_np, svp_fp);
+
+        float svp_perceived_dist =
+            svp_invView.c.distance_to(sphere.P) * tanf(svp_fov * 0.5f);
+
+        Fvector4 v_res1, v_res2;
+        svp_fullTransform.transform(v_res1, sphere.P);
+        svp_fullTransform.transform(
+            v_res2, Fvector(sphere.P).mad(svp_invView.i, sphere.R));
+        float svp_ssa = v_res1.sub(v_res2).magnitude();
+
+        CFrustum svp_frustum;
+        svp_frustum.CreateFromMatrix(svp_fullTransform, FRUSTUM_P_LRTB + FRUSTUM_P_FAR);
+
+        bool svp_visibleCheck =
+            (svp_perceived_dist < IK_ALWAYS_CALC_DIST) ||
+            svp_frustum.testSphere_dirty(sphere.P, sphere.R);
+
+        if (svp_visibleCheck) {
+          visibleCheck = true;
+          if (svp_ssa >= IK_CALC_SSA) {
+            lowSSA = false;
+            update_rate_k = 1.f;
+          }
+        }
+      }
+
       if (!visibleCheck) {
         bForceExact = FALSE;
         update_rate_k = _max(2.f, update_rate_k);
@@ -61,10 +103,7 @@ void CKinematics::CalculateBones(BOOL bForceExact) {
         }*/
       }
 
-      // screen space area check, perform when cvar is enabled and can be
-      // optimized
-      if (r_optimize_calculate_bones && canBeOptimized() &&
-          (ssa < IK_CALC_SSA)) {
+      if (lowSSA) {
         bForceExact = FALSE;
 
         /*if (RDEVICE.dwTimeGlobal % 100 < 10)
