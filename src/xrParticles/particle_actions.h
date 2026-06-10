@@ -48,6 +48,11 @@ namespace PAPI
 			actions.clear();
 		}
 
+		IC void reserve(int capacity)
+		{
+			actions.reserve(capacity);
+		}
+
 		IC void append(ParticleAction* pa)
 		{
 			R_ASSERT(!m_bLocked);
