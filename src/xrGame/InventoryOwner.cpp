@@ -199,7 +199,8 @@ void CInventoryOwner::load(IReader& input_packet)
 	CharacterInfo().load(input_packet);
 	load_data(m_game_name_str, input_packet);
 	load_data(m_money, input_packet);
-	if (this->object_id() != Actor()->object_id())
+	CActor* actor = Actor();
+	if (!actor || this->object_id() != actor->object_id())
 		m_game_name = TranslateName(m_game_name_str.c_str());
 }
 
