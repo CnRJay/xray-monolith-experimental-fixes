@@ -577,9 +577,12 @@ void CConsole::DrawRect(Frect const& r, u32 color)
 void CConsole::ExecuteCommand(LPCSTR cmd_str, bool record_cmd)
 {
 	u32 str_size = xr_strlen(cmd_str);
-	PSTR edt = (PSTR)_alloca((str_size + 1) * sizeof(char));
-	PSTR first = (PSTR)_alloca((str_size + 1) * sizeof(char));
-	PSTR last = (PSTR)_alloca((str_size + 1) * sizeof(char));
+	xr_vector<char> edt_buf(str_size + 1);
+	xr_vector<char> first_buf(str_size + 1);
+	xr_vector<char> last_buf(str_size + 1);
+	PSTR edt = edt_buf.data();
+	PSTR first = first_buf.data();
+	PSTR last = last_buf.data();
 
 	xr_strcpy(edt, str_size + 1, cmd_str);
 	edt[str_size] = 0;
