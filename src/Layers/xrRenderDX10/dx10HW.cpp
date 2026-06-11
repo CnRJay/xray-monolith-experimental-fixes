@@ -564,7 +564,7 @@ void CHW::CreateDevice(HWND hwnd, bool move_window)
     // create device
     ID3D11Device* device;
     ID3D11DeviceContext* context;
-    R_CHK(D3D11CreateDevice(
+    R = D3D11CreateDevice(
         nullptr,
         D3D_DRIVER_TYPE_HARDWARE,
         nullptr,
@@ -574,7 +574,8 @@ void CHW::CreateDevice(HWND hwnd, bool move_window)
         D3D11_SDK_VERSION,
         &device,
         &FeatureLevel,
-        &context));
+        &context);
+    R_CHK(R);
 
     R_CHK(device->QueryInterface(&pDevice));
     R_CHK(context->QueryInterface(&pContext));
