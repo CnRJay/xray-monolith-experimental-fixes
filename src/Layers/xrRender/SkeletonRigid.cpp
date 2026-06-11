@@ -65,7 +65,8 @@ void CKinematics::CalculateBones(BOOL bForceExact) {
         svp_fullTransform.mul(svp_m.mProject, svp_m.mView);
 
         float svp_fov, svp_aspect, svp_np, svp_fp;
-        svp_m.mProject.decompose_projection(svp_fov, svp_aspect, svp_np, svp_fp);
+        Fmatrix svp_proj(svp_m.mProject);
+        svp_proj.decompose_projection(svp_fov, svp_aspect, svp_np, svp_fp);
 
         float svp_perceived_dist =
             svp_invView.c.distance_to(sphere.P) * tanf(svp_fov * 0.5f);

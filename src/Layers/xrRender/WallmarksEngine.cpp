@@ -23,14 +23,14 @@ namespace WallmarksEngine
 	struct wm_slot
 	{
 		typedef CWallmarksEngine::StaticWMVec StaticWMVec;
+		typedef CWallmarksEngine::StaticWMSectorMap StaticWMSectorMap;
 		ref_shader shader;
-		StaticWMVec static_items;
+		StaticWMSectorMap static_items;
 		xr_vector<intrusive_ptr<CSkeletonWallmark>> skeleton_items;
 
 		wm_slot(ref_shader sh)
 		{
 			shader = sh;
-			static_items.reserve(256);
 			skeleton_items.reserve(256);
 		}
 	};
@@ -82,8 +82,9 @@ void CWallmarksEngine::clear()
 	{
 		for (WMSlotVecIt p_it = marks.begin(); p_it != marks.end(); p_it++)
 		{
-			for (StaticWMVecIt m_it = (*p_it)->static_items.begin(); m_it != (*p_it)->static_items.end(); m_it++)
-				static_wm_destroy(*m_it);
+			for (auto& sector_it : (*p_it)->static_items)
+				for (StaticWMVecIt m_it = sector_it.second.begin(); m_it != sector_it.second.end(); m_it++)
+					static_wm_destroy(*m_it);
 			xr_delete(*p_it);
 		}
 		marks.clear();
@@ -274,33 +275,30 @@ void CWallmarksEngine::AddWallmark_internal(CDB::TRI* pTri, const Fvector* pVert
 		bb.getsphere(W->bounds.P, W->bounds.R);
 	}
 
-	//	if (W->bounds.R < 1.f)	
+	//	if (W->bounds.R < 1.f)
 	{
-		// search if similar wallmark exists
 		wm_slot* slot = FindSlot(hShader);
-		if (slot)
-		{
-			StaticWMVecIt it = slot->static_items.begin();
-			StaticWMVecIt end = slot->static_items.end();
-			for (; it != end; it++)
-			{
-				static_wallmark* wm = *it;
-				if (wm->bounds.P.similar(W->bounds.P, 0.02f))
-				{
-					// replace
-					static_wm_destroy(wm);
-					*it = W;
-					return;
-				}
-			}
-		}
-		else
-		{
+		if (!slot)
 			slot = AppendSlot(hShader);
+
+		IRender_Sector* S = RImplementation.detectSector(W->bounds.P);
+		StaticWMVec& items = slot->static_items[S];
+
+		// search if similar wallmark exists
+		for (StaticWMVecIt it = items.begin(); it != items.end(); it++)
+		{
+			static_wallmark* wm = *it;
+			if (wm->bounds.P.similar(W->bounds.P, 0.02f))
+			{
+				// replace
+				static_wm_destroy(wm);
+				*it = W;
+				return;
+			}
 		}
 
 		// no similar - register _new_
-		slot->static_items.push_back(W);
+		items.push_back(W);
 	}
 	//else
 	//{
@@ -409,28 +407,37 @@ void CWallmarksEngine::UpdateWallmarks()
 		wm_slot* slot = *slot_it;
 
 		// static wallmarks remove expired
-		for (StaticWMVecIt w_it = slot->static_items.begin(); w_it != slot->static_items.end();)
+		for (auto sector_it = slot->static_items.begin(); sector_it != slot->static_items.end();)
 		{
-			static_wallmark* W = *w_it;
-
-			// don't need to check wallmarks with infinite lifetime
-			if (W->TimeEnd() == -1.f)
+			StaticWMVec& items = sector_it->second;
+			for (StaticWMVecIt w_it = items.begin(); w_it != items.end();)
 			{
-				w_it++;
-				continue;
+				static_wallmark* W = *w_it;
+
+				// don't need to check wallmarks with infinite lifetime
+				if (W->TimeEnd() == -1.f)
+				{
+					w_it++;
+					continue;
+				}
+
+				float w = (RDEVICE.fTimeGlobal - W->TimeStart()) / W->TimeEnd();
+				if (w < 1.f)
+				{
+					w_it++;
+				}
+				else
+				{
+					static_wm_destroy(W);
+					*w_it = items.back();
+					items.pop_back();
+				}
 			}
 
-			float w = (RDEVICE.fTimeGlobal - W->TimeStart()) / W->TimeEnd();
-			if (w < 1.f)
-			{
-				w_it++;
-			}
+			if (items.empty())
+				sector_it = slot->static_items.erase(sector_it);
 			else
-			{
-				static_wm_destroy(W);
-				*w_it = slot->static_items.back();
-				slot->static_items.pop_back();
-			}
+				sector_it++;
 		}
 
 		// dynamic wallmarks remove expired
@@ -500,26 +507,37 @@ void CWallmarksEngine::Render()
 			BeginStream(hGeom, w_offset, w_verts, w_start);
 
 			// static wallmarks
-			for (StaticWMVecIt w_it = slot->static_items.begin(); w_it != slot->static_items.end(); w_it++)
+			for (auto& sector_it : slot->static_items)
 			{
-				static_wallmark* W = *w_it;
-				if (!RImplementation.ViewBase.testSphere_dirty(W->bounds.P, W->bounds.R))
+				StaticWMVec& items = sector_it.second;
+				if (items.empty())
 					continue;
 
-				Device.Statistic->RenderDUMP_WMS_Count++;
+				IRender_Sector* sector = sector_it.first;
+				if (sector && PortalTraverser.i_marker != ((CSector*)sector)->r_marker)
+					continue; // sector wasn't visited during this frames portal traversal
 
-				float dst = vCameraPosition.distance_to_sqr(W->bounds.P);
-				float ssa = W->bounds.R * W->bounds.R / dst;
-				if (ssa < ssaCLIP)
-					continue;
-
-				u32 w_count = u32(w_verts - w_start);
-				if ((w_count + W->verts.size()) >= (MAX_TRIS * 3))
+				for (StaticWMVecIt w_it = items.begin(); w_it != items.end(); w_it++)
 				{
-					FlushStream(hGeom, slot->shader, w_offset, w_verts, w_start,FALSE);
-					BeginStream(hGeom, w_offset, w_verts, w_start);
+					static_wallmark* W = *w_it;
+					if (!RImplementation.ViewBase.testSphere_dirty(W->bounds.P, W->bounds.R))
+						continue;
+
+					Device.Statistic->RenderDUMP_WMS_Count++;
+
+					float dst = vCameraPosition.distance_to_sqr(W->bounds.P);
+					float ssa = W->bounds.R * W->bounds.R / dst;
+					if (ssa < ssaCLIP)
+						continue;
+
+					u32 w_count = u32(w_verts - w_start);
+					if ((w_count + W->verts.size()) >= (MAX_TRIS * 3))
+					{
+						FlushStream(hGeom, slot->shader, w_offset, w_verts, w_start,FALSE);
+						BeginStream(hGeom, w_offset, w_verts, w_start);
+					}
+					static_wm_render(W, w_verts);
 				}
-				static_wm_render(W, w_verts);
 			}
 			// Flush stream
 			FlushStream(hGeom, slot->shader, w_offset, w_verts, w_start,FALSE); //. remove line if !(suppress cull needed)

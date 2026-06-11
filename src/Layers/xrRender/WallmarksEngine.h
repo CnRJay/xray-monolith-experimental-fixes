@@ -10,6 +10,7 @@ namespace WallmarksEngine
 
 class CSkeletonWallmark;
 class CKinematics;
+class IRender_Sector;
 
 class CWallmarksEngine
 {
@@ -31,6 +32,7 @@ public:
 
 	DEFINE_VECTOR(static_wallmark*, StaticWMVec, StaticWMVecIt);
 	DEFINE_VECTOR(wm_slot*, WMSlotVec, WMSlotVecIt);
+	typedef xr_unordered_map<IRender_Sector*, StaticWMVec> StaticWMSectorMap;
 private:
 	StaticWMVec static_pool;
 	WMSlotVec marks;
