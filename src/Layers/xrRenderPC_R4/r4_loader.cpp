@@ -127,6 +127,8 @@ void CRender::level_Unload() {
   if (!b_loaded)
     return;
 
+  Device.seqParallelRender_tasks.wait();
+
   u32 I;
 
   // HOM
