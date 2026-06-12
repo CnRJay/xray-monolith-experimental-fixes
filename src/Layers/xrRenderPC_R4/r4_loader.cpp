@@ -127,7 +127,9 @@ void CRender::level_Unload() {
   if (!b_loaded)
     return;
 
+  // Wait for tasks and clear new ones
   Device.seqParallelRender_tasks.wait();
+  Device.seqParallelRender.clear();
 
   u32 I;
 
