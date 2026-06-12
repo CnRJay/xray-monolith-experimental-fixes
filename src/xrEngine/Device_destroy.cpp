@@ -26,6 +26,9 @@ void CRenderDevice::Destroy(void)
 {
 	if (!b_is_Ready) return;
 
+	// Make sure seqParallelRender_tasks is done
+	seqParallelRender_tasks.wait();
+
 	Log("Destroying Direct3D...");
 
 	ShowCursor(TRUE);
@@ -69,6 +72,9 @@ extern ENGINE_API u32 psCurrentVidMode[];
 
 void CRenderDevice::Reset(bool precache)
 {
+	// Make sure seqParallelRender_tasks is done
+	seqParallelRender_tasks.wait();
+
 	if (use_reshade)
 		unregister_reshade();
 
