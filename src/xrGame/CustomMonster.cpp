@@ -477,7 +477,9 @@ void CCustomMonster::UpdateCL()
 				animation_movement()->DBG_verify_position_not_chaged();
 #endif
 
-		CScriptEntity::process_sound_callbacks();
+		START_PROFILE("CustomMonster/client_update/sound_callbacks")
+			CScriptEntity::process_sound_callbacks();
+		STOP_PROFILE
 
 		/*	//. hack just to skip 'CalculateBones'
 		if (sound().need_bone_data()) {
