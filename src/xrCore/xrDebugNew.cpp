@@ -797,12 +797,76 @@ void format_message(LPSTR buffer, const u32& buffer_size)
 #pragma comment( lib, "faultrep.lib" )
 #endif //-!_EDITOR
 
+// Decode the exception record into a human-readable line so crash logs say *what*
+// kind of fault happened (e.g. access violation reading a stale pointer), not just
+// where. Logged at the top of the unhandled-exception handler.
+static void log_exception_info(_EXCEPTION_POINTERS* pExceptionInfo)
+{
+	if (!pExceptionInfo || !pExceptionInfo->ExceptionRecord)
+		return;
+
+	const EXCEPTION_RECORD& rec = *pExceptionInfo->ExceptionRecord;
+	const DWORD code = rec.ExceptionCode;
+
+	LPCSTR name = "unknown";
+	switch (code)
+	{
+	case EXCEPTION_ACCESS_VIOLATION:         name = "EXCEPTION_ACCESS_VIOLATION";         break;
+	case EXCEPTION_IN_PAGE_ERROR:            name = "EXCEPTION_IN_PAGE_ERROR";            break;
+	case EXCEPTION_ARRAY_BOUNDS_EXCEEDED:    name = "EXCEPTION_ARRAY_BOUNDS_EXCEEDED";    break;
+	case EXCEPTION_DATATYPE_MISALIGNMENT:    name = "EXCEPTION_DATATYPE_MISALIGNMENT";    break;
+	case EXCEPTION_FLT_DENORMAL_OPERAND:     name = "EXCEPTION_FLT_DENORMAL_OPERAND";     break;
+	case EXCEPTION_FLT_DIVIDE_BY_ZERO:       name = "EXCEPTION_FLT_DIVIDE_BY_ZERO";       break;
+	case EXCEPTION_FLT_INEXACT_RESULT:       name = "EXCEPTION_FLT_INEXACT_RESULT";       break;
+	case EXCEPTION_FLT_INVALID_OPERATION:    name = "EXCEPTION_FLT_INVALID_OPERATION";    break;
+	case EXCEPTION_FLT_OVERFLOW:             name = "EXCEPTION_FLT_OVERFLOW";             break;
+	case EXCEPTION_FLT_STACK_CHECK:          name = "EXCEPTION_FLT_STACK_CHECK";          break;
+	case EXCEPTION_FLT_UNDERFLOW:            name = "EXCEPTION_FLT_UNDERFLOW";            break;
+	case EXCEPTION_INT_DIVIDE_BY_ZERO:       name = "EXCEPTION_INT_DIVIDE_BY_ZERO";       break;
+	case EXCEPTION_INT_OVERFLOW:             name = "EXCEPTION_INT_OVERFLOW";             break;
+	case EXCEPTION_PRIV_INSTRUCTION:         name = "EXCEPTION_PRIV_INSTRUCTION";         break;
+	case EXCEPTION_ILLEGAL_INSTRUCTION:      name = "EXCEPTION_ILLEGAL_INSTRUCTION";      break;
+	case EXCEPTION_NONCONTINUABLE_EXCEPTION: name = "EXCEPTION_NONCONTINUABLE_EXCEPTION"; break;
+	case EXCEPTION_STACK_OVERFLOW:           name = "EXCEPTION_STACK_OVERFLOW";           break;
+	case EXCEPTION_GUARD_PAGE:               name = "EXCEPTION_GUARD_PAGE";               break;
+	case EXCEPTION_INVALID_HANDLE:           name = "EXCEPTION_INVALID_HANDLE";           break;
+	case 0xE06D7363:                         name = "C++ exception (MSVC)";               break;
+	default:                                                                              break;
+	}
+
+	if (!shared_str_initialized)
+		return;
+
+	Msg("\nUnhandled exception: %s (0x%08X) at 0x%p", name, code, rec.ExceptionAddress);
+
+	// For access violations / in-page errors the first two parameters describe the
+	// offending memory access: [0] = operation, [1] = faulting data address.
+	if ((code == EXCEPTION_ACCESS_VIOLATION || code == EXCEPTION_IN_PAGE_ERROR) &&
+		rec.NumberParameters >= 2)
+	{
+		LPCSTR op = "accessed";
+		switch (rec.ExceptionInformation[0])
+		{
+		case 0: op = "read from";    break;
+		case 1: op = "wrote to";     break;
+		case 8: op = "executed (DEP) at"; break;
+		default:                     break;
+		}
+		Msg("  %s memory at 0x%p", op, (void*)rec.ExceptionInformation[1]);
+
+		if (code == EXCEPTION_IN_PAGE_ERROR && rec.NumberParameters >= 3)
+			Msg("  underlying NTSTATUS: 0x%08X", (u32)rec.ExceptionInformation[2]);
+	}
+}
+
 #ifdef NO_BUG_TRAP
 //AVO: simplify function
 LONG WINAPI UnhandledFilter(_EXCEPTION_POINTERS* pExceptionInfo)
 {
 	string256 error_message;
 	format_message(error_message, sizeof(error_message));
+
+	log_exception_info(pExceptionInfo);
 
 	CONTEXT save = *pExceptionInfo->ContextRecord;
 	//    BuildStackTrace(pExceptionInfo);
@@ -876,6 +940,8 @@ LONG WINAPI UnhandledFilter(_EXCEPTION_POINTERS* pExceptionInfo)
 {
     string256 error_message;
     format_message(error_message, sizeof(error_message));
+
+    log_exception_info(pExceptionInfo);
 
     if (!error_after_dialog && !strstr(GetCommandLine(), "-no_call_stack_assert"))
     {
