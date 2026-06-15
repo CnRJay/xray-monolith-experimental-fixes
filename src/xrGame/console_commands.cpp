@@ -87,6 +87,8 @@ extern int psLua_ParallelGC_CallAmount;
 extern BOOL psLua_ParallelGC_debug;
 extern BOOL psLua_ParallelGC;
 extern BOOL lua_debug;
+
+extern BOOL psThreadedRender;
 BOOL lua_busy_hands_debug = TRUE;
 
 float g_end_modif = 0.f;
@@ -2562,6 +2564,8 @@ void CCC_RegisterCommands()
 	CMD3(CCC_Mask, "mt_alife", &g_mt_config, mtALife);
 	CMD3(CCC_Mask, "mt_map", &g_mt_config, mtMap);
 #endif // MASTER_GOLD
+
+	CMD4(CCC_Integer, "r__threaded_render", &psThreadedRender, 0, 1);
 
 #ifndef MASTER_GOLD
 	CMD3(CCC_Mask, "ai_obstacles_avoiding", &psAI_Flags, aiObstaclesAvoiding);

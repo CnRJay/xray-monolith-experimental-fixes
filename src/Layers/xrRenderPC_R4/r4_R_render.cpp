@@ -17,8 +17,8 @@
 
 IC bool pred_sp_sort(ISpatial* _1, ISpatial* _2)
 {
-	float d1 = _1->spatial.sphere.P.distance_to_sqr(Device.vCameraPosition);
-	float d2 = _2->spatial.sphere.P.distance_to_sqr(Device.vCameraPosition);
+	float d1 = _1->spatial.sphere.P.distance_to_sqr(Device.frame_data.vCameraPosition);
+	float d2 = _2->spatial.sphere.P.distance_to_sqr(Device.frame_data.vCameraPosition);
 	return d1 < d2;
 }
 
@@ -36,16 +36,21 @@ void CRender::render_main(Fmatrix& m_ViewProjection, bool _fportals)
 		//!!!
 		{
 			// Traverse object database
-			g_SpatialSpace->q_frustum
-			(
-				lstRenderables,
-				ISpatial_DB::O_ORDERED,
-				STYPE_RENDERABLE + STYPE_LIGHTSOURCE,
-				ViewBase
-			);
+			if (lstRenderables_frame != Device.dwFrame)
+			{
+				g_SpatialSpace->q_frustum
+				(
+					lstRenderables,
+					ISpatial_DB::O_ORDERED,
+					STYPE_RENDERABLE + STYPE_LIGHTSOURCE,
+					ViewBase
+				);
 
-			// (almost) Exact sorting order (front-to-back)
-			tbb::parallel_sort(lstRenderables.begin(), lstRenderables.end(), pred_sp_sort);
+				// (almost) Exact sorting order (front-to-back)
+				tbb::parallel_sort(lstRenderables.begin(), lstRenderables.end(), pred_sp_sort);
+
+				lstRenderables_frame = Device.dwFrame;
+			}
 
 			// Determine visibility for dynamic part of scene
 			set_Object(0);
@@ -82,7 +87,7 @@ void CRender::render_main(Fmatrix& m_ViewProjection, bool _fportals)
 		(
 			pLastSector,
 			ViewBase,
-            Device.vCameraPosition,
+            Device.frame_data.vCameraPosition,
 			m_ViewProjection,
 			CPortalTraverser::VQ_HOM + CPortalTraverser::VQ_SSA + CPortalTraverser::VQ_FADE
 			//. disabled scissoring (HW.Caps.bScissor?CPortalTraverser::VQ_SCISSOR:0)	// generate scissoring info
@@ -390,6 +395,13 @@ void svpCamera() {
 	Device.matrices[1].mView.invert(m_W_svpcam);
 	Device.matrices[1].mProject = svp_proj;
 	Device.matrices[1].mProjectHud = svp_proj_hud;
+
+	auto& svp_frame = Device.frame_data.viewport[1];
+	svp_frame.mView = Device.matrices[1].mView;
+	svp_frame.mProject = Device.matrices[1].mProject;
+	svp_frame.mProjectHud = Device.matrices[1].mProjectHud;
+	svp_frame.mFullTransform.mul(svp_frame.mProject, svp_frame.mView);
+	svp_frame.mFullTransformHud.mul(svp_frame.mProjectHud, svp_frame.mView);
 }
 
 void CRender::renderGBuffer() {
@@ -404,7 +416,7 @@ void CRender::renderGBuffer() {
 	phase = PHASE_NORMAL;
 
     //SVP HACK: Use main frame view matrix to prevent rendering the wrong sector
-    auto main_ft = Fmatrix().mul(Device.mProject, Device.matrices[0].mView);
+    auto main_ft = Device.frame_data.viewport[0].mFullTransform;
     ViewBase.CreateFromMatrix(main_ft, FRUSTUM_P_LRTB + FRUSTUM_P_FAR);
     View = 0;
 

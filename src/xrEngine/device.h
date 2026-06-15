@@ -111,6 +111,40 @@ public:
 	MatrixData matrices[2];
 	MatrixData matrices_previous[2];
 
+	struct SRenderFrameData
+	{
+		struct SViewport
+		{
+			Fmatrix mView;
+			Fmatrix mProject;
+			Fmatrix mProjectHud;
+			Fmatrix mFullTransform;
+			Fmatrix mFullTransformHud;
+		};
+
+		SViewport viewport[2];
+
+		Fvector vCameraPosition;
+		Fvector vCameraDirection;
+		Fvector vCameraTop;
+		Fvector vCameraRight;
+		Fmatrix mInvFullTransform;
+		Fmatrix mInvView;
+		float fFOV;
+		float fASPECT;
+
+		u32 dwFrame;
+		float fTimeDelta;
+		float fTimeGlobal;
+		u32 dwTimeDelta;
+		u32 dwTimeGlobal;
+
+		Fvector4 wind_anim_curr;
+		Fvector4 wind_anim_prev;
+	};
+
+	SRenderFrameData frame_data;
+
 protected:
 
 	u32 Timer_MM_Delta;

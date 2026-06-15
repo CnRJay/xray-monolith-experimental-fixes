@@ -48,6 +48,8 @@ BOOL psLua_ParallelGC = TRUE;
 BOOL psLua_ParallelGC_debug = FALSE;
 int psLua_ParallelGC_CallAmount = 25;
 
+BOOL psThreadedRender = FALSE;
+
 extern discord::Core* discord_core;
 extern bool use_discord;
 
@@ -466,7 +468,9 @@ void CRenderDevice::on_idle()
 	seqParallelBeforRender.clear_not_free();
 	STOP_PROFILE;
 
+	START_PROFILE("CPU: Sim Frame");
 	FrameMove();
+	STOP_PROFILE;
 
 	// Precache
 	if (dwPrecacheFrame)
@@ -505,6 +509,30 @@ void CRenderDevice::on_idle()
 	mFullTransform_saved = mFullTransform;
 	mView_saved = mView;
 	mProject_saved = mProject;
+
+	frame_data.viewport[0].mView = mView;
+	frame_data.viewport[0].mProject = mProject;
+	frame_data.viewport[0].mProjectHud = mProjectHud;
+	frame_data.viewport[0].mFullTransform = mFullTransform;
+	frame_data.viewport[0].mFullTransformHud = mFullTransformHud;
+
+	frame_data.vCameraPosition = vCameraPosition;
+	frame_data.vCameraDirection = vCameraDirection;
+	frame_data.vCameraTop = vCameraTop;
+	frame_data.vCameraRight = vCameraRight;
+	frame_data.mInvFullTransform = mInvFullTransform;
+	frame_data.mInvView = mInvView;
+	frame_data.fFOV = fFOV;
+	frame_data.fASPECT = fASPECT;
+
+	frame_data.dwFrame = dwFrame;
+	frame_data.fTimeDelta = fTimeDelta;
+	frame_data.fTimeGlobal = fTimeGlobal;
+	frame_data.dwTimeDelta = dwTimeDelta;
+	frame_data.dwTimeGlobal = dwTimeGlobal;
+
+	frame_data.wind_anim_curr = wind_anim_saved;
+	frame_data.wind_anim_prev = wind_anim_prev;
 	STOP_PROFILE;
 
 	Device.isRendering = true;
@@ -561,6 +589,7 @@ void CRenderDevice::on_idle()
 #endif // ECO_RENDER END
 
 #ifndef DEDICATED_SERVER
+	START_PROFILE("CPU: Render Submit");
 	Statistic->RenderTOTAL_Real.FrameStart();
 	Statistic->RenderTOTAL_Real.Begin();
 
@@ -579,6 +608,7 @@ void CRenderDevice::on_idle()
 		End();
 	}
 	Statistic->RenderTOTAL_Real.End();
+	STOP_PROFILE;
 	Statistic->RenderTOTAL_Real.FrameEnd();
 	Statistic->RenderTOTAL.accum = Statistic->RenderTOTAL_Real.accum;
 #endif // #ifndef DEDICATED_SERVER
