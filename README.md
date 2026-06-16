@@ -78,12 +78,12 @@ The latest release of the engine can be downloaded on the [releases page](https:
 
 ## Installation
 
-1.  **Backup**: Backup your existing `bin` folder in your Anomaly directory.
+1.  **Backup**: Backup your existing `bin` and 'gamedata' folders in your Anomaly directory.
 2.  **Download**: Get the **Release** archive from the [releases page](https://github.com/CnRJay/xray-monolith-gc64/releases).
-3.  **Extract**: Extract the contents (the `.exe` and `.dll` files) into your `ANOMALY/bin` folder.
+3.  **Extract**: Extract the contents of the zip into your `ANOMALY` game folder.
     *   *Note: Ensure the new `lua51.dll` from this download is in the bin folder. The engine will not run with the standard Anomaly version.*
 4.  **Clear Cache (CRITICAL)**: Navigate to `appdata/shaders_cache` and **delete the folder**.
-    *   *Failure to do this may result in a black screen upon loading a saved game.*
+    *   *Failure to do this may result in a black screen or crashes upon loading a saved game.*
 5.  **Launch**: Run the game using the new executable.
 
 ## Building
