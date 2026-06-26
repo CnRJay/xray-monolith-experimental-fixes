@@ -808,6 +808,7 @@ void CGamePersistent::OnEvent(EVENT E, u64 P1, u64 P2)
 		if (CurrentGameUI())
 		{
 			CurrentGameUI()->HideShownDialogs();
+			CurrentGameUI()->CleanInternals();
 			CurrentGameUI()->UIMainIngameWnd->reset_ui();
 			CurrentGameUI()->GetPdaMenu().Reset();
 		}

@@ -41,8 +41,8 @@ class PROTECT_API CDialogHolder : public pureFrame
 	void SetMainInputReceiver(CUIDialogWnd* ir, bool _find_remove);
 protected:
 	void DoRenderDialogs();
-	void CleanInternals();
 public:
+	void CleanInternals();
 	CDialogHolder();
 	virtual ~CDialogHolder();
 
