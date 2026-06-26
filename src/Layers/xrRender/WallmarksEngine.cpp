@@ -478,12 +478,12 @@ void CWallmarksEngine::Render()
 	RCache.set_xform_world(Fidentity);
 	RCache.set_xform_project(Device.mProject);
 
-	Fmatrix mSavedView = Device.mView;
+	Fmatrix mSavedView = Device.mView_saved;
 	Fvector mViewPos;
-	Fvector vCameraPosition = Device.mInvView.c; // vCameraPosition may not be correct in SVP frame
+	Fvector vCameraPosition = Device.mInvView_saved.c;
 
-	mViewPos.mad(vCameraPosition, Device.vCameraDirection, ps_r__WallmarkSHIFT_V);
-	Device.mView.build_camera_dir(mViewPos, Device.vCameraDirection, Device.vCameraTop);
+	mViewPos.mad(vCameraPosition, Device.frame_data.vCameraDirection, ps_r__WallmarkSHIFT_V);
+	Device.mView.build_camera_dir(mViewPos, Device.frame_data.vCameraDirection, Device.frame_data.vCameraTop);
 	RCache.set_xform_view(Device.mView);
 
 	Device.Statistic->RenderDUMP_WM.Begin();
@@ -593,8 +593,8 @@ void CWallmarksEngine::Render()
 	Device.Statistic->RenderDUMP_WM.End();
 
 	// Projection
-	Device.mView = mSavedView;
+	Device.mView.set(mSavedView);
 	Device.mProject._43 = _43;
-	RCache.set_xform_view(Device.mView);
+	RCache.set_xform_view(mSavedView);
 	RCache.set_xform_project(Device.mProject);
 }

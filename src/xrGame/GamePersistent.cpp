@@ -896,22 +896,23 @@ void CGamePersistent::OnAppDeactivate()
 
 bool CGamePersistent::OnRenderPPUI_query()
 {
-	return MainMenu()->OnRenderPPUI_query();
-	// enable PP or not
+	CMainMenu* mm = MainMenu();
+	return mm ? mm->OnRenderPPUI_query() : false;
 }
 
 extern void draw_wnds_rects();
 
 void CGamePersistent::OnRenderPPUI_main()
 {
-	// always
-	MainMenu()->OnRenderPPUI_main();
+	CMainMenu* mm = MainMenu();
+	if (mm) mm->OnRenderPPUI_main();
 	draw_wnds_rects();
 }
 
 void CGamePersistent::OnRenderPPUI_PP()
 {
-	MainMenu()->OnRenderPPUI_PP();
+	CMainMenu* mm = MainMenu();
+	if (mm) mm->OnRenderPPUI_PP();
 }
 
 #include "string_table.h"

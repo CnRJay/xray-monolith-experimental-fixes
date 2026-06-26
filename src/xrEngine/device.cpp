@@ -1,4 +1,5 @@
 #include "stdafx.h"
+#include <objbase.h>
 #include "../xrCDB/frustum.h"
 #include "xr_ioconsole.h"
 #include "xr_input.h"
@@ -49,6 +50,7 @@ BOOL psLua_ParallelGC_debug = FALSE;
 int psLua_ParallelGC_CallAmount = 25;
 
 BOOL psThreadedRender = FALSE;
+thread_local bool g_is_render_thread = false;
 
 extern discord::Core* discord_core;
 extern bool use_discord;
@@ -232,6 +234,55 @@ void mt_Thread(void* ptr)
 		// returns sync signal to device
 		device.mt_csLeave.Leave();
 		STOP_PROFILE;
+	}
+}
+
+void rt_Thread(void* ptr)
+{
+	auto& device = *static_cast<CRenderDevice*>(ptr);
+
+	g_is_render_thread = true;
+	CoInitializeEx(NULL, COINIT_MULTITHREADED);
+
+	while (true)
+	{
+		PROF_EVENT();
+
+		WaitForSingleObject(device.rt_hStartEvent, INFINITE);
+
+		if (device.rt_bMustExit)
+		{
+			CoUninitialize();
+			SetEvent(device.rt_hDoneEvent);
+			return;
+		}
+
+#ifndef DEDICATED_SERVER
+		START_PROFILE("CPU: Render Submit");
+		device.Statistic->RenderTOTAL_Real.FrameStart();
+		device.Statistic->RenderTOTAL_Real.Begin();
+
+		if (device.b_is_Active && device.Begin())
+		{
+			START_PROFILE("Process seqRender");
+			device.seqRender.Process(rp_Render);
+			STOP_PROFILE;
+
+			if (psDeviceFlags.test(rsCameraPos) || psDeviceFlags.test(rsStatistic) || device.Statistic->errors.size())
+			{
+				PROF_EVENT("Draw statistics");
+				device.Statistic->Show();
+			}
+
+			device.End();
+		}
+		device.Statistic->RenderTOTAL_Real.End();
+		STOP_PROFILE;
+		device.Statistic->RenderTOTAL_Real.FrameEnd();
+		device.Statistic->RenderTOTAL.accum = device.Statistic->RenderTOTAL_Real.accum;
+#endif // #ifndef DEDICATED_SERVER
+
+		SetEvent(device.rt_hDoneEvent);
 	}
 }
 
@@ -462,6 +513,9 @@ void CRenderDevice::on_idle()
 		g_SASH.StartBenchmark();
 	}
 
+	bool rt_render_skip = false;
+
+	g_bones_write_idx = 1 - frame_data.g_bones_read_idx;
 	START_PROFILE("Process seqParallelBeforRender");
 	for (u32 pit = 0; pit < seqParallelBeforRender.size(); pit++)
 		seqParallelBeforRender[pit]();
@@ -471,6 +525,34 @@ void CRenderDevice::on_idle()
 	START_PROFILE("CPU: Sim Frame");
 	FrameMove();
 	STOP_PROFILE;
+
+	if (psThreadedRender)
+	{
+		MSG localMsg;
+		while (true)
+		{
+			DWORD res = MsgWaitForMultipleObjects(1, &rt_hDoneEvent, FALSE, INFINITE, QS_ALLINPUT);
+			if (res == WAIT_OBJECT_0)
+				break;
+			while (PeekMessage(&localMsg, nullptr, 0, 0, PM_REMOVE))
+			{
+				if (localMsg.message == WM_QUIT)
+				{
+					PostQuitMessage(static_cast<int>(localMsg.wParam));
+					rt_render_skip = true;
+					break;
+				}
+				TranslateMessage(&localMsg);
+				DispatchMessage(&localMsg);
+			}
+			if (rt_render_skip)
+			{
+				WaitForSingleObject(rt_hDoneEvent, INFINITE);
+				SetEvent(rt_hDoneEvent);
+				break;
+			}
+		}
+	}
 
 	// Precache
 	if (dwPrecacheFrame)
@@ -533,6 +615,12 @@ void CRenderDevice::on_idle()
 
 	frame_data.wind_anim_curr = wind_anim_saved;
 	frame_data.wind_anim_prev = wind_anim_prev;
+	frame_data.g_bones_read_idx = g_bones_write_idx;
+	frame_data.svp_isActive = m_SecondViewport.IsSVPActive();
+	if (g_pGamePersistent && g_pGamePersistent->m_pGShaderConstants)
+		frame_data.hud_params = g_pGamePersistent->m_pGShaderConstants->hud_params;
+
+	m_pRender->pre_build_vis_list();
 	STOP_PROFILE;
 
 	Device.isRendering = true;
@@ -589,6 +677,15 @@ void CRenderDevice::on_idle()
 #endif // ECO_RENDER END
 
 #ifndef DEDICATED_SERVER
+	if (psThreadedRender)
+	{
+		START_PROFILE("CPU: Render Submit");
+		if (!rt_render_skip)
+			SetEvent(rt_hStartEvent);
+		STOP_PROFILE;
+	}
+	else
+	{
 	START_PROFILE("CPU: Render Submit");
 	Statistic->RenderTOTAL_Real.FrameStart();
 	Statistic->RenderTOTAL_Real.Begin();
@@ -611,6 +708,7 @@ void CRenderDevice::on_idle()
 	STOP_PROFILE;
 	Statistic->RenderTOTAL_Real.FrameEnd();
 	Statistic->RenderTOTAL.accum = Statistic->RenderTOTAL_Real.accum;
+	}
 #endif // #ifndef DEDICATED_SERVER
 	Device.isRendering = false;
 
@@ -715,16 +813,30 @@ void CRenderDevice::Run()
 	mt_bMustExit = FALSE;
 	thread_spawn(mt_FreezeThread, "Freeze detecting thread", 0, 0);
 	thread_spawn(mt_Thread, "X-RAY Secondary thread", 0, this);
+
+	rt_hStartEvent = CreateEvent(nullptr, FALSE, FALSE, nullptr);
+	rt_hDoneEvent  = CreateEvent(nullptr, FALSE, TRUE,  nullptr);
+	rt_bMustExit = FALSE;
+	thread_spawn(rt_Thread, "X-RAY Render thread", 0, this);
+
 	// Message cycle
 	seqAppStart.Process(rp_AppStart);
 	m_pRender->ClearTarget();
 	SetForegroundWindow(m_hWnd);
 	message_loop();
-	seqAppEnd.Process(rp_AppEnd);
 	// Stop Balance-Thread
 	mt_bMustExit = TRUE;
 	mt_csEnter.Leave();
 	while (mt_bMustExit) Sleep(0);
+
+	WaitForSingleObject(rt_hDoneEvent, INFINITE);
+	rt_bMustExit = TRUE;
+	SetEvent(rt_hStartEvent);
+	WaitForSingleObject(rt_hDoneEvent, INFINITE);
+	CloseHandle(rt_hStartEvent);
+	CloseHandle(rt_hDoneEvent);
+
+	seqAppEnd.Process(rp_AppEnd);
 	// DeleteCriticalSection (&mt_csEnter);
 	// DeleteCriticalSection (&mt_csLeave);
 }

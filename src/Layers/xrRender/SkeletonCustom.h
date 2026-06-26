@@ -126,7 +126,8 @@ protected:
 
   // Globals
   CInifile *pUserData;
-  CBoneInstance *bone_instances; // bone instances
+  CBoneInstance *bone_instances[2];
+  u32 bones_render_idx;
   vecBones *bones;               // all bones	(shared)
   u16 iRoot;                     // Root bone index
   xr_vector<u16> m_bones_topo;
@@ -197,14 +198,14 @@ public:
   accel *LL_Bones() { return bone_map_N; }
   ICF CBoneInstance &_BCL LL_GetBoneInstance(u16 bone_id) {
     VERIFY(bone_id < LL_BoneCount());
-    VERIFY(bone_instances);
-    return bone_instances[bone_id];
+    VERIFY(bone_instances[bones_render_idx]);
+    return bone_instances[bones_render_idx][bone_id];
   }
 
   ICF const CBoneInstance &_BCL LL_GetBoneInstance(u16 bone_id) const {
     VERIFY(bone_id < LL_BoneCount());
-    VERIFY(bone_instances);
-    return bone_instances[bone_id];
+    VERIFY(bone_instances[bones_render_idx]);
+    return bone_instances[bones_render_idx][bone_id];
   }
 
   CBoneData &_BCL LL_GetData(u16 bone_id) {
@@ -328,7 +329,7 @@ public:
 
   virtual u32 mem_usage(bool bInstance) {
     u32 sz = sizeof(*this);
-    sz += bone_instances ? bone_instances->mem_usage() : 0;
+    sz += bone_instances[0] ? (u32)(bones->size() * sizeof(CBoneInstance) * 2) : 0;
     if (!bInstance) {
       //			sz					+=
       //pUserData?pUserData->mem_usage():0;

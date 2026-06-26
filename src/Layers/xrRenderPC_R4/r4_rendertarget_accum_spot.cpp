@@ -38,7 +38,7 @@ void CRenderTarget::accum_spot(light* L)
 		// setup xform
 		L->xform_calc();
 		RCache.set_xform_world(L->m_xform);
-		RCache.set_xform_view(Device.mView);
+		RCache.set_xform_view(Device.mView_saved);
 		RCache.set_xform_project(Device.mProject);
 		bIntersect = enable_scissor(L);
 		enable_dbt_bounds(L);
@@ -106,7 +106,7 @@ void CRenderTarget::accum_spot(light* L)
 		Fmatrix xf_view = L->X.S.view;
 		Fmatrix xf_project;
 		xf_project.mul(m_TexelAdjust, L->X.S.project);
-		m_Shadow.mul(xf_view, Device.mInvView);
+		m_Shadow.mul(xf_view, Device.mInvView_saved);
 		m_Shadow.mulA_44(xf_project);
 
 		// lmap
@@ -122,7 +122,7 @@ void CRenderTarget::accum_spot(light* L)
 
 		// compute xforms
 		xf_project.mul(m_TexelAdjust2, L->X.S.project);
-		m_Lmap.mul(xf_view, Device.mInvView);
+		m_Lmap.mul(xf_view, Device.mInvView_saved);
 		m_Lmap.mulA_44(xf_project);
 	}
 
@@ -132,8 +132,8 @@ void CRenderTarget::accum_spot(light* L)
 	L_clr.set(L->color.r, L->color.g, L->color.b);
 	L_clr.mul(L->get_LOD());
 	L_spec = u_diffuse2s(L_clr);
-	Device.mView.transform_tiny(L_pos, L->position);
-	//Device.mView.transform_dir(L_dir, L->direction);
+	Device.mView_saved.transform_tiny(L_pos, L->position);
+	//Device.mView_saved.transform_dir(L_dir, L->direction);
 	//L_dir.normalize();
 
 	// Draw volume with projective texgen
@@ -311,7 +311,7 @@ void CRenderTarget::accum_volumetric_lv(light* L)
 	//Set XFORMs, we gonna transform our geometry in VS
 	L->xform_calc();
 	RCache.set_xform_world(L->m_xform);
-	RCache.set_xform_view(Device.mView);
+	RCache.set_xform_view(Device.mView_saved);
 	RCache.set_xform_project(Device.mProject);
 
 	//Shadow xform (+texture adjustment matrix)
@@ -334,7 +334,7 @@ void CRenderTarget::accum_volumetric_lv(light* L)
 
 		//Compute xforms
 		Fmatrix xf_world;
-		xf_world.invert(Device.mView);
+		xf_world.invert(Device.mView_saved);
 		Fmatrix xf_view = L->X.S.view;
 		Fmatrix xf_project;
 		xf_project.mul(m_TexelAdjust, L->X.S.project);
@@ -427,7 +427,7 @@ void CRenderTarget::accum_volumetric(light* L)
 		// setup xform
 		L->xform_calc();
 		RCache.set_xform_world(L->m_xform);
-		RCache.set_xform_view(Device.mView);
+		RCache.set_xform_view(Device.mView_saved);
 		RCache.set_xform_project(Device.mProject);
 		bIntersect = enable_scissor(L);
 
@@ -466,7 +466,7 @@ void CRenderTarget::accum_volumetric(light* L)
 		Fmatrix xf_view = L->X.S.view;
 		Fmatrix xf_project;
 		xf_project.mul(m_TexelAdjust, L->X.S.project);
-		m_Shadow.mul(xf_view, Device.mInvView);
+		m_Shadow.mul(xf_view, Device.mInvView_saved);
 		m_Shadow.mulA_44(xf_project);
 
 		// lmap
@@ -482,7 +482,7 @@ void CRenderTarget::accum_volumetric(light* L)
 
 		// compute xforms
 		xf_project.mul(m_TexelAdjust2, L->X.S.project);
-		m_Lmap.mul(xf_view, Device.mInvView);
+		m_Lmap.mul(xf_view, Device.mInvView_saved);
 		m_Lmap.mulA_44(xf_project);
 
 		// Compute light frustum in world space
@@ -527,14 +527,14 @@ void CRenderTarget::accum_volumetric(light* L)
 	//float	scaledRadius = L->spatial.sphere.R;
 	//Fvector	rr = Fvector().set(scaledRadius,scaledRadius,scaledRadius);
 	//Fvector pt = L->spatial.sphere.P;
-	Device.mView.transform(pt);
+	Device.mView_saved.transform(pt);
 	aabb.setb(pt, rr);
 	/*	
 		//	Calculate presise AABB assuming we are drawing for the spot light
 		{
 			aabb.invalidate();
 			Fmatrix	transform;
-			transform.mul( Device.mView, L->m_xform);		 
+			transform.mul( Device.mView_saved, L->m_xform);		 
 			for (u32 i=0; i<DU_CONE_NUMVERTEX; ++i)
 			{
 				Fvector		pt = du_cone_vertices[i];
@@ -587,8 +587,8 @@ void CRenderTarget::accum_volumetric(light* L)
 	}
 
 	L_spec = u_diffuse2s(L_clr);
-	Device.mView.transform_tiny(L_pos, L->position);
-	//Device.mView.transform_dir(L_dir, L->direction);
+	Device.mView_saved.transform_tiny(L_pos, L->position);
+	//Device.mView_saved.transform_dir(L_dir, L->direction);
 	//L_dir.normalize();
 
 

@@ -19,11 +19,11 @@ void light::vis_prepare()
 	//		. camera inside light volume	= visible,	shedule for 'small' interval
 	//		. perform testing				= ???,		pending
 
-	u32 frame = Device.dwFrame;
+	u32 frame = Device.frame_data.dwFrame;
 	if (frame < vis.frame2test)
 		return; // Not time to test
 
-	if (Device.vCameraPosition.distance_to(spatial.sphere.P) < spatial.sphere.R)
+	if (Device.frame_data.vCameraPosition.distance_to(spatial.sphere.P) < spatial.sphere.R)
 	{
 		vis.visible = true;
 		vis.r4_queries.clear();
@@ -48,11 +48,11 @@ void light::vis_prepare()
 
 void light::vis_update()
 {
-	auto frame = Device.dwFrame;
+	auto frame = Device.frame_data.dwFrame;
 
-	auto light_to_player = Fvector(Device.vCameraPosition).sub(position);
+	auto light_to_player = Fvector(Device.frame_data.vCameraPosition).sub(position);
 	auto distance = light_to_player.magnitude();
-	auto inside_dist = Device.vCameraPosition.distance_to(spatial.sphere.P) < spatial.sphere.R * 1.5f;
+	auto inside_dist = Device.frame_data.vCameraPosition.distance_to(spatial.sphere.P) < spatial.sphere.R * 1.5f;
 	auto inside_fov  = acos(light_to_player.normalize().dotproduct(direction.normalize())) < deg2rad(120.0f * 0.5);
 	auto critical_dist = distance < 1.0;
 

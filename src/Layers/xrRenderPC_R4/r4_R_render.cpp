@@ -22,6 +22,25 @@ IC bool pred_sp_sort(ISpatial* _1, ISpatial* _2)
 	return d1 < d2;
 }
 
+void CRender::pre_build_vis_list()
+{
+	if (!pLastSector || !g_SpatialSpace)
+		return;
+
+	Fmatrix main_ft = Device.frame_data.viewport[0].mFullTransform;
+	ViewBase.CreateFromMatrix(main_ft, FRUSTUM_P_LRTB + FRUSTUM_P_FAR);
+
+	g_SpatialSpace->q_frustum(
+		lstRenderables,
+		ISpatial_DB::O_ORDERED,
+		STYPE_RENDERABLE + STYPE_LIGHTSOURCE,
+		ViewBase
+	);
+
+	tbb::parallel_sort(lstRenderables.begin(), lstRenderables.end(), pred_sp_sort);
+	lstRenderables_frame = Device.frame_data.dwFrame;
+}
+
 void CRender::render_main(Fmatrix& m_ViewProjection, bool _fportals)
 {
 	PIX_EVENT(render_main);
@@ -36,7 +55,7 @@ void CRender::render_main(Fmatrix& m_ViewProjection, bool _fportals)
 		//!!!
 		{
 			// Traverse object database
-			if (lstRenderables_frame != Device.dwFrame)
+			if (lstRenderables_frame != Device.frame_data.dwFrame)
 			{
 				g_SpatialSpace->q_frustum
 				(
@@ -49,7 +68,7 @@ void CRender::render_main(Fmatrix& m_ViewProjection, bool _fportals)
 				// (almost) Exact sorting order (front-to-back)
 				tbb::parallel_sort(lstRenderables.begin(), lstRenderables.end(), pred_sp_sort);
 
-				lstRenderables_frame = Device.dwFrame;
+				lstRenderables_frame = Device.frame_data.dwFrame;
 			}
 
 			// Determine visibility for dynamic part of scene
@@ -103,63 +122,6 @@ void CRender::render_main(Fmatrix& m_ViewProjection, bool _fportals)
 				set_Frustum(&(sector->r_frustums[v_it]));
 				add_Geometry(root);
 			}
-		}
-
-		// skeleton pre calc before frustum
-		{
-			xr_vector<CKinematics*> skeletons_to_update;
-			skeletons_to_update.reserve(lstRenderables.size());
-
-			for (u32 o_it = 0; o_it < lstRenderables.size(); o_it++)
-			{
-				ISpatial* spatial = lstRenderables[o_it];
-				spatial->spatial_updatesector();
-				CSector* sector = (CSector*)spatial->spatial.sector;
-				if (!sector) continue;
-
-				if (PortalTraverser.i_marker != sector->r_marker) continue;
-
-				if (!(spatial->spatial.type & STYPE_RENDERABLE)) continue;
-
-				// Check if it is a skeleton
-				IRenderable* renderable = spatial->dcast_Renderable();
-				if (!renderable) continue;
-
-				dxRender_Visual* V = (dxRender_Visual*)renderable->renderable.visual;
-				if (V->Type != MT_SKELETON_ANIM && V->Type != MT_SKELETON_RIGID) continue;
-
-				// Check frustums
-				bool visible_in_frustum = false;
-				for (u32 v_it = 0; v_it < sector->r_frustums.size(); v_it++)
-				{
-					CFrustum& view = sector->r_frustums[v_it];
-					if (view.testSphere_dirty(spatial->spatial.sphere.P, spatial->spatial.sphere.R)) {
-						visible_in_frustum = true;
-						break;
-					}
-				}
-				if (!visible_in_frustum) continue;
-
-				// Check HOM
-				vis_data& v_orig = V->vis;
-				if (Device.dwFrame < v_orig.hom_frame) {
-					skeletons_to_update.push_back((CKinematics*)V);
-				}
-				else {
-					vis_data v_copy = v_orig;
-					v_copy.box.xform(renderable->renderable.xform);
-					if (HOM.visible(v_copy.box)) {
-						skeletons_to_update.push_back((CKinematics*)V);
-					}
-				}
-			}
-
-			tbb::parallel_for(tbb::blocked_range<size_t>(0, skeletons_to_update.size()),
-				[&](const tbb::blocked_range<size_t>& range) {
-					for (size_t i = range.begin(); i != range.end(); ++i) {
-						skeletons_to_update[i]->CalculateBones(TRUE);
-					}
-				});
 		}
 
 		// Traverse frustums
@@ -333,7 +295,7 @@ void debug_scope(Fmatrix scope_camera) {
 }
 
 void svpCamera() {
-	float svp_fov = g_pGamePersistent->m_pGShaderConstants->hud_params.y * 0.75;
+	float svp_fov = Device.frame_data.hud_params.y * 0.75;
 	float _, fov, fNearPlane, fFarPlane;
 	Device.matrices[0].mProject.decompose_projection(fov, _, fNearPlane, fFarPlane);
 
@@ -381,7 +343,7 @@ void svpCamera() {
 		near_plane = d;
 	}
 
-	auto aspect = RImplementation.TargetSVP->Width /  RImplementation.TargetSVP->Height;
+	auto aspect = float(RImplementation.TargetSVP->Width) / float(RImplementation.TargetSVP->Height);
 
 
 	float fNearPlane_hud, fFarPlane_hud;
@@ -492,7 +454,7 @@ void CRender::renderGBuffer() {
 		{
 			PIX_EVENT(RENDER_HUD_EARLY);
 
-			auto fakescope = Target == TargetMain && !Device.m_SecondViewport.IsSVPActive();
+			auto fakescope = Target == TargetMain && !Device.frame_data.svp_isActive;
 
 			if (Target == TargetMain)
 			{
@@ -519,7 +481,7 @@ void CRender::renderGBuffer() {
 				RCache.set_ZFunc(D3DCMP_LESSEQUAL);
 			}
 
-			if (Target == TargetMain && !Device.m_SecondViewport.IsSVPActive())
+			if (Target == TargetMain && !Device.frame_data.svp_isActive)
 			{
 				PIX_EVENT(SCOPE_HOLEPUNCH);
 				// Clear depth anywhere the hud does not occlude the lens
@@ -638,7 +600,7 @@ void CRender::renderGBuffer() {
 	{
 		static Fmatrix mm_saved_viewproj[2];
 
-		Target->GetPrevious()->Matrix_previous.mul(mm_saved_viewproj[Device.m_SecondViewport.IsSVPFrame()], Device.mInvView);
+		Target->GetPrevious()->Matrix_previous.mul(mm_saved_viewproj[Device.m_SecondViewport.IsSVPFrame()], Device.mInvView_saved);
 		Target->GetPrevious()->Matrix_current.set(Device.mProject);
 		mm_saved_viewproj[Device.m_SecondViewport.IsSVPFrame()].set(Device.mFullTransform);
 	}
@@ -696,7 +658,7 @@ void CRender::combineLightingAndBloom()
 		Target->phase_accumulator();
 		// Render emissive geometry, stencil - write 0x0 at pixel pos
 		RCache.set_xform_project(Device.mProject);
-		RCache.set_xform_view(Device.mView);
+		RCache.set_xform_view(Device.mView_saved);
 		// Stencil - write 0x1 at pixel pos - 
 		if (!RImplementation.o.dx10_msaa)
 			RCache.set_Stencil(TRUE, D3DCMP_ALWAYS, 0x01, 0xff, 0xff, D3DSTENCILOP_KEEP, D3DSTENCILOP_REPLACE,
@@ -848,34 +810,31 @@ void CRender::Render()
 	Device.m_SecondViewport.eyepiece.radius = 0;
 	Device.m_SecondViewport.objective.radius = 0;
 
-	auto mainCameraPos = Device.vCameraPosition;
 	TargetMain->SetActive();
 	{
 		PIX_EVENT(DRAW_MAIN);
 		renderGBuffer();
 	}
 
-	if (Device.m_SecondViewport.IsSVPActive()) {
+	if (Device.frame_data.svp_isActive) {
 		TargetSVP->SetActive();
 		{
             PIX_EVENT(DRAW_SVP);
-            //SVP HACK: Use main frame view matrix to prevent rendering the wrong sector
-            Device.vCameraPosition = mainCameraPos;
             renderGBuffer();
 		}
 	}
 
-	{   
+	{
 		PIX_EVENT(RENDER_SUN);
 		TargetMain->SetActive();
 		renderSun();
 	}
 
-	{	
+	{
 		PIX_EVENT(COMBINE_GBUFFER_CONT);
 		TargetMain->SetActive();
 		combineLightingAndBloom();
-		if (Device.m_SecondViewport.IsSVPActive()) {
+		if (Device.frame_data.svp_isActive) {
 			TargetSVP->SetActive();
 			combineLightingAndBloom();
 		}
@@ -887,7 +846,7 @@ void CRender::Render()
 		renderShadowmaps();
 	}
 
-	if (Device.m_SecondViewport.IsSVPActive()) {
+	if (Device.frame_data.svp_isActive) {
 		TargetSVP->SetActive();
 		{
 			PIX_EVENT(COMBINE_SVP);

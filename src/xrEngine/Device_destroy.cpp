@@ -43,7 +43,7 @@ void CRenderDevice::Destroy(void)
 	//xr_delete (Resources);
 	//HW.DestroyDevice ();
 
-	seqRender.R.clear();
+	seqRender.inner.R.clear();
 	seqAppActivate.R.clear();
 	seqAppDeactivate.R.clear();
 	seqAppStart.R.clear();

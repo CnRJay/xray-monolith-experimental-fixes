@@ -170,7 +170,7 @@ void occRasterizer::on_dbg_render() {
         box_r.sub(box_center);
 
         Fmatrix inv;
-        inv.invert(Device.mView);
+        inv.invert(Device.mView_saved);
         inv.transform(box_center);
         inv.transform_dir(box_r);
 

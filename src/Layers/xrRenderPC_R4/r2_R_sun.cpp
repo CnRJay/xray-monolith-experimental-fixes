@@ -324,7 +324,7 @@ D3DXVECTOR2 BuildTSMProjectionMatrix_caster_depth_bounds(D3DXMATRIX& lightSpaceB
 {
 	float min_z = 1e32f, max_z = -1e32f;
 	D3DXMATRIX minmax_xf;
-	D3DXMatrixMultiply(&minmax_xf, (D3DXMATRIX*)&Device.mView, &lightSpaceBasis);
+	D3DXMatrixMultiply(&minmax_xf, (D3DXMATRIX*)&Device.frame_data.viewport[0].mView, &lightSpaceBasis);
 	Fmatrix& minmax_xform = *((Fmatrix*)&minmax_xf);
 	for (u32 c = 0; c < s_casters.size(); c++)
 	{
@@ -350,10 +350,10 @@ void CRender::render_sun()
 	Fmatrix ex_project, ex_full, ex_full_inverse;
 	{
 		float _far_ = min(OLES_SUN_LIMIT_27_01_07, g_pGamePersistent->Environment().CurrentEnv->far_plane);
-		//ex_project.build_projection	(deg2rad(Device.fFOV/* *Device.fASPECT*/),Device.fASPECT,ps_r2_sun_near,_far_);	
-		ex_project.build_projection(deg2rad(Device.fFOV/* *Device.fASPECT*/), Device.fASPECT,VIEWPORT_NEAR, _far_);
+		//ex_project.build_projection	(deg2rad(Device.frame_data.fFOV/* *Device.frame_data.fASPECT*/),Device.frame_data.fASPECT,ps_r2_sun_near,_far_);	
+		ex_project.build_projection(deg2rad(Device.frame_data.fFOV/* *Device.frame_data.fASPECT*/), Device.frame_data.fASPECT,VIEWPORT_NEAR, _far_);
 		//VIEWPORT_NEAR
-		ex_full.mul(ex_project, Device.mView);
+		ex_full.mul(ex_project, Device.frame_data.viewport[0].mView);
 		D3DXMatrixInverse((D3DXMATRIX*)&ex_full_inverse, 0, (D3DXMATRIX*)&ex_full);
 	}
 
@@ -403,7 +403,7 @@ void CRender::render_sun()
 		cull_sector = largest_sector;
 
 		// COP - 100 km away
-		cull_COP.mad(Device.vCameraPosition, fuckingsun->direction, -tweak_COP_initial_offs);
+		cull_COP.mad(Device.frame_data.vCameraPosition, fuckingsun->direction, -tweak_COP_initial_offs);
 
 		// Create frustum for query
 		cull_frustum._clear();
@@ -470,7 +470,7 @@ void CRender::render_sun()
 	set_Recorder(nullptr);
 
 	//	Prepare to interact with D3DX code
-	const D3DXMATRIX& m_View = *((D3DXMATRIX*)(&Device.mView));
+	const D3DXMATRIX& m_View = *((D3DXMATRIX*)(&Device.frame_data.viewport[0].mView));
 	const D3DXMATRIX& m_Projection = *((D3DXMATRIX*)(&ex_project));
 	const D3DXVECTOR3 m_lightDir = -D3DXVECTOR3(fuckingsun->direction.x, fuckingsun->direction.y,
 	                                            fuckingsun->direction.z);
@@ -732,11 +732,11 @@ void CRender::render_sun()
 		b_receivers = view_clipper.clipped_AABB(s_receivers, xform);
 		Fmatrix x_project, x_full, x_full_inverse;
 		{
-			x_project.build_projection(deg2rad(Device.fFOV/* *Device.fASPECT*/), Device.fASPECT, ps_r2_sun_near,
+			x_project.build_projection(deg2rad(Device.frame_data.fFOV/* *Device.frame_data.fASPECT*/), Device.frame_data.fASPECT, ps_r2_sun_near,
 			                           ps_r2_sun_near + tweak_guaranteed_range);
-			x_project.build_projection(deg2rad(Device.fFOV/* *Device.fASPECT*/), Device.fASPECT,VIEWPORT_NEAR,
+			x_project.build_projection(deg2rad(Device.frame_data.fFOV/* *Device.frame_data.fASPECT*/), Device.frame_data.fASPECT,VIEWPORT_NEAR,
 			                           ps_r2_sun_near + tweak_guaranteed_range);
-			x_full.mul(x_project, Device.mView);
+			x_full.mul(x_project, Device.frame_data.viewport[0].mView);
 			D3DXMatrixInverse((D3DXMATRIX*)&x_full_inverse, 0, (D3DXMATRIX*)&x_full);
 		}
 		for (int e = 0; e < 8; e++)
@@ -829,7 +829,7 @@ void CRender::render_sun()
 
 	// Restore XForms
 	RCache.set_xform_world(Fidentity);
-	RCache.set_xform_view(Device.mView);
+	RCache.set_xform_view(Device.frame_data.viewport[0].mView);
 	RCache.set_xform_project(Device.mProject);
 }
 
@@ -841,9 +841,9 @@ void CRender::render_sun_near()
 	// calculate view-frustum bounds in world space
 	Fmatrix ex_project, ex_full, ex_full_inverse;
 	{
-		ex_project.build_projection(deg2rad(Device.fFOV/* *Device.fASPECT*/), Device.fASPECT,VIEWPORT_NEAR,
+		ex_project.build_projection(deg2rad(Device.frame_data.fFOV/* *Device.frame_data.fASPECT*/), Device.frame_data.fASPECT,VIEWPORT_NEAR,
 		                            ps_r2_sun_near);
-		ex_full.mul(ex_project, Device.mView);
+		ex_full.mul(ex_project, Device.frame_data.viewport[0].mView);
 		D3DXMatrixInverse((D3DXMATRIX*)&ex_full_inverse, 0, (D3DXMATRIX*)&ex_full);
 	}
 
@@ -902,7 +902,7 @@ void CRender::render_sun_near()
 		cull_sector = largest_sector;
 
 		// COP - 100 km away
-		cull_COP.mad(Device.vCameraPosition, fuckingsun->direction, -tweak_COP_initial_offs);
+		cull_COP.mad(Device.frame_data.vCameraPosition, fuckingsun->direction, -tweak_COP_initial_offs);
 
 		// Create frustum for query
 		cull_frustum._clear();
@@ -925,18 +925,18 @@ void CRender::render_sun_near()
 		/*
 		//	Original
 		float	_D					= ps_r2_sun_near;
-		float	a0					= deg2rad(Device.fFOV*Device.fASPECT)/2.f;
-		float	a1					= deg2rad(Device.fFOV)/2.f;
+		float	a0					= deg2rad(Device.frame_data.fFOV*Device.frame_data.fASPECT)/2.f;
+		float	a1					= deg2rad(Device.frame_data.fFOV)/2.f;
 		float	c0					= _D/_cos(a0);
 		float	c1					= _D/_cos(a1);
 		float	k0					= 2.f*c0*_sin(a0);
 		float	k1					= 2.f*c1*_sin(a1);
-		float	borderalpha			= (Device.fFOV-10) / (90-10);
+		float	borderalpha			= (Device.frame_data.fFOV-10) / (90-10);
 		                            
 		float	nearborder			= 1*borderalpha + 1.136363636364f*(1-borderalpha);
 		float	spherical_range		= ps_r2_sun_near_border * nearborder * _max(_max(c0,c1), _max(k0,k1)*1.414213562373f );
 		Fbox	frustum_bb;			frustum_bb.invalidate	();
-		hull.points.push_back		(Device.vCameraPosition);
+		hull.points.push_back		(Device.frame_data.vCameraPosition);
 		for (int it=0; it<9; it++)	{
 		    Fvector	xf	= wform		(mdir_View,hull.points[it]);
 		    frustum_bb.modify		(xf);
@@ -980,7 +980,7 @@ void CRender::render_sun_near()
 
 		// snap view-position to pixel
 		cull_xform.mul(mdir_Project, mdir_View);
-		Fvector cam_proj = wform(cull_xform, Device.vCameraPosition);
+		Fvector cam_proj = wform(cull_xform, Device.frame_data.vCameraPosition);
 		Fvector cam_pixel = wform(m_viewport, cam_proj);
 		cam_pixel.x = floorf(cam_pixel.x);
 		cam_pixel.y = floorf(cam_pixel.y);
@@ -1073,7 +1073,7 @@ void CRender::render_sun_near()
 
 	// Restore XForms
 	RCache.set_xform_world(Fidentity);
-	RCache.set_xform_view(Device.mView);
+	RCache.set_xform_view(Device.frame_data.viewport[0].mView);
 	RCache.set_xform_project(Device.mProject);
 }
 
@@ -1130,18 +1130,18 @@ void CRender::render_sun_cascades()
 		TargetMain->SetActive();
 		shadowmap_sun_cascade(i);
 		
-		if (Device.m_SecondViewport.IsSVPActive()) {
+		if (Device.frame_data.svp_isActive) {
 			TargetSVP->SetActive();
 			render_sun_cascade(i);
 		}
 		TargetMain->SetActive();
 		render_sun_cascade(i);
 	}
-	
+
 	if (b_need_to_render_sunshafts)
 		m_sun_cascades[m_sun_cascades.size() - 1].reset_chain = last_cascade_chain_mode;
 
-	if (Device.m_SecondViewport.IsSVPActive()) {
+	if (Device.frame_data.svp_isActive) {
 		TargetSVP->SetActive();
 		TargetSVP->accum_direct_blend();
 	}
@@ -1160,7 +1160,7 @@ void CRender::shadowmap_sun_cascade(u32 cascade_ind)
 	Fmatrix ex_project, ex_full, ex_full_inverse;
 	{
 		ex_project = Device.mProject;
-		ex_full.mul(ex_project, Device.mView);
+		ex_full.mul(ex_project, Device.frame_data.viewport[0].mView);
 		D3DXMatrixInverse((D3DXMATRIX*)&ex_full_inverse, 0, (D3DXMATRIX*)&ex_full);
 	}
 
@@ -1200,7 +1200,7 @@ void CRender::shadowmap_sun_cascade(u32 cascade_ind)
 		cull_sector = largest_sector;
 
 		// COP - 100 km away
-		cull_COP.mad(Device.vCameraPosition, fuckingsun->direction, -tweak_COP_initial_offs);
+		cull_COP.mad(Device.frame_data.vCameraPosition, fuckingsun->direction, -tweak_COP_initial_offs);
 
 		// Create approximate ortho-xform
 		// view: auto find 'up' and 'right' vectors
@@ -1232,8 +1232,8 @@ void CRender::shadowmap_sun_cascade(u32 cascade_ind)
 				{
 					// 					Fvector asd = Device.vCameraDirection;
 					// 					asd.mul(-2);
-					// 					asd.add(Device.vCameraPosition);
-					// 					near_p		= Device.vCameraPosition;//wform		(fullxform_inv,asd); //
+					// 					asd.add(Device.frame_data.vCameraPosition);
+					// 					near_p		= Device.frame_data.vCameraPosition;//wform		(fullxform_inv,asd); //
 					near_p = wform(fullxform_inv, corners[facetable[4][p]]);
 
 					edge_vec = wform(fullxform_inv, corners[facetable[5][p]]);
@@ -1246,8 +1246,8 @@ void CRender::shadowmap_sun_cascade(u32 cascade_ind)
 			else
 				light_cuboid.view_frustum_rays = m_sun_cascades[cascade_ind].rays;
 
-			light_cuboid.view_ray.P = Device.vCameraPosition;
-			light_cuboid.view_ray.D = Device.vCameraDirection;
+			light_cuboid.view_ray.P = Device.frame_data.vCameraPosition;
+			light_cuboid.view_ray.D = Device.frame_data.vCameraDirection;
 			light_cuboid.light_ray.P = L_pos;
 			light_cuboid.light_ray.D = L_dir;
 		}
@@ -1255,7 +1255,7 @@ void CRender::shadowmap_sun_cascade(u32 cascade_ind)
 		// THIS NEED TO BE A CONSTATNT
 		Fplane light_top_plane;
 		light_top_plane.build_unit_normal(L_pos, L_dir);
-		float dist = light_top_plane.classify(Device.vCameraPosition);
+		float dist = light_top_plane.classify(Device.frame_data.vCameraPosition);
 
 		float map_size = m_sun_cascades[cascade_ind].size;
 		D3DXMatrixOrthoOffCenterLH((D3DXMATRIX*)&mdir_Project, -map_size * 0.5f, map_size * 0.5f, -map_size * 0.5f,
@@ -1302,7 +1302,7 @@ void CRender::shadowmap_sun_cascade(u32 cascade_ind)
 		Fvector lightXZshift;
 		light_cuboid.compute_caster_model_fixed(cull_planes, lightXZshift, m_sun_cascades[cascade_ind].size,
 			m_sun_cascades[cascade_ind].reset_chain);
-		Fvector proj_view = Device.vCameraDirection;
+		Fvector proj_view = Device.frame_data.vCameraDirection;
 		proj_view.y = 0;
 		proj_view.normalize();
 		//			lightXZshift.mad(proj_view, 20);
@@ -1336,7 +1336,7 @@ void CRender::shadowmap_sun_cascade(u32 cascade_ind)
 			cull_frustum._add(cull_planes[p]);
 
 		{
-			Fvector cam_proj = Device.vCameraPosition;
+			Fvector cam_proj = Device.frame_data.vCameraPosition;
 			const float align_aim_step_coef = 4.f;
 			cam_proj.set(floorf(cam_proj.x / align_aim_step_coef) + align_aim_step_coef / 2,
 				floorf(cam_proj.y / align_aim_step_coef) + align_aim_step_coef / 2,
@@ -1446,7 +1446,7 @@ void CRender::shadowmap_sun_cascade(u32 cascade_ind)
 
 	// Restore XForms
 	RCache.set_xform_world(Fidentity);
-	RCache.set_xform_view(Device.mView);
+	RCache.set_xform_view(Device.frame_data.viewport[0].mView);
 	RCache.set_xform_project(Device.mProject);
 }
 
@@ -1481,6 +1481,6 @@ void CRender::render_sun_cascade(u32 cascade_ind)
 
 	// Restore XForms
 	RCache.set_xform_world(Fidentity);
-	RCache.set_xform_view(Device.mView);
+	RCache.set_xform_view(Device.frame_data.viewport[0].mView);
 	RCache.set_xform_project(Device.mProject);
 }

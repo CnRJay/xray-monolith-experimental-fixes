@@ -62,6 +62,7 @@ public:
 	virtual void OnAssetsChanged() = 0;
 
 	virtual bool SwitchOutputMonitor(HMONITOR hTargetMon, HWND hWnd, u32 g_screenmode, u32& vidModeW, u32& vidModeH) { return false; }
+	virtual void pre_build_vis_list() {}
 };
 
 #endif	//	RenderDeviceRender_included

@@ -76,7 +76,7 @@ void CSkeletonX::_Render(ref_geom& hGeom, u32 vCount, u32 iOffset, u32 pCount)
 			// Save bone matrix to use in the next frame
 			for (u16 b = 0; b < Parent->LL_BoneCount(); b++)
 			{
-				CBoneInstance& Bone = Parent->LL_GetBoneInstance(b);
+				CBoneInstance& Bone = Parent->bone_instances[Device.frame_data.g_bones_read_idx][b];
 				Bone.mRenderTransform_prev[svp].set(Bone.mRenderTransform_temp[svp]);
 				Bone.mRenderTransform_temp[svp].set(Bone.mRenderTransform);
 			}
@@ -87,7 +87,7 @@ void CSkeletonX::_Render(ref_geom& hGeom, u32 vCount, u32 iOffset, u32 pCount)
 		{
 			// RM_SINGLE
 			Fmatrix Bone_Prev;
-			Bone_Prev.mul_43(Parent->Matrix_Prev[svp], Parent->LL_GetBoneInstance(u16(RMS_boneid)).mRenderTransform_prev[svp]);
+			Bone_Prev.mul_43(Parent->Matrix_Prev[svp], Parent->bone_instances[Device.frame_data.g_bones_read_idx][u16(RMS_boneid)].mRenderTransform_prev[svp]);
 			p_WV.mul_43(RCache.xforms.m_v_prev[Device.m_SecondViewport.IsSVPFrame()], Bone_Prev);
 			p_WVP.mul(RCache.xforms.m_p_prev[Device.m_SecondViewport.IsSVPFrame()], p_WV);
 		}
@@ -112,7 +112,7 @@ void CSkeletonX::_Render(ref_geom& hGeom, u32 vCount, u32 iOffset, u32 pCount)
 	case RM_SINGLE:
 		{
 			Fmatrix W;
-			W.mul_43(RCache.xforms.m_w, Parent->LL_GetTransform_R(u16(RMS_boneid)));
+			W.mul_43(RCache.xforms.m_w, Parent->bone_instances[Device.frame_data.g_bones_read_idx][u16(RMS_boneid)].mRenderTransform);
 			RCache.set_xform_world(W);
 			//
 			RCache.set_Geometry(hGeom);
@@ -132,7 +132,7 @@ void CSkeletonX::_Render(ref_geom& hGeom, u32 vCount, u32 iOffset, u32 pCount)
 			u32 count = RMS_bonecount;
 			for (u32 mid = 0; mid < count; mid++)
 			{
-				Fmatrix& M = Parent->LL_GetTransform_R(u16(mid));
+				Fmatrix& M = Parent->bone_instances[Device.frame_data.g_bones_read_idx][u16(mid)].mRenderTransform;
 				u32 id = mid * 3;
 				RCache.set_ca(&*array, id + 0, M._11, M._21, M._31, M._41);
 				RCache.set_ca(&*array, id + 1, M._12, M._22, M._32, M._42);
@@ -143,7 +143,7 @@ void CSkeletonX::_Render(ref_geom& hGeom, u32 vCount, u32 iOffset, u32 pCount)
 				{
 					auto svp = Device.m_SecondViewport.IsSVPFrame();
 					// Save previous transform
-					Fmatrix& Mprev = Parent->LL_GetBoneInstance(u16(mid)).mRenderTransform_prev[svp];
+					Fmatrix& Mprev = Parent->bone_instances[Device.frame_data.g_bones_read_idx][u16(mid)].mRenderTransform_prev[svp];
 					RCache.set_ca(&*array_prev, id + 0, Mprev._11, Mprev._21, Mprev._31, Mprev._41);
 					RCache.set_ca(&*array_prev, id + 1, Mprev._12, Mprev._22, Mprev._32, Mprev._42);
 					RCache.set_ca(&*array_prev, id + 2, Mprev._13, Mprev._23, Mprev._33, Mprev._43);
@@ -186,7 +186,7 @@ void CSkeletonX::_Render_soft(ref_geom& hGeom, u32 vCount, u32 iOffset, u32 pCou
 				Dest, // dest
 				*Vertices1W, // source
 				vCount, // count
-				Parent->bone_instances // bones
+				Parent->bone_instances[Device.frame_data.g_bones_read_idx] // bones
 			);
 		}
 		else if (*Vertices2W)
@@ -195,7 +195,7 @@ void CSkeletonX::_Render_soft(ref_geom& hGeom, u32 vCount, u32 iOffset, u32 pCou
 				Dest, // dest
 				*Vertices2W, // source
 				vCount, // count
-				Parent->bone_instances // bones
+				Parent->bone_instances[Device.frame_data.g_bones_read_idx] // bones
 			);
 		}
 		else if (*Vertices3W)
@@ -204,7 +204,7 @@ void CSkeletonX::_Render_soft(ref_geom& hGeom, u32 vCount, u32 iOffset, u32 pCou
 				Dest, // dest
 				*Vertices3W, // source
 				vCount, // count
-				Parent->bone_instances // bones
+				Parent->bone_instances[Device.frame_data.g_bones_read_idx] // bones
 			);
 		}
 		else if (*Vertices4W)
@@ -213,7 +213,7 @@ void CSkeletonX::_Render_soft(ref_geom& hGeom, u32 vCount, u32 iOffset, u32 pCou
 				Dest, // dest
 				*Vertices4W, // source
 				vCount, // count
-				Parent->bone_instances // bones
+				Parent->bone_instances[Device.frame_data.g_bones_read_idx] // bones
 			);
 		}
 		else

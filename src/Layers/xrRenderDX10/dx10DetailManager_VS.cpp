@@ -122,9 +122,9 @@ void CDetailManager::hw_Render()
 	//hw_Render_dump			(&*hwc_s_array,	0, 1, c_hdr );
 	hw_Render_dump(consts, wave.div(PI_MUL_2), dir2, prev_wave.div(PI_MUL_2), prev_dir2, 0, 1);
 
-	if (prev_frame != Device.dwFrame) 
+	if (prev_frame != Device.frame_data.dwFrame)
 	{
-		prev_frame = Device.dwFrame;
+		prev_frame = Device.frame_data.dwFrame;
 		
 		// Prev Frame swing time
 		prev_time = m_time_pos;
@@ -163,7 +163,7 @@ void CDetailManager::hw_Render_dump(const Fvector4& consts, const Fvector4& wave
 
 	// Add Player?
 	if (ps_ssfx_grass_interactive.x > 0)
-		player_pos.set(Device.vCameraPosition.x, Device.vCameraPosition.y, Device.vCameraPosition.z, -1);
+		player_pos.set(Device.frame_data.vCameraPosition.x, Device.frame_data.vCameraPosition.y, Device.frame_data.vCameraPosition.z, -1);
 
 	Device.Statistic->RenderDUMP_DT_Count = 0;
 

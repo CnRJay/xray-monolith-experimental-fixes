@@ -169,6 +169,11 @@ void dxRenderDeviceRender::OnDeviceCreate(LPCSTR shName)
 	//#endif
 }
 
+void dxRenderDeviceRender::pre_build_vis_list()
+{
+	::Render->pre_build_vis_list();
+}
+
 void dxRenderDeviceRender::Create(HWND hWnd, u32& dwWidth, u32& dwHeight, float& fWidth_2, float& fHeight_2,
                                   bool move_window)
 {

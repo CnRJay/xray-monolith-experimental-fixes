@@ -452,6 +452,7 @@ public:
 	void renderShadowmaps();
 	void combineGBuffer();
 	virtual void Render();
+	virtual void pre_build_vis_list() override;
 	virtual void Screenshot(ScreenshotMode mode = SM_NORMAL, LPCSTR name = 0);
 	virtual void Screenshot(ScreenshotMode mode, CMemoryWriter& memory_writer);
 	virtual void ScreenshotAsyncBegin();

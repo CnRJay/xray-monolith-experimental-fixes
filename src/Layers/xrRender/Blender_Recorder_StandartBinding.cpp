@@ -552,7 +552,7 @@ class cl_sun0_dir_e : public R_constant_setup
 		{
 			Fvector D;
 			CEnvDescriptor& desc = *g_pGamePersistent->Environment().CurrentEnv;
-			Device.mView.transform_dir(D, desc.sun_dir);
+			Device.mView_saved.transform_dir(D, desc.sun_dir);
 			D.normalize();
 			result.set(D.x, D.y, D.z, 0);
 		}
@@ -709,7 +709,7 @@ static class cl_inv_v : public R_constant_setup
 
 	virtual void setup(R_constant* C)
 	{
-		RCache.set_c(C, Device.mInvView);
+		RCache.set_c(C, Device.mInvView_saved);
 	}
 } binder_inv_v;
 

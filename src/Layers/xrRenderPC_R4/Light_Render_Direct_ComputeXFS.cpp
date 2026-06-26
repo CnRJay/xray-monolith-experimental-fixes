@@ -42,7 +42,7 @@ void CLight_Compute_XFORM_and_VIS::compute_xf_spot(light* L)
 
 	// Compute approximate screen area (treating it as an point light) - R*R/dist_sq
 	// Note: we clamp screen space area to ONE, although it is not correct at all
-	float dist = Device.vCameraPosition.distance_to(L->spatial.sphere.P) - L->spatial.sphere.R;
+	float dist = Device.frame_data.vCameraPosition.distance_to(L->spatial.sphere.P) - L->spatial.sphere.R;
 	if (dist < 0) dist = 0;
 	float ssa = clampr(L->range * L->range / (1.f + dist * dist), 0.f, 1.f);
 

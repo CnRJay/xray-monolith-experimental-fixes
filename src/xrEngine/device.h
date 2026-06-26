@@ -10,6 +10,35 @@
 //class ENGINE_API CGammaControl;
 
 #include "pure.h"
+#include "../xrCore/xrSyncronize.h"
+
+struct CSeqRenderRegistrator
+{
+	CRegistrator<pureRender> inner;
+	xrCriticalSection cs;
+	void Add(pureRender* obj, int priority = REG_PRIORITY_NORMAL, u32 flags = 0) {
+		cs.Enter(); inner.Add(obj, priority, flags); cs.Leave();
+	}
+	void Remove(pureRender* obj) {
+		cs.Enter(); inner.Remove(obj); cs.Leave();
+	}
+	void Process(RP_FUNC* f) {
+		cs.Enter();
+		inner.in_process = true;
+		if (!inner.R.empty()) {
+			if (inner.R[0].Prio == REG_PRIORITY_CAPTURE) {
+				try { f(inner.R[0].Object); } catch (...) {}
+			} else {
+				for (u32 i = 0; i < inner.R.size(); i++)
+					if (inner.R[i].Prio != REG_PRIORITY_INVALID)
+						try { f(inner.R[i].Object); } catch (...) {}
+			}
+		}
+		if (inner.changed) inner.Resort();
+		inner.in_process = false;
+		cs.Leave();
+	}
+};
 //#include "hw.h"
 #include "../xrcore/ftimer.h"
 #include "stats.h"
@@ -94,6 +123,7 @@ public:
 	Fvector vCameraPosition_saved;
 
 	Fmatrix mView_saved;
+	Fmatrix mInvView_saved;
 	Fmatrix mProject_saved;
 	Fmatrix mFullTransform_saved;
 
@@ -141,9 +171,13 @@ public:
 
 		Fvector4 wind_anim_curr;
 		Fvector4 wind_anim_prev;
+		u32 g_bones_read_idx;
+		bool svp_isActive;
+		Fvector4 hud_params;
 	};
 
 	SRenderFrameData frame_data;
+	u32 g_bones_write_idx = 0;
 
 protected:
 
@@ -158,7 +192,7 @@ protected:
 public:
 
 	// Registrators
-	CRegistrator<pureRender> seqRender;
+	CSeqRenderRegistrator seqRender;
 	CRegistrator<pureAppActivate> seqAppActivate;
 	CRegistrator<pureAppDeactivate> seqAppDeactivate;
 	CRegistrator<pureAppStart> seqAppStart;
@@ -503,6 +537,10 @@ public:
 	xrCriticalSection mt_csLeave;
 	volatile BOOL mt_bMustExit;
 	xr_task_group seqParallelRender_tasks;
+
+	HANDLE rt_hStartEvent;
+	HANDLE rt_hDoneEvent;
+	volatile BOOL rt_bMustExit;
 
 	ICF void remove_from_seq_parallel(const fastdelegate::FastDelegate0<>& delegate)
 	{

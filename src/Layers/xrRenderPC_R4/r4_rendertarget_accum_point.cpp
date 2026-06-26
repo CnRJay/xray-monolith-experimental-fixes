@@ -21,12 +21,12 @@ void CRenderTarget::accum_point(light* L)
 	Fvector L_clr;
 	L_clr.set(L->color.r, L->color.g, L->color.b);
 	L_spec = u_diffuse2s(L_clr);
-	Device.mView.transform_tiny(L_pos, L->position);
+	Device.mView_saved.transform_tiny(L_pos, L->position);
 
 	// Xforms
 	L->xform_calc();
 	RCache.set_xform_world(L->m_xform);
-	RCache.set_xform_view(Device.mView);
+	RCache.set_xform_view(Device.mView_saved);
 	RCache.set_xform_project(Device.mProject);
 	enable_scissor(L);
 	enable_dbt_bounds(L);

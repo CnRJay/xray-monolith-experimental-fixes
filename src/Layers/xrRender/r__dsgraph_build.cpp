@@ -23,13 +23,13 @@ float r_ssaHZBvsTEX;
 ICF float CalcSSA(float& distSQ, Fvector& C, dxRender_Visual* V)
 {
 	float R = V->vis.sphere.R + 0;
-	distSQ = Device.vCameraPosition.distance_to_sqr(C) + EPS;
+	distSQ = Device.frame_data.vCameraPosition.distance_to_sqr(C) + EPS;
 	return R / distSQ;
 }
 
 ICF float CalcSSA(float& distSQ, Fvector& C, float R)
 {
-	distSQ = Device.vCameraPosition.distance_to_sqr(C) + EPS;
+	distSQ = Device.frame_data.vCameraPosition.distance_to_sqr(C) + EPS;
 	return R / distSQ;
 }
 
@@ -625,8 +625,8 @@ Fvector4 o_optimize_dynamic_l3_size = {O_D_L3_S_LOW, O_D_L3_S_MED, O_D_L3_S_HII,
 IC float GetDistFromCamera(const Fvector& from_position)
 // Aproximate, adjusted by fov, distance from camera to position (For right work when looking though binoculars and scopes)
 {
-	float distance = Device.vCameraPosition.distance_to(from_position);
-	float fov_K = BASE_FOV / Device.fFOV;
+	float distance = Device.frame_data.vCameraPosition.distance_to(from_position);
+	float fov_K = BASE_FOV / Device.frame_data.fFOV;
 	float adjusted_distane = distance / fov_K;
 
 	return adjusted_distane;

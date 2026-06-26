@@ -363,6 +363,7 @@ public:
 	// Main
 	virtual void Calculate() = 0;
 	virtual void Render() = 0;
+	virtual void pre_build_vis_list() {}
 
 	virtual void Screenshot(ScreenshotMode mode = SM_NORMAL, LPCSTR name = 0) = 0;
 	virtual void Screenshot(ScreenshotMode mode, CMemoryWriter& memory_writer) = 0;

@@ -609,7 +609,7 @@ void R_dsgraph_structure::r_dsgraph_render_hud(bool NoPS)
 				Device.fASPECT, R_VIEWPORT_NEAR,
 				g_pGamePersistent->Environment().CurrentEnv->far_plane);
 
-			Device.mFullTransform.mul(camproj, Device.mView);
+			Device.mFullTransform.mul(camproj, Device.mView_saved);
 			RCache.set_xform_project(camproj);
 
 			// Rendering
@@ -635,7 +635,7 @@ void R_dsgraph_structure::r_dsgraph_render_hud(bool NoPS)
 				Device.fASPECT, R_VIEWPORT_NEAR,
 				g_pGamePersistent->Environment().CurrentEnv->far_plane);
 
-			Device.mFullTransform.mul(camproj, Device.mView);
+			Device.mFullTransform.mul(camproj, Device.mView_saved);
 			RCache.set_xform_project(camproj);
 
 			// Rendering
@@ -683,7 +683,7 @@ void R_dsgraph_structure::r_dsgraph_render_cam_ui()
 		Device.fASPECT, R_VIEWPORT_NEAR,
 		g_pGamePersistent->Environment().CurrentEnv->far_plane);
 
-	Device.mFullTransform.mul(camproj, Device.mView);
+	Device.mFullTransform.mul(camproj, Device.mView_saved);
 	RCache.set_xform_project(camproj);
 
 	// Rendering
@@ -725,7 +725,7 @@ void R_dsgraph_structure::r_dsgraph_render_sorted()
 			Device.fASPECT, R_VIEWPORT_NEAR,
 			g_pGamePersistent->Environment().CurrentEnv->far_plane);
 
-		Device.mFullTransform.mul(camproj, Device.mView);
+		Device.mFullTransform.mul(camproj, Device.mView_saved);
 		RCache.set_xform_project(camproj);
 
 		// Rendering
@@ -873,19 +873,12 @@ void R_dsgraph_structure::r_dsgraph_render_subspace(IRender_Sector* _sector, CFr
 	{
 		set_Object(0);
 
-		// Traverse object database
-		g_SpatialSpace->q_frustum
-		(
-			lstRenderables,
-			ISpatial_DB::O_ORDERED,
-			STYPE_RENDERABLE,
-			ViewBase
-		);
-
 		// Determine visibility for dynamic part of scene
+		// lstRenderables is pre-populated by pre_build_vis_list() on the sim thread
 		for (u32 o_it = 0; o_it < lstRenderables.size(); o_it++)
 		{
 			ISpatial* spatial = lstRenderables[o_it];
+			if (!(spatial->spatial.type & STYPE_RENDERABLE)) continue;
 			CSector* sector = (CSector*)spatial->spatial.sector;
 			if (0 == sector) continue; // disassociated from S/P structure
 			if (PortalTraverser.i_marker != sector->r_marker) continue; // inactive (untouched) sector

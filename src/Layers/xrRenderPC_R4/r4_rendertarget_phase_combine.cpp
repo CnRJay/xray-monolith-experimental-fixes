@@ -90,7 +90,7 @@ void CRenderTarget::phase_combine()
 	Fvector2 p0, p1;
 
 	//*** exposure-pipeline
-	u32			gpu_id = Device.dwFrame % HW.Caps.iGPUNum;
+	u32			gpu_id = Device.frame_data.dwFrame % HW.Caps.iGPUNum;
 	{
 		t_LUM_src->surface_set(rt_LUM_pool[gpu_id * 2 + 0]->pSurface);
 		t_LUM_dest->surface_set(rt_LUM_pool[gpu_id * 2 + 1]->pSurface);
@@ -120,9 +120,9 @@ void CRenderTarget::phase_combine()
 		static Fmatrix m_saved_viewproj[2];
 		static Fvector3 saved_position[2];
 		GetPrevious()->Position_previous.set(saved_position[Device.m_SecondViewport.IsSVPFrame()]);
-		saved_position[Device.m_SecondViewport.IsSVPFrame()].set(Device.vCameraPosition);
+		saved_position[Device.m_SecondViewport.IsSVPFrame()].set(Device.frame_data.vCameraPosition);
 
-		GetPrevious()->Matrix_previous.mul(m_saved_viewproj[Device.m_SecondViewport.IsSVPFrame()], Device.mInvView);
+		GetPrevious()->Matrix_previous.mul(m_saved_viewproj[Device.m_SecondViewport.IsSVPFrame()], Device.mInvView_saved);
 		GetPrevious()->Matrix_current.set(Device.mProject);
 		m_saved_viewproj[Device.m_SecondViewport.IsSVPFrame()].set(Device.mFullTransform);
 
@@ -202,7 +202,7 @@ void CRenderTarget::phase_combine()
 		static Fmatrix m_saved_viewproj;
 
 		// (new-camera) -> (world) -> (old_viewproj)
-		m_previous.mul(m_saved_viewproj, Device.mInvView);
+		m_previous.mul(m_saved_viewproj, Device.mInvView_saved);
 		m_current.set(Device.mProject);
 		m_saved_viewproj.set(Device.mFullTransform);
 		float scale = ps_r2_mblur / 2.f;
@@ -236,11 +236,11 @@ void CRenderTarget::phase_combine()
 
 		float fSSAONoise = 2.0f;
 		fSSAONoise *= tan(deg2rad(67.5f / 2.0f));
-		fSSAONoise /= tan(deg2rad(Device.fFOV / 2.0f));
+		fSSAONoise /= tan(deg2rad(Device.frame_data.fFOV / 2.0f));
 
 		float fSSAOKernelSize = 150.0f;
 		fSSAOKernelSize *= tan(deg2rad(67.5f / 2.0f));
-		fSSAOKernelSize /= tan(deg2rad(Device.fFOV / 2.0f));
+		fSSAOKernelSize /= tan(deg2rad(Device.frame_data.fFOV / 2.0f));
 
 
 		// sun-params
@@ -250,7 +250,7 @@ void CRenderTarget::phase_combine()
 			float L_spec;
 			L_clr.set(fuckingsun->color.r, fuckingsun->color.g, fuckingsun->color.b);
 			L_spec = u_diffuse2s(L_clr);
-			Device.mView.transform_dir(L_dir, fuckingsun->direction);
+			Device.mView_saved.transform_dir(L_dir, fuckingsun->direction);
 			L_dir.normalize();
 
 			sunclr.set(L_clr.x, L_clr.y, L_clr.z, L_spec);
@@ -310,7 +310,7 @@ void CRenderTarget::phase_combine()
 		//RCache.set_Geometry			(g_combine_VP		);
 		RCache.set_Geometry(g_combine);
 
-		RCache.set_c("m_v2w", Device.mInvView);
+		RCache.set_c("m_v2w", Device.mInvView_saved);
 		RCache.set_c("L_ambient", ambclr);
 
 		RCache.set_c("Ldynamic_color", sunclr);

@@ -318,7 +318,7 @@ void CRenderTarget::draw_scope(ref_shader se, std::function<void(R_dsgraph::mapS
 			RCache.set_c(id, v.x, v.y, v.z, 1.0);
 		};
 
-		RCache.set_c("scope_svp", Device.m_SecondViewport.IsSVPActive());
+		RCache.set_c("scope_svp", Device.frame_data.svp_isActive);
 		RCache.set_c("scope_debug", (int)scope_debug);
 		set_v3("scope_w_ffp", Device.m_SecondViewport.w_ffp);
 		set_v3("scope_w_sfp", Device.m_SecondViewport.w_sfp);
@@ -333,9 +333,9 @@ void CRenderTarget::draw_scope(ref_shader se, std::function<void(R_dsgraph::mapS
 		// Clear so that we don't have invalid data for no lense being found
 
 		static u32 dwFrame = 0;
-		if (Device.dwFrame > dwFrame)
-		{   // Compute the lens information
-			dwFrame = Device.dwFrame;
+		if (Device.frame_data.dwFrame > dwFrame)
+		{
+			dwFrame = Device.frame_data.dwFrame;
 
 			p->eyepiece.radius = 0.f;
 			p->objective.radius = 0.f;
@@ -377,7 +377,7 @@ void CRenderTarget::phase_3DSSReticle()
 	PIX_EVENT(PHASE_SCOPE_RETICLE);
 	HW.pContext->CopyResource(rt_Generic_2->pTexture->surface_get(), RImplementation.Target->rt_Position->pTexture->surface_get());
 
-	if (!Device.m_SecondViewport.IsSVPActive())
+	if (!Device.frame_data.svp_isActive)
 		HW.pContext->CopyResource(rt_secondVP->pTexture->surface_get(), rt_Generic_0->pTexture->surface_get());
 
 	u_setrt(RImplementation.Target->rt_Generic_0, nullptr, RImplementation.Target->rt_Position, RImplementation.Target->baseZB);
@@ -405,9 +405,9 @@ void CRenderTarget::phase_3DSSReticle()
 			RCache.override_Texture(t->cName, target->pTexture);
 		};
 
-		auto svp = Device.m_SecondViewport.IsSVPActive();
-		
-		f(r2_RT_secondVP, svp ? RImplementation.TargetSVP->rt_secondVP : RImplementation.TargetMain->rt_secondVP);		
+		auto svp = Device.frame_data.svp_isActive;
+
+		f(r2_RT_secondVP, svp ? RImplementation.TargetSVP->rt_secondVP : RImplementation.TargetMain->rt_secondVP);
 		f(r2_RT_generic2, svp ? RImplementation.TargetSVP->rt_Position : RImplementation.TargetMain->rt_Generic_2);
 		f(r2_RT_heat,     svp ? RImplementation.TargetSVP->rt_Heat : RImplementation.TargetMain->rt_Heat);
 
@@ -419,7 +419,7 @@ void CRenderTarget::phase_3DSSReticle()
 			RCache.set_c("scope_phase", SCOPE_PHASE_IMAGE);
 
 			{	// Set screen_res to the gbuffer size
-				auto t = Device.m_SecondViewport.IsSVPActive() ? RImplementation.TargetSVP : RImplementation.TargetMain;
+				auto t = Device.frame_data.svp_isActive ? RImplementation.TargetSVP : RImplementation.TargetMain;
 				RCache.set_c("screen_res", Fvector4({(float)t->Width, (float)t->Height, 1.0f/(float)t->Width, 1.0f/(float)t->Height}));
 			}
 
@@ -431,7 +431,7 @@ void CRenderTarget::phase_3DSSReticle()
 			auto P = Device.m_SecondViewport;
 			Fvector up = {0,1,0};
 			P.objective.m_W.transform_dir(up);
-			Device.mView.transform_dir(up);
+			Device.mView_saved.transform_dir(up);
 
 			up.z = 0.0;
 			up.normalize();

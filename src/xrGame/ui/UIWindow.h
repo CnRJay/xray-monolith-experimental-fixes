@@ -251,13 +251,14 @@ public:
 protected:
 	IC void SafeRemoveChild(CUIWindow* child)
 	{
+		xrCriticalSectionGuard g(m_children_cs);
 		WINDOW_LIST_it it = std::find(m_ChildWndList.begin(), m_ChildWndList.end(), child);
 		if (it != m_ChildWndList.end())m_ChildWndList.erase(it);
 	};
 
 	shared_str m_windowName;
-	//список дочерних окон
 	WINDOW_LIST m_ChildWndList;
+	mutable xrCriticalSection m_children_cs;
 
 	//указатель на родительское окно
 	CUIWindow* m_pParentWnd;

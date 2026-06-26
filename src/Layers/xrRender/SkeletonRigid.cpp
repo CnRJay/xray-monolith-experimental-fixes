@@ -118,38 +118,49 @@ void CKinematics::CalculateBones(BOOL bForceExact) {
   }
 #endif
 
+  extern thread_local bool g_is_render_thread;
+  const u32 bones_wi = g_is_render_thread ? Device.frame_data.g_bones_read_idx : Device.g_bones_write_idx;
+
   xrCriticalSectionGuard g(UCalc_Mutex);
   OnCalculateBones();
   if (!bForceExact &&
       (RDEVICE.dwTimeGlobal < (UCalc_Time + UCalc_Interval * update_rate_k)))
-    return; // early out for "slow" update
+  {
+    u32 wi = bones_wi;
+    u32 ri = Device.frame_data.g_bones_read_idx;
+    if (ri != wi && bone_instances[0])
+      memcpy(bone_instances[wi], bone_instances[ri], (u32)bones->size() * sizeof(CBoneInstance));
+    bones_render_idx = wi;
+    return;
+  }
   if (Update_Visibility)
     Visibility_Update();
 
   _DBG_SINGLE_USE_MARKER;
-  // here we have either:
-  //	1:	timeout elapsed
-  //	2:	exact computation required
   UCalc_Time = RDEVICE.dwTimeGlobal;
 
-  // exact computation
-  // Calculate bones
+  const u32 wi = bones_wi;
+  CBoneInstance* const bi_w = bone_instances[wi];
+  const u32 n_calc_bones = (u32)bones->size();
+
 #ifdef DEBUG
   RDEVICE.Statistic->Animation.Begin();
 #endif
 
   if (!m_bones_topo.empty() && iRoot == m_bones_topo[0]) {
+    memcpy(bi_w, bone_instances[Device.frame_data.g_bones_read_idx], n_calc_bones * sizeof(CBoneInstance));
     xrCriticalSectionGuard g2(UCalc_Mutex2);
     for (u16 id : m_bones_topo) {
       CBoneData *bd = (*bones)[id];
-      CBoneInstance &bi = bone_instances[id];
+      CBoneInstance &bi = bi_w[id];
       const Fmatrix *parent = (bd->GetParentID() == BI_NONE)
                                    ? &Fidentity
-                                   : &bone_instances[bd->GetParentID()].mTransform;
+                                   : &bi_w[bd->GetParentID()].mTransform;
       CLBone(bd, bi, parent, u8(-1));
     }
   } else {
     Bone_Calculate(bones->at(iRoot), &Fidentity);
+    memcpy(bi_w, bone_instances[Device.frame_data.g_bones_read_idx], n_calc_bones * sizeof(CBoneInstance));
   }
 #ifdef DEBUG
   check_kinematics(this, dbg_name.c_str());
@@ -170,7 +181,7 @@ void CKinematics::CalculateBones(BOOL bForceExact) {
       if (!LL_GetBoneVisible(u16(b)))
         continue;
       Fobb &obb = (*bones)[b]->obb;
-      Fmatrix &Mbone = bone_instances[b].mTransform;
+      Fmatrix &Mbone = bi_w[b].mTransform;
       Fmatrix Mbox;
       obb.xform_get(Mbox);
       Fmatrix X;
@@ -227,7 +238,9 @@ void CKinematics::CalculateBones(BOOL bForceExact) {
 #endif
   } else
     UCalc_ThisFrame = false;
-  //
+
+  bones_render_idx = wi;
+
   if (Update_Callback)
     Update_Callback(this);
 }

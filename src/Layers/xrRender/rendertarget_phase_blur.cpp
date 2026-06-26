@@ -833,7 +833,7 @@ void CRenderTarget::phase_ssfx_sss_ext(light_Package& LP)
 					// Update Light
 					Fvector L_pos;
 
-					Device.mView.transform_tiny(L_pos, LightSlot[slot]->position);
+					Device.mView_saved.transform_tiny(L_pos, LightSlot[slot]->position);
 
 					// Distance Atte ( Use MaxAtte if the light range is bigger than the max sort range )
 					float MaxAtte = 1.0f - (clampr((LightSlot[slot]->distance - 780) / -100, 0.f, 1.f));

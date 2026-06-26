@@ -72,8 +72,8 @@ void CKinematics::DebugRender(Fmatrix& XFORM)
 	Fvector H1; H1.set(0.01f,0.01f,0.01f);
 	Fvector H2; H2.mul(H1,2);
 	for (u32 i=0; i<dbgLines.size(); i+=2)	{
-		Fmatrix& M1 = bone_instances[dbgLines[i]].mTransform;
-		Fmatrix& M2 = bone_instances[dbgLines[i+1]].mTransform;
+		Fmatrix& M1 = bone_instances[bones_render_idx][dbgLines[i]].mTransform;
+		Fmatrix& M2 = bone_instances[bones_render_idx][dbgLines[i+1]].mTransform;
 
 		Fvector P1,P2;
 		M1.transform_tiny(P1,Z);
@@ -89,7 +89,7 @@ void CKinematics::DebugRender(Fmatrix& XFORM)
 	for (u32 b=0; b<bones->size(); b++)
 	{
 		Fobb&		obb		= (*bones)[b]->obb;
-		Fmatrix&	Mbone	= bone_instances[b].mTransform;
+		Fmatrix&	Mbone	= bone_instances[bones_render_idx][b].mTransform;
 		Fmatrix		Mbox;	obb.xform_get(Mbox);
 		Fmatrix		X;		X.mul(Mbone,Mbox);
 		Fmatrix		W;		W.mul(XFORM,X);
@@ -130,20 +130,21 @@ CKinematics::~CKinematics()
 
 void CKinematics::IBoneInstances_Create()
 {
-	// VERIFY2				(bones->size() < 64, "More than 64 bones is a crazy thing!");
 	u32 size = bones->size();
-	bone_instances = xr_alloc<CBoneInstance>(size);
+	bone_instances[0] = xr_alloc<CBoneInstance>(size);
+	bone_instances[1] = xr_alloc<CBoneInstance>(size);
 	for (u32 i = 0; i < size; i++)
-		bone_instances[i].construct();
+	{
+		bone_instances[0][i].construct();
+		bone_instances[1][i].construct();
+	}
+	bones_render_idx = 0;
 }
 
 void CKinematics::IBoneInstances_Destroy()
 {
-	if (bone_instances)
-	{
-		xr_free(bone_instances);
-		bone_instances = nullptr;
-	}
+	if (bone_instances[0]) { xr_free(bone_instances[0]); bone_instances[0] = nullptr; }
+	if (bone_instances[1]) { xr_free(bone_instances[1]); bone_instances[1] = nullptr; }
 }
 
 bool pred_sort_N(const std::pair<shared_str, u32>& A, const std::pair<shared_str, u32>& B)
@@ -213,7 +214,9 @@ void CKinematics::Load(const char* N, IReader* data, u32 dwFlags)
 	bone_map_N = xr_new<accel>();
 	bone_map_P = xr_new<accel>();
 	bones = xr_new<vecBones>();
-	bone_instances = nullptr;
+	bone_instances[0] = nullptr;
+	bone_instances[1] = nullptr;
+	bones_render_idx = 0;
 
 	// Load bones
 #pragma todo("container is created in stack!")
@@ -472,7 +475,11 @@ void CKinematics::Spawn()
 	inherited::Spawn();
 	// bones
 	for (u32 i = 0; i < bones->size(); i++)
-		bone_instances[i].construct();
+	{
+		bone_instances[0][i].construct();
+		bone_instances[1][i].construct();
+	}
+	bones_render_idx = 0;
 	Update_Callback = nullptr;
 	CalculateBones_Invalidate();
 	// wallmarks
@@ -538,18 +545,17 @@ void CKinematics::LL_SetBoneVisible(u16 bone_id, BOOL val, BOOL bRecursive)
 	visimask.set(mask, val);
 	if (!visimask.is(mask))
 	{
-		bone_instances[bone_id].mTransformHidden = bone_instances[bone_id].mTransform;
-		bone_instances[bone_id].mTransform.scale(0.f, 0.f, 0.f);
+		CBoneInstance& bi_vis = bone_instances[bones_render_idx][bone_id];
+		bi_vis.mTransformHidden = bi_vis.mTransform;
+		bi_vis.mTransform.scale(0.f, 0.f, 0.f);
 		u16 parent_id = LL_GetData(bone_id).GetParentID();
 		if (parent_id < LL_BoneCount() && parent_id != BI_NONE)
-			bone_instances[bone_id].mTransform.c = LL_GetBoneInstance(parent_id).mTransform.c;
-
-		bone_instances[bone_id].mRenderTransform.mul_43(bone_instances[bone_id].mTransform,
-			(*bones)[bone_id]->m2b_transform);
+			bi_vis.mTransform.c = LL_GetBoneInstance(parent_id).mTransform.c;
+		bi_vis.mRenderTransform.mul_43(bi_vis.mTransform, (*bones)[bone_id]->m2b_transform);
 	}
 	else
 	{
-		bone_instances[bone_id].mTransform = bone_instances[bone_id].mTransformHidden;
+		bone_instances[bones_render_idx][bone_id].mTransform = bone_instances[bones_render_idx][bone_id].mTransformHidden;
 		CalculateBones_Invalidate();
 	}
 
@@ -574,15 +580,14 @@ void CKinematics::LL_SetBonesVisible(u64 mask)
 		}
 		else
 		{
-			bone_instances[bone_id].mTransformHidden = bone_instances[bone_id].mTransform;
-			bone_instances[bone_id].mTransform.scale(0.f, 0.f, 0.f);
+			CBoneInstance& bi_vis2 = bone_instances[bones_render_idx][bone_id];
+			bi_vis2.mTransformHidden = bi_vis2.mTransform;
+			bi_vis2.mTransform.scale(0.f, 0.f, 0.f);
 
 			u16 parent_id = LL_GetData(bone_id).GetParentID();
 			if (parent_id < LL_BoneCount() && parent_id != BI_NONE)
-				bone_instances[bone_id].mTransform.c = LL_GetBoneInstance(parent_id).mTransform.c;
-
-			bone_instances[bone_id].mRenderTransform.mul_43(bone_instances[bone_id].mTransform,
-				(*bones)[bone_id]->m2b_transform);
+				bi_vis2.mTransform.c = LL_GetBoneInstance(parent_id).mTransform.c;
+			bi_vis2.mRenderTransform.mul_43(bi_vis2.mTransform, (*bones)[bone_id]->m2b_transform);
 		}
 	}
 	CalculateBones_Invalidate();
@@ -838,6 +843,7 @@ void CKinematics::RenderWallmark(intrusive_ptr<CSkeletonWallmark> wm, FVF::LIT* 
 
 	if ((wm == 0) || (0 == bones) || (0 == bone_instances)) return;
 
+	CBoneInstance* const bi_r = bone_instances[Device.frame_data.g_bones_read_idx];
 	// skin vertices
 	for (u32 f_idx = 0; f_idx < wm->m_Faces.size(); f_idx++)
 	{
@@ -849,15 +855,15 @@ void CKinematics::RenderWallmark(intrusive_ptr<CSkeletonWallmark> wm, FVF::LIT* 
 			if (F.bone_id[k][0] == F.bone_id[k][1])
 			{
 				// 1-link
-				Fmatrix& xform0 = LL_GetBoneInstance(F.bone_id[k][0]).mRenderTransform;
+				Fmatrix& xform0 = bi_r[F.bone_id[k][0]].mRenderTransform;
 				xform0.transform_tiny(P, F.vert[k]);
 			}
 			else if (F.bone_id[k][1] == F.bone_id[k][2])
 			{
 				// 2-link
 				Fvector P0, P1;
-				Fmatrix& xform0 = LL_GetBoneInstance(F.bone_id[k][0]).mRenderTransform;
-				Fmatrix& xform1 = LL_GetBoneInstance(F.bone_id[k][1]).mRenderTransform;
+				Fmatrix& xform0 = bi_r[F.bone_id[k][0]].mRenderTransform;
+				Fmatrix& xform1 = bi_r[F.bone_id[k][1]].mRenderTransform;
 				xform0.transform_tiny(P0, F.vert[k]);
 				xform1.transform_tiny(P1, F.vert[k]);
 				P.lerp(P0, P1, F.weight[k][0]);
@@ -866,9 +872,9 @@ void CKinematics::RenderWallmark(intrusive_ptr<CSkeletonWallmark> wm, FVF::LIT* 
 			{
 				// 3-link
 				Fvector P0, P1, P2;
-				Fmatrix& xform0 = LL_GetBoneInstance(F.bone_id[k][0]).mRenderTransform;
-				Fmatrix& xform1 = LL_GetBoneInstance(F.bone_id[k][1]).mRenderTransform;
-				Fmatrix& xform2 = LL_GetBoneInstance(F.bone_id[k][2]).mRenderTransform;
+				Fmatrix& xform0 = bi_r[F.bone_id[k][0]].mRenderTransform;
+				Fmatrix& xform1 = bi_r[F.bone_id[k][1]].mRenderTransform;
+				Fmatrix& xform2 = bi_r[F.bone_id[k][2]].mRenderTransform;
 				xform0.transform_tiny(P0, F.vert[k]);
 				xform1.transform_tiny(P1, F.vert[k]);
 				xform2.transform_tiny(P2, F.vert[k]);
@@ -887,7 +893,7 @@ void CKinematics::RenderWallmark(intrusive_ptr<CSkeletonWallmark> wm, FVF::LIT* 
 				Fvector PB[4];
 				for (int i = 0; i < 4; ++i)
 				{
-					Fmatrix& xform = LL_GetBoneInstance(F.bone_id[k][i]).mRenderTransform;
+					Fmatrix& xform = bi_r[F.bone_id[k][i]].mRenderTransform;
 					xform.transform_tiny(PB[i], F.vert[k]);
 				}
 

@@ -37,6 +37,7 @@ void dump_list_wnd()
 
 xr_vector<Frect> g_wnds_rects;
 BOOL g_show_wnd_rect2 = FALSE;
+static xrCriticalSection g_wnds_rects_cs;
 
 void clean_wnd_rects()
 {
@@ -47,6 +48,7 @@ void clean_wnd_rects()
 
 void add_rect_to_draw(Frect r)
 {
+	xrCriticalSectionGuard guard(g_wnds_rects_cs);
 	g_wnds_rects.push_back(r);
 }
 
@@ -73,6 +75,7 @@ void draw_rect(Frect& r, u32 color)
 
 void draw_wnds_rects()
 {
+	xrCriticalSectionGuard guard(g_wnds_rects_cs);
 	if (0 == g_wnds_rects.size()) return;
 
 	xr_vector<Frect>::iterator it = g_wnds_rects.begin();
@@ -171,6 +174,7 @@ CUIWindow::~CUIWindow()
 
 void CUIWindow::Draw()
 {
+	xrCriticalSectionGuard g(m_children_cs);
 	for (WINDOW_LIST_it it = m_ChildWndList.begin(); m_ChildWndList.end() != it; ++it)
 	{
 		if (!(*it)) continue;
@@ -236,6 +240,7 @@ void CUIWindow::AttachChild(CUIWindow* pChild)
 	R_ASSERT(pChild);
 	if (!pChild) return;
 
+	xrCriticalSectionGuard g(m_children_cs);
 	// Ncenka: Print in console instead of crash
 	if (IsChild(pChild)) {
 		Msg("!CUIWindow::AttachChild, %s child element is already attached to %s", pChild->WindowName_script(), WindowName_script());
@@ -251,6 +256,8 @@ void CUIWindow::DetachChild(CUIWindow* pChild)
 	R_ASSERT(pChild);
 	if (NULL == pChild)
 		return;
+
+	xrCriticalSectionGuard g(m_children_cs);
 
 	if (m_pMouseCapturer == pChild)
 		SetCapture(pChild, false);
@@ -268,9 +275,16 @@ void CUIWindow::DetachChild(CUIWindow* pChild)
 
 void CUIWindow::DetachAll()
 {
+	xrCriticalSectionGuard g(m_children_cs);
 	while (!m_ChildWndList.empty())
 	{
-		DetachChild(m_ChildWndList.back());
+		CUIWindow* child = m_ChildWndList.back();
+		m_ChildWndList.pop_back();
+		if (m_pMouseCapturer == child)
+			SetCapture(child, false);
+		child->SetParent(nullptr);
+		if (child->IsAutoDelete())
+			xr_delete(child);
 	}
 }
 

@@ -17,15 +17,15 @@ void CRenderTarget::draw_rain(light& RainSetup)
 
 	// Common constants (light-related)
 	Fvector L_dir;
-	Device.mView.transform_dir(L_dir, RainSetup.direction);
+	Device.mView_saved.transform_dir(L_dir, RainSetup.direction);
 	L_dir.normalize();
 
 	Fvector W_dirX;
-	Device.mView.transform_dir(W_dirX, Fvector().set(1.0f, 0.0f, 0.0f));
+	Device.mView_saved.transform_dir(W_dirX, Fvector().set(1.0f, 0.0f, 0.0f));
 	W_dirX.normalize();
 
 	Fvector W_dirZ;
-	Device.mView.transform_dir(W_dirZ, Fvector().set(0.0f, 0.0f, 1.0f));
+	Device.mView_saved.transform_dir(W_dirZ, Fvector().set(0.0f, 0.0f, 1.0f));
 	W_dirZ.normalize();
 
 	// Perform masking (only once - on the first/near phase)
@@ -66,7 +66,7 @@ void CRenderTarget::draw_rain(light& RainSetup)
 		fRainFar = ps_r3_dyn_wet_surf_far;
 
 	Fvector center_pt;
-	center_pt.mad(Device.vCameraPosition, Device.vCameraDirection, fRainFar);
+	center_pt.mad(Device.frame_data.vCameraPosition, Device.frame_data.vCameraDirection, fRainFar);
 	Device.mFullTransform.transform(center_pt);
 	d_Z = center_pt.z;
 
@@ -112,7 +112,7 @@ void CRenderTarget::draw_rain(light& RainSetup)
 		{
 			Fmatrix xf_project;
 			xf_project.mul(m_TexelAdjust, RainSetup.X.D.combine);
-			m_shadow.mul(xf_project, Device.mInvView);
+			m_shadow.mul(xf_project, Device.mInvView_saved);
 
 			FPU::m24r();
 		}
@@ -134,7 +134,7 @@ void CRenderTarget::draw_rain(light& RainSetup)
 
 		// compute xforms
 		FPU::m64r			();
-		Fmatrix				xf_invview;		xf_invview.invert	(Device.mView)	;
+		Fmatrix				xf_invview;		xf_invview.invert	(Device.mView_saved)	;
 
 		// shadow xform
 		Fmatrix				m_shadow;
@@ -161,7 +161,7 @@ void CRenderTarget::draw_rain(light& RainSetup)
 			Fvector localnormal;
 			m_xform.transform_dir(localnormal, normal);
 			localnormal.normalize();
-			m_clouds_shadow.mul(m_xform, Device.mInvView);
+			m_clouds_shadow.mul(m_xform, Device.mInvView_saved);
 			//m_xform.scale				(0.002f,0.002f,1.f)			;
 			m_xform.scale(1.f, 1.f, 1.f);
 			m_clouds_shadow.mulA_44(m_xform);
@@ -210,10 +210,10 @@ void CRenderTarget::draw_rain(light& RainSetup)
 			zMin = ps_r2_sun_near;
 			zMax = OLES_SUN_LIMIT_27_01_07;
 		}
-		center_pt.mad(Device.vCameraPosition,Device.vCameraDirection,zMin);	Device.mFullTransform.transform	(center_pt);
+		center_pt.mad(Device.frame_data.vCameraPosition,Device.frame_data.vCameraDirection,zMin);	Device.mFullTransform.transform	(center_pt);
 		zMin = center_pt.z	;
 
-		center_pt.mad(Device.vCameraPosition,Device.vCameraDirection,zMax);	Device.mFullTransform.transform	(center_pt);
+		center_pt.mad(Device.frame_data.vCameraPosition,Device.frame_data.vCameraDirection,zMax);	Device.mFullTransform.transform	(center_pt);
 		zMax = center_pt.z	;
 		*/
 

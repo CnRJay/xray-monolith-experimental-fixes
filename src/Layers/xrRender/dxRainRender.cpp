@@ -98,11 +98,11 @@ void dxRainRender::Update(CEffect_Rain& owner)
 	Fplane src_plane;
 	Fvector norm = {0.f, -1.f, 0.f};
 	Fvector upper;
-	upper.set(Device.vCameraPosition.x, Device.vCameraPosition.y + source_offset, Device.vCameraPosition.z);
+	upper.set(Device.frame_data.vCameraPosition.x, Device.frame_data.vCameraPosition.y + source_offset, Device.frame_data.vCameraPosition.z);
 	src_plane.build(upper, norm);
 
 	// perform update
-	const Fvector& vEye = Device.vCameraPosition;
+	const Fvector& vEye = Device.frame_data.vCameraPosition;
 	if (!Device.m_SecondViewport.IsSVPFrame()) {
 		for (u32 I = 0; I < current_items; I++)
 		{
@@ -207,7 +207,7 @@ void dxRainRender::Render(CEffect_Rain& owner)
 	Fvector3 f_rain_color = g_pGamePersistent->Environment().CurrentEnv->rain_color;
 	u32 u_rain_color = color_rgba_f(f_rain_color.x, f_rain_color.y, f_rain_color.z, factor_visual);
 
-	const Fvector& vEye = Device.vCameraPosition;
+	const Fvector& vEye = Device.frame_data.vCameraPosition;
 
 	// Generate geometry
 	u32 vOffset;

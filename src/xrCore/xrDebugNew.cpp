@@ -1177,8 +1177,14 @@ static void invalid_parameter_handler(
 	);
 }
 
+extern thread_local bool g_is_render_thread;
+
+struct render_thread_pure_virtual {};
+
 static void pure_call_handler()
 {
+	if (g_is_render_thread)
+		throw render_thread_pure_virtual{};
 	handler_base("pure virtual function call");
 }
 
