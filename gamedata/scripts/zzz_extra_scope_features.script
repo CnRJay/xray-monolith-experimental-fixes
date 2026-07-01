@@ -278,6 +278,14 @@ function isFixed(info, zc)
     return cur.l == cur.h
 end
 
+local function clamp_or_wrap(v, min, max, wantClamp)
+    return wantClamp
+        and clamp(v, min, max)
+        or (v > max and min)
+        or (v < min and max)
+        or v
+end
+
 -- If wantClamp is false, the zoom will wrap.  Useful to support a "cycle zoom" keybind
 function change_zoom(info, direction, wantClamp)
     if info then
@@ -285,7 +293,7 @@ function change_zoom(info, direction, wantClamp)
 	    local delta = 1.0 / steps;
 
         info.zoom_target_old = info.zoom_target;
-        info.zoom_target = clamp(info.zoom_target + direction*delta, 0, 1);
+        info.zoom_target = clamp_or_wrap(info.zoom_target + direction*delta, 0, 1, wantClamp);
         debug("Zoom target %: %s", info.zoom_target)
     end
 end
