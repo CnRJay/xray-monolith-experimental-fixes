@@ -1538,6 +1538,28 @@ bool CScriptGameObject::is_weapon_going_to_be_strapped(CScriptGameObject const* 
 	return stalker->is_weapon_going_to_be_strapped(&object->object());
 }
 
+::luabind::object CScriptGameObject::g_fireParams()
+{
+    ::luabind::object lua_table = ::luabind::newtable(ai().script_engine().lua());
+    Fvector pos, dir;
+    if (object().cast_actor())
+    {
+        object().cast_actor()->g_fireParams(nullptr, pos, dir);
+        lua_table["pos"] = pos;
+        lua_table["dir"] = dir;
+        return lua_table;
+    }
+    if (object().cast_stalker())
+    {
+        object().cast_stalker()->g_fireParams(nullptr, pos, dir);
+        lua_table["pos"] = pos;
+        lua_table["dir"] = dir;
+        return lua_table;
+    }
+    ai().script_engine().script_log(ScriptStorage::eLuaMessageTypeError, "CGameObject : object invalid.");
+    return lua_table;
+}
+
 //Alundaio:
 #ifdef GAME_OBJECT_EXTENDED_EXPORTS
 u16 CScriptGameObject::AmmoGetCount()
@@ -2139,6 +2161,17 @@ void CScriptGameObject::set_enable_anomalies_damage(bool v)
 		return;
 	}
 	stalker->m_enable_anomalies_damage = v;
+}
+bool CScriptGameObject::inside_anomaly()
+{
+	auto stalker = smart_cast<CAI_Stalker*>(&object());
+	if (!stalker)
+	{
+		ai().script_engine().script_log(ScriptStorage::eLuaMessageTypeError,
+			"CGameObject : cannot call inside_anomaly (not a CAI_Stalker)!");
+		return false;
+	}
+	return stalker->inside_anomaly();
 }
 #endif
 //-Alundaio
