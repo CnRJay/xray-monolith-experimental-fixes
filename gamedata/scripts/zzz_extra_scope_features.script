@@ -284,15 +284,7 @@ function change_zoom(info, direction, wantClamp)
         local steps = info.zoom_step_count or get_console():get_float("zoom_step_count") or 100;   -- If it find neither, make it obvious that something is broken
 	    local delta = 1.0 / steps;
 
-        function clampOrWrap(v, min, max)
-            return wantClamp
-                and clamp(v, min, max)
-                or (v > max and min)
-                or (v < min and max)
-                or v
-        end
-
-        info.zoom_target_old = info.zoom_target;        
+        info.zoom_target_old = info.zoom_target;
         info.zoom_target = clamp(info.zoom_target + direction*delta, 0, 1);
         debug("Zoom target %: %s", info.zoom_target)
     end
@@ -311,18 +303,18 @@ end
 local mwheel_supported_ver	= 20230701
 local mwheel_avail 			= MODDED_EXES_VERSION and (MODDED_EXES_VERSION >= mwheel_supported_ver)
 
-function print_optic_detail(info) 
-    function f(n)
-        return n 
-            and (math.floor(n) == n
-                    and tostring(n)
-                    or string.format("%.1f", n))
-            or "nil"
-    end
+local function fmt_mag(n)
+    return n
+        and (math.floor(n) == n
+                and tostring(n)
+                or string.format("%.1f", n))
+        or "nil"
+end
 
+function print_optic_detail(info)
     local snap_type = info.zoom_step_count == 1 and "," or "-"
-    local mag_string = info.min == info.max and f(info.max)
-        or  f(info.min) .. snap_type .. f(info.max)
+    local mag_string = info.min == info.max and fmt_mag(info.max)
+        or  fmt_mag(info.min) .. snap_type .. fmt_mag(info.max)
 
     log( "Weapon".. (info.legacy_config and "[LEGACY]" or "") ..": " .. info.section
          .. " | Magnification: " .. mag_string 
@@ -389,17 +381,13 @@ function on_game_start()
         end
     end)
 
-    function aim_changed()
+    local function aim_changed()
         local info = active_2d_scope()
         last_info = info
         if info then
             print_optic_detail(info)
 
             exec_console_cmd("scope_objective_lens_offset " .. (info.scope_objective_lens_offset or "0,0,0,0"))
-
-
-            local item = db.actor:active_item()
-            local weapon = item and item:cast_Weapon()
 
             actor_on_update()
         end
