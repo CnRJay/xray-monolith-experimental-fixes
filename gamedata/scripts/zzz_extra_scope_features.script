@@ -149,12 +149,17 @@ end
 function active_2d_scope()
     local item = db.actor:active_item()
     local weapon = item and item:cast_Weapon()
-    local key = item and get_item_key(item)
 
-    if item and IsBinoc(item:section()) then
+    if not (weapon and weapon:IsZoomed()) then
+        return -- Not aiming a scope; skip all per-frame key/binoc work
+    end
+
+    if IsBinoc(item:section()) then
         return -- Don't handle binoculars at all
     end
-    if key and (weapon and weapon:IsZoomed()) then
+
+    local key = get_item_key(item)
+    if key then
         if not property_cache[key] then
             local r = _active_2d_scope()
             if not r then
@@ -173,7 +178,12 @@ function active_2d_scope()
     end
 end
 
-function get_item_key(item) 
+local _key_upgrades = ""
+local function _accum_upgrade(upgrade_section)
+    _key_upgrades = _key_upgrades .. "+" .. upgrade_section
+end
+
+function get_item_key(item)
     local weapon = item and item:cast_Weapon()
     if not weapon then
         return nil
@@ -183,10 +193,10 @@ function get_item_key(item)
     local section  = zoomtype == 0
                         and utils_item.get_attached_scope(item)
                         or  item:section()
-    local upgrades = ""
 
-    item:iterate_installed_upgrades(function(upgrade_section) upgrades = upgrades .. "+" .. upgrade_section end)
-    return id .. ":" .. zoomtype .. ":" .. section .. ":" .. upgrades
+    _key_upgrades = ""
+    item:iterate_installed_upgrades(_accum_upgrade)
+    return id .. ":" .. zoomtype .. ":" .. section .. ":" .. _key_upgrades
 end
 
 function current_magnification(info, wantTarget)
@@ -195,8 +205,17 @@ function current_magnification(info, wantTarget)
         or nil
 end
 
+-- avoid calling this shit every frame. why tf was this done in the first place?
+local last_sp_a, last_sp_b, last_sp_c, last_sp_d
+local function push_scope_params(a, b, c, d)
+    if a ~= last_sp_a or b ~= last_sp_b or c ~= last_sp_c or d ~= last_sp_d then
+        last_sp_a, last_sp_b, last_sp_c, last_sp_d = a, b, c, d
+        exec_console_cmd("shader_scope_params " .. a .. ", " .. b .. ", " .. c .. ", " .. d)
+    end
+end
+
 local last_key = nil
-function actor_on_update() 
+function actor_on_update()
     
     local item = db.actor:active_item()
     local weapon = item and item:cast_Weapon()
@@ -229,7 +248,7 @@ function actor_on_update()
             local player_fov = get_console():get_float("fov") * TO_RADIANS
             local target_fov = mag_to_fov(player_fov, magnification)
             weapon:SetZoomFactor(fov_to_zoomfactor(target_fov))
-            exec_console_cmd("shader_scope_params " .. magnification .. ", " .. min_magnification .. ", " .. max_magnification .. ", " .. -1.0)
+            push_scope_params(magnification, min_magnification, max_magnification, -1.0)
         else
             local max_pip_magnification = (ui_mcm and ui_mcm.get("3d_scopes/zoom_factor")) or (1.0/scope_factor);
             local pip_magnification = math.min( magnification
@@ -249,7 +268,7 @@ function actor_on_update()
                 and weapon:GetInertionAimFactor() > 0.001 and fov_to_zoomfactor(player_fov)
                 or fov_to_zoomfactor(fov_factor)
             weapon:SetZoomFactor(zoom_factor)
-            exec_console_cmd("shader_scope_params " .. magnification .. ", " .. min_magnification .. ", " .. max_magnification .. ", " .. target_fov)
+            push_scope_params(magnification, min_magnification, max_magnification, target_fov)
         end
     end
 end
