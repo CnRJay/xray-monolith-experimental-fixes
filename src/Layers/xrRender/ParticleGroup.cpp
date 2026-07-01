@@ -519,7 +519,28 @@ void CParticleGroup::SItem::OnFrame(u32 u_dt, const CPGDef::SEffect &def,
       }
     };
 
-    {
+    if (_children_related.size() < 4u) {
+      static thread_local CollisionContext ctx;
+      ctx.r_spatial.clear();
+      ctx.r_temp.r_clear();
+      for (size_t i = 0; i < _children_related.size(); ++i) {
+        CParticleEffect *E = static_cast<CParticleEffect *>(_children_related[i]);
+        if (E) {
+          E->SetCollisionContext(&ctx);
+          E->OnFrame(u_dt);
+          E->SetCollisionContext(nullptr);
+          if (E->IsPlaying()) {
+            bPlaying = true;
+            if (E->vis.box.is_valid())
+              box.merge(E->vis.box);
+          } else {
+            if (def.m_Flags.is(CPGDef::SEffect::flOnPlayChildRewind)) {
+              E->Play();
+            }
+          }
+        }
+      }
+    } else {
       UpdateBody body(_children_related, u_dt, def);
       tbb::parallel_reduce(tbb::blocked_range<int>(0, _children_related.size()),
                            body);
@@ -573,7 +594,24 @@ void CParticleGroup::SItem::OnFrame(u32 u_dt, const CPGDef::SEffect &def,
       }
     };
 
-    {
+    if (_children_free.size() < 4u) {
+      static thread_local CollisionContext ctx;
+      ctx.r_spatial.clear();
+      ctx.r_temp.r_clear();
+      for (size_t i = 0; i < _children_free.size(); ++i) {
+        CParticleEffect *E = static_cast<CParticleEffect *>(_children_free[i]);
+        if (E) {
+          E->SetCollisionContext(&ctx);
+          E->OnFrame(u_dt);
+          E->SetCollisionContext(nullptr);
+          if (E->IsPlaying()) {
+            bPlaying = true;
+            if (E->vis.box.is_valid())
+              box.merge(E->vis.box);
+          }
+        }
+      }
+    } else {
       UpdateFreeBody body(_children_free, u_dt);
       tbb::parallel_reduce(tbb::blocked_range<int>(0, _children_free.size()),
                            body);
