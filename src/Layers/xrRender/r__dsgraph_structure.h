@@ -87,6 +87,7 @@ public:
 	xr_vector<R_dsgraph::_LodItem,render_alloc<R_dsgraph::_LodItem>> lstLODs;
 	xr_vector<int,render_alloc<int>> lstLODgroups;
 	xr_vector<ISpatial* /**,render_alloc<ISpatial*>/**/> lstRenderables;
+	xr_vector<ISpatial* /**,render_alloc<ISpatial*>/**/> lstRenderablesMain;
 	xr_vector<ISpatial* /**,render_alloc<ISpatial*>/**/> lstSpatial;
 	xr_vector<dxRender_Visual*,render_alloc<dxRender_Visual*>> lstVisuals;
 
@@ -163,6 +164,7 @@ public:
 		lstLODs.clear();
 		lstLODgroups.clear();
 		lstRenderables.clear();
+		lstRenderablesMain.clear();
 		lstSpatial.clear();
 		lstVisuals.clear();
 

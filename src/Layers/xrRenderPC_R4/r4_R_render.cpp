@@ -40,14 +40,14 @@ void CRender::render_main(Fmatrix& m_ViewProjection, bool _fportals)
 			{
 				g_SpatialSpace->q_frustum
 				(
-					lstRenderables,
+					lstRenderablesMain,
 					ISpatial_DB::O_ORDERED,
 					STYPE_RENDERABLE + STYPE_LIGHTSOURCE,
 					ViewBase
 				);
 
 				// (almost) Exact sorting order (front-to-back)
-				tbb::parallel_sort(lstRenderables.begin(), lstRenderables.end(), pred_sp_sort);
+				tbb::parallel_sort(lstRenderablesMain.begin(), lstRenderablesMain.end(), pred_sp_sort);
 
 				lstRenderables_frame = Device.dwFrame;
 			}
@@ -58,7 +58,7 @@ void CRender::render_main(Fmatrix& m_ViewProjection, bool _fportals)
 			if (phase == PHASE_NORMAL)
 			{
 				uLastLTRACK ++;
-				if (lstRenderables.size()) uID_LTRACK = uLastLTRACK % lstRenderables.size();
+				if (lstRenderablesMain.size()) uID_LTRACK = uLastLTRACK % lstRenderablesMain.size();
 
 				// update light-vis for current entity / actor
 				CObject* O = g_pGameLevel->CurrentViewEntity();
@@ -70,9 +70,9 @@ void CRender::render_main(Fmatrix& m_ViewProjection, bool _fportals)
 
 				// update light-vis for selected entity
 				// track lighting environment
-				if (lstRenderables.size())
+				if (lstRenderablesMain.size())
 				{
-					IRenderable* renderable = lstRenderables[uID_LTRACK]->dcast_Renderable();
+					IRenderable* renderable = lstRenderablesMain[uID_LTRACK]->dcast_Renderable();
 					if (renderable)
 					{
 						CROS_impl* T = (CROS_impl*)renderable->renderable_ROS();
@@ -108,11 +108,11 @@ void CRender::render_main(Fmatrix& m_ViewProjection, bool _fportals)
 		// skeleton pre calc before frustum
 		{
 			xr_vector<CKinematics*> skeletons_to_update;
-			skeletons_to_update.reserve(lstRenderables.size());
+			skeletons_to_update.reserve(lstRenderablesMain.size());
 
-			for (u32 o_it = 0; o_it < lstRenderables.size(); o_it++)
+			for (u32 o_it = 0; o_it < lstRenderablesMain.size(); o_it++)
 			{
-				ISpatial* spatial = lstRenderables[o_it];
+				ISpatial* spatial = lstRenderablesMain[o_it];
 				spatial->spatial_updatesector();
 				CSector* sector = (CSector*)spatial->spatial.sector;
 				if (!sector) continue;
@@ -163,9 +163,9 @@ void CRender::render_main(Fmatrix& m_ViewProjection, bool _fportals)
 		}
 
 		// Traverse frustums
-		for (u32 o_it = 0; o_it < lstRenderables.size(); o_it++)
+		for (u32 o_it = 0; o_it < lstRenderablesMain.size(); o_it++)
 		{
-			ISpatial* spatial = lstRenderables[o_it];
+			ISpatial* spatial = lstRenderablesMain[o_it];
 			spatial->spatial_updatesector();
 			CSector* sector = (CSector*)spatial->spatial.sector;
 			if (0 == sector) continue; // disassociated from S/P structure
