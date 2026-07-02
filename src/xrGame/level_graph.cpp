@@ -67,7 +67,7 @@ u32 CLevelGraph::vertex(const Fvector& position) const
 		{
 			u32 guess_id = u32(I - B);
 			u32 selected = guess_vertex_id(guess_id, position);
-			if (valid_vertex_id(selected))
+			if (valid_vertex_id(selected) && inside(selected, position))
 				return (selected);
 		}
 	}
