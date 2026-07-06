@@ -67,6 +67,14 @@ void CAttachableItem::OnH_A_Chield()
 
 void CAttachableItem::renderable_Render()
 {
+	// Don't render items that are being destroyed: a parented item destroyed
+	// via server release is rejected (detached at the owner's position) and
+	// only actually removed when the destroy event lands - this unguarded
+	// submission path made e.g. consumed magazine items flash for a frame
+	// next to the player after every magazine-system reload.
+	if (object().getDestroy() || object().GetTmpPreDestroy())
+		return;
+
 	::Render->set_Transform(&object().XFORM());
 	::Render->add_Visual(object().Visual());
 }
