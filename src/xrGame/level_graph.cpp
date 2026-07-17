@@ -57,21 +57,6 @@ CLevelGraph::~CLevelGraph()
 
 u32 CLevelGraph::vertex(const Fvector& position) const
 {
-	if (valid_vertex_position(position))
-	{
-		CPosition _vertex_position = vertex_position(position);
-		CVertex* B = m_nodes;
-		CVertex* E = m_nodes + header().vertex_count();
-		CVertex* I = std::lower_bound(B, E, _vertex_position.xz());
-		if (I != E)
-		{
-			u32 guess_id = u32(I - B);
-			u32 selected = guess_vertex_id(guess_id, position);
-			if (valid_vertex_id(selected) && inside(selected, position))
-				return (selected);
-		}
-	}
-
 	CLevelGraph::CPosition _node_position;
 	vertex_position(_node_position, position);
 	float min_dist = flt_max;
