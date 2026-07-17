@@ -52,6 +52,17 @@ PAGE = filter_false(page {
 	line{},
 
 	get_item_if_exists(list_bool { id = "r__clear_resources_on_unload" }),
+	get_item_if_exists(list_bool { id = "r__tex_evict_enabled" }),
+	get_item_if_exists(track {
+		id = "r__tex_evict_age_frames",
+		def = 1024,
+		step = 32,
+	}),
+	get_item_if_exists(track {
+		id = "r__tex_evict_batch_size",
+		def = 1024,
+		step = 32,
+	}),
 	list_bool { id = "dltx_use_cache" },
 	track {
 		id = "mouse_buffer_size",

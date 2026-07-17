@@ -63,6 +63,7 @@ class_<CScriptGameObject> script_register_game_object2(class_<CScriptGameObject>
 		.def("path_completed", SAFE_WRAP(&CScriptGameObject::path_completed))
 		.def("patrol_path_make_inactual", SAFE_WRAP(&CScriptGameObject::patrol_path_make_inactual))
 		.def("enable_memory_object", SAFE_WRAP(&CScriptGameObject::enable_memory_object))
+		.def("set_vision_speed", SAFE_WRAP(&CScriptGameObject::set_vision_speed))
 		.def("active_sound_count", SAFE_WRAP((int (CScriptGameObject::*)())(&CScriptGameObject::active_sound_count)))
 		.def("active_sound_count", SAFE_WRAP((int (CScriptGameObject::*)(bool))(&CScriptGameObject::active_sound_count)))
 		.def("best_cover", SAFE_WRAP(&CScriptGameObject::best_cover))
@@ -454,6 +455,12 @@ class_<CScriptGameObject> script_register_game_object2(class_<CScriptGameObject>
 
 		.def("sniper_fire_mode", SAFE_WRAP((void (CScriptGameObject::*)(bool))&CScriptGameObject::sniper_fire_mode))
 		.def("sniper_fire_mode", SAFE_WRAP((bool (CScriptGameObject::*)() const)&CScriptGameObject::sniper_fire_mode))
+
+		.def("set_aim_params", SAFE_WRAP(&CScriptGameObject::set_aim_params))
+		.def("set_fire_queue_scale", SAFE_WRAP(&CScriptGameObject::set_fire_queue_scale))
+		.def("can_kill_enemy", SAFE_WRAP(&CScriptGameObject::can_kill_enemy))
+		.def("can_kill_member", SAFE_WRAP(&CScriptGameObject::can_kill_member))
+		.def("fire_make_sense", SAFE_WRAP(&CScriptGameObject::fire_make_sense))
 
 		.def("aim_bone_id", SAFE_WRAP((void (CScriptGameObject::*)(LPCSTR))&CScriptGameObject::aim_bone_id))
 		.def("aim_bone_id", SAFE_WRAP((LPCSTR (CScriptGameObject::*)() const)&CScriptGameObject::aim_bone_id))

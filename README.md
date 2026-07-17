@@ -141,6 +141,7 @@ We welcome contributions to improve performance and stability! Please follow the
 
 Contents of this repository are licensed under a custom GSC Game World proprietary license for non-commercial use. See the [License.txt](./License.txt) file for details.
 
+<<<<<<< HEAD
 ## Credits
 
 - **Original X-Ray Monolith**: [TheMrDemonized](https://github.com/themrdemonized/xray-monolith)
@@ -148,3 +149,38 @@ Contents of this repository are licensed under a custom GSC Game World proprieta
 - **Intel**: TBB Library
 - **LuaJIT**: Scripting engine
 - **True PIP**: [m22specner](https://github.com/m22spencer/xray-monolith)
+=======
+* DXML will no longer process translation strings of non eng/rus languages, they aren't supported yet
+* New lua_help_ex.script file where new engine exports will be described
+* Exported additional CWeapon functions considering weapon's RPM, handling and recoil
+* Exported functions to get and set actors walk accel and walkback coeff
+
+  ```lua
+  db.actor:get_actor_walk_accel()
+  db.actor:set_actor_walk_accel(float)
+  db.actor:get_actor_walk_back_coef()
+  db.actor:set_actor_walk_back_coef(float)
+  ```
+  * DLTX received possibility to add items to parameter's list if the parameter has structure like 
+  
+  ```name = item1, item2, item3```
+  
+    * `>name = item4, item5` will add item4 and item5 to list, the result would be `name = item1, item2, item3, item4, item5`
+    * `<name = item3` will remove item3 from the list, the result would be `name = item1, item2`
+    * example for mod_system_...ltx: 
+    
+    ```
+      ![info_portions]
+      >files                                    = ah_info, info_hidden_threat
+
+      ![dialogs]
+      >files                                    = AH_dialogs, dialogs_hidden_threat
+      
+      ![profiles]
+      >files                                    = npc_profile_ah, npc_profile_hidden_threat
+      >specific_characters_files                = character_desc_ah, character_desc_hidden_threat
+    ```
+
+* Exported distance_to_xz_sqr() function of Fvector
+* Redesigned duplicate section error, it will additionally print what file adds the section in the first place in addition to the file that has the duplicate
+>>>>>>> upstream/all-in-one-vs2022-wpo

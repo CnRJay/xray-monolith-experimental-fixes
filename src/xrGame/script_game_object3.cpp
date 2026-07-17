@@ -150,6 +150,16 @@ void CScriptGameObject::SetVisualMemoryEnabled(bool enabled)
 		custom_monster->memory().visual().enable(enabled);
 }
 
+void CScriptGameObject::set_vision_speed(float value)
+{
+	CCustomMonster* custom_monster = smart_cast<CCustomMonster*>(&object());
+	if (!custom_monster)
+		ai().script_engine().script_log(ScriptStorage::eLuaMessageTypeError,
+		                                "CCustomMonster : cannot access class member set_vision_speed!");
+	else
+		custom_monster->memory().visual().set_vision_speed(value);
+}
+
 float CScriptGameObject::GetObjectVisibleDistance(const CScriptGameObject* obj)
 {
     if (obj == nullptr)

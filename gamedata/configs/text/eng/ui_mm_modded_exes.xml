@@ -1149,6 +1149,9 @@
 	<string id="ui_mm_modded_exes_gameplay_monsters_pseudogiant_can_damage_objects_on_stomp">
 		<text>Pseudogiant Damage Objects On Stomp (pseudogiant_can_damage_objects_on_stomp)</text>
 	</string>
+	<string id="ui_mm_modded_exes_gameplay_monsters_pseudogiant_dodge_stomp_while_falling">
+		<text>Dodge Pseudogiant Stomp While Falling (pseudogiant_dodge_stomp_while_falling)</text>
+	</string>
 	<string id="ui_mm_modded_exes_gameplay_monsters_telekinetic_objects_include_corpses">
 		<text>Poltergeists and Burers throw Corpses (telekinetic_objects_include_corpses)</text>
 	</string>
@@ -1360,6 +1363,15 @@
 	</string>
 	<string id="ui_mm_modded_exes_optimizations_r__clear_resources_on_unload_desc">
 		<text>Reduces RAM and VRAM usage but increases loading times</text>
+	</string>
+	<string id="ui_mm_modded_exes_optimizations_r__tex_evict_enabled">
+		<text>Periodically clear unused textures (r__tex_evict_enabled)</text>
+	</string>
+	<string id="ui_mm_modded_exes_optimizations_r__tex_evict_age_frames">
+		<text>Wait n frames to clear (r__tex_evict_age_frames)</text>
+	</string>
+	<string id="ui_mm_modded_exes_optimizations_r__tex_evict_batch_size">
+		<text>Batch size to clear (r__tex_evict_batch_size)</text>
 	</string>
 
 	<string id="ui_mm_modded_exes_optimizations_dltx_use_cache">

@@ -138,6 +138,8 @@ extern BOOL g_allow_silencer_hide_tracer;
 extern int showActorBody; //leer
 extern BOOL disableActorBodyRotationDelay; //leer
 
+extern BOOL pseudogiantDodgeWhileFalling; // Verdatim
+
 //demonized: new console vars
 extern BOOL firstPersonDeath;
 extern BOOL pseudogiantCanDamageObjects;
@@ -3078,6 +3080,8 @@ void CCC_RegisterCommands()
 	CMD4(CCC_Integer, "binoculars_dynamic_zoom_check", &binoculars_dynamic_zoom_check, 0, 1); //VodoXleb
 
 	CMD4(CCC_Integer, "pseudogiant_can_damage_objects_on_stomp", &pseudogiantCanDamageObjects, 0, 1);
+
+    CMD4(CCC_Integer, "pseudogiant_dodge_stomp_while_falling", &pseudogiantDodgeWhileFalling, 0, 1); // Verdatim
 
 	CMD4(CCC_Integer, "telekinetic_objects_include_corpses", &g_telekinetic_objects_include_corpses, 0, 1); // Tosox
 

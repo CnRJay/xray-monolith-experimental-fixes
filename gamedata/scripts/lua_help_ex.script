@@ -10,6 +10,8 @@
 
         pseudogiant_can_damage_objects_on_stomp [0; 1] // Enable the ability for pseudogiants to damage objects on stomp
 
+        pseudogiant_dodge_stomp_while_falling [0; 1] // Prevent pseudogiants stomp attack from damaging actor if they are falling
+
         telekinetic_objects_include_corpses [0; 1] // Enable the ability for poltergeists and burers to throw corpses
         
         sds_enable [0; 1] // Enable shader based scopes
@@ -232,6 +234,17 @@
 
     class CUIMessagesWindow : CUIWindow {
         // no extra exports yet
+    }
+
+    class CUIPropertiesBox : CUIFrameWindow {
+        void AddHeader(string str) // Adds a non-selectable, colored title row (used to group items in a merged context menu)
+        CUIPropertiesBox AddSubmenu(string label) // Adds a "label >" row whose submenu expands on hover; returns the child box to populate (AddItem/AddHeader/nested AddSubmenu)
+        bool AddItem(string str, u32 id) // Adds a selectable item row carrying a u32 id (read back via GetSelectedItem():GetTAG() / map_spot_menu_property_clicked prop_id); lets a menu carry duplicate labels
+    }
+
+    class CUIListBoxItem : CUIFrameLineWnd {
+        u32 GetTAG() // Per-item u32 id set via CUIPropertiesBox:AddItem(str, id)
+        void SetTAG(u32 value)
     }
 
     class CUIMainIngameWnd : CUIWindow {
@@ -468,7 +481,27 @@
         function EngineCurTorque() -> float
         function DoorOpen(number bone_id) / DoorClose / DoorUse / DoorSwitch
         function IsDoor(number bone_id) -> bool
-
+		
+		function SetUseAction(string)
+		function GetZoomFactor() -> float
+		function GetViewportNear() float
+		function SetViewportNear(float)
+		
+		/* Camera scope with different zooming levels. */
+		function IsScopeEnable() -> bool
+		function GetScopeSize() number
+		function GetScopeActive() number
+		function SetScopeActive(number)
+		
+		/* Drone subclass */
+		function CCarDrone_GetPowerEfficiency() -> float
+		function CCarDrone_SetPowerEfficiency(float)
+		
+		/* Visual 3D camera on model */
+		function VisualCamera_GetDesireAngle() -> float
+		function VisualCamera_GetRotXCur() -> float
+		function VisualCamera_GetRotYCur() -> float
+		
         callbacks (see callbacks_gameobject.script): car_on_hit, car_on_weapon_fired
     }
 
@@ -615,6 +648,7 @@
 
         // Stalker and Monster
         function invalidate_restrictions()
+        void set_vision_speed(float factor) // Per-object vision-speed factor multiplied into get_visible_value on top of the ai_vision_speed_boost cvar. 1.0 = vanilla, higher spots faster, negative clamps to 0. Persists while online; re-set on spawn (memory manager is rebuilt when the NPC comes back online).
 
         // Stalker NPCs
         function get_enable_anomalies_pathfinding()
@@ -629,6 +663,11 @@
         function memory_remove_links(game_object)
         function get_object_visible_distance(game_object)
         function get_object_luminocity(game_object)
+        void set_aim_params(float max_angle, float min_angle, float min_speed, float predict_time) // Per-NPC sight-manager aim params (swing speed, firing cone, target lead). Unset or negative components follow the live ai_aim_max_angle / ai_aim_min_angle / ai_aim_min_speed / ai_aim_predict_time cvars, so pass negatives to revert to vanilla. Set once per NPC (e.g. on spawn by rank); read per frame in C++, no per-frame Lua.
+        void set_fire_queue_scale(float size_k, float interval_k) // Per-NPC scale on the combat planner's burst roll (select_queue_params): burst size and inter-burst interval multiply after the weapon-type x distance band is picked, so [fire_queue_params] retunes stay respected. Scaled size clamps to >= 1. Negative = unset (vanilla queues). Touches planner fire only - script set_item queues and the death mag dump are not scaled. Not serialized; re-set on spawn.
+        bool can_kill_enemy() // Engine posture-aware shot clearance: fire-point ray (with safety-angle probes) reaches the NPC's current selected enemy. False when no weapon is out. At most one recompute per frame (shared cache with the engine friendly-fire gate).
+        bool can_kill_member() // As can_kill_enemy but true when the ray would hit a squad member (friendly fire). False when no weapon is out.
+        bool fire_make_sense() // Engine fire-discipline gate for the current selected enemy: occlusion before target (pick_distance + ai_fire_range_extension), floor gap (ai_fire_max_height_diff), point-blank (ai_fire_min_dist), unseen enemy only within ai_fire_make_sense_interval and with an automatic weapon.
         bool affect_cover() // Returns true when the NPC considers itself in a tactically covered position (physically arrived at cover). Set by combat actions, reset on action transition. Use in BeforeHitCallback to detect hits in the open.
         void best_cover_invalidate() // Forces the NPC to re-evaluate its best cover point on the next tick. Call after affect_cover() returns false on a hit to make the NPC seek new cover.
         string rank_name() // Returns rank id string from CharacterInfo: "novice", "experienced", "veteran", "master", "expert". More reliable than rank() since raw integer thresholds vary per modpack.

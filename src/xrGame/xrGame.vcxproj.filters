@@ -6042,6 +6042,9 @@
     <ClInclude Include="CarLights.h">
       <Filter>Core\Client\Objects\vehicles\Car</Filter>
     </ClInclude>
+    <ClInclude Include="CarDrone.h">
+      <Filter>Core\Client\Objects\vehicles\Car\CarDrone</Filter>
+    </ClInclude>
     <ClInclude Include="CarWeapon.h">
       <Filter>Core\Client\Objects\vehicles\Car\CarWeapon</Filter>
     </ClInclude>
@@ -9691,6 +9694,9 @@
     </ClCompile>
     <ClCompile Include="DBG_Car.cpp">
       <Filter>Core\Client\Objects\vehicles\Car</Filter>
+    </ClCompile>
+    <ClCompile Include="CarDrone.cpp">
+      <Filter>Core\Client\Objects\vehicles\Car\CarDrone</Filter>
     </ClCompile>
     <ClCompile Include="CarWeapon.cpp">
       <Filter>Core\Client\Objects\vehicles\Car\CarWeapon</Filter>

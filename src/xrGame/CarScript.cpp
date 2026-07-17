@@ -79,13 +79,20 @@ void CCar::script_register(lua_State* L)
 
 #ifdef CAR_NEW
 		.def("SetUseAction", &CCar::SetUseAction)
-		.def("GetFlyWeightAdd", &CCar::GetFlyWeightAdd)
-		.def("SetFlyWeightAdd", &CCar::SetFlyWeightAdd)
+		.def("GetZoomFactor", &CCar::GetZoomFactor)
+		.def("GetViewportNear", &CCar::GetViewportNear)
+		.def("SetViewportNear", &CCar::SetViewportNear)
+		.def("IsScopeEnable", &CCar::IsScopeEnable)
+		.def("GetScopeSize", &CCar::GetScopeSize)
+		.def("GetScopeActive", &CCar::GetScopeActive)
+		.def("SetScopeActive", &CCar::SetScopeActive)
 
-		.def("GetControlEle", &CCar::GetControlEle)
-		.def("GetControlYaw", &CCar::GetControlYaw)
-		.def("GetControlPit", &CCar::GetControlPit)
-		.def("GetControlRol", &CCar::GetControlRol)
+		.def("CCarDrone_GetPowerEfficiency", &CCar::CCarDrone_GetPowerEfficiency)
+		.def("CCarDrone_SetPowerEfficiency", &CCar::CCarDrone_SetPowerEfficiency)
+
+		.def("VisualCamera_GetDesireAngle", &CCar::VisualCamera_GetDesireAngle)
+		.def("VisualCamera_GetRotXCur", &CCar::VisualCamera_GetRotXCur)
+		.def("VisualCamera_GetRotYCur", &CCar::VisualCamera_GetRotYCur)
 #endif
 		.def(constructor<>())
 	];

@@ -1148,6 +1148,9 @@
 	<string id="ui_mm_modded_exes_gameplay_monsters_pseudogiant_can_damage_objects_on_stomp">
 		<text>Псевдогигант повреждает объекты при топоте (pseudogiant_can_damage_objects_on_stomp)</text>
 	</string>
+	<string id="ui_mm_modded_exes_gameplay_monsters_pseudogiant_dodge_stomp_while_falling">
+		<text>Уклонение от хлопка псевдогиганта в падении (pseudogiant_dodge_stomp_while_falling)</text>
+	</string>
 	<string id="ui_mm_modded_exes_gameplay_monsters_telekinetic_objects_include_corpses">
 		<text>Полтеры и бюреры кидают трупы (telekinetic_objects_include_corpses)</text>
 	</string>
@@ -1356,6 +1359,15 @@
 	</string>
 	<string id="ui_mm_modded_exes_optimizations_r__clear_resources_on_unload_desc">
 		<text>Уменьшает потребление RAM и VRAM но увеличивает время загрузки уровней</text>
+	</string>
+	<string id="ui_mm_modded_exes_optimizations_r__tex_evict_enabled">
+		<text>Периодически очищать память от неиспользованных текстур (r__tex_evict_enabled)</text>
+	</string>
+	<string id="ui_mm_modded_exes_optimizations_r__tex_evict_age_frames">
+		<text>Через сколько фреймов очищать (r__tex_evict_age_frames)</text>
+	</string>
+	<string id="ui_mm_modded_exes_optimizations_r__tex_evict_batch_size">
+		<text>Кол-во текстур на очистку (r__tex_evict_batch_size)</text>
 	</string>
 
 	<string id="ui_mm_modded_exes_optimizations_dltx_use_cache">

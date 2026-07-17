@@ -265,11 +265,30 @@ map_table contains:
 
 --]]
 
+-- Replace base pda.property_box_clicked so the clicked item's u32 TAG is forwarded
+-- as a trailing prop_id arg, letting menus carry duplicate labels.
+function pda.property_box_clicked(property_ui)
+	local list_item = property_ui:GetSelectedItem()
+	if not (list_item) then
+		return
+	end
+	local prop = list_item:GetTextItem():GetText()
+	SendScriptCallback("map_spot_menu_property_clicked", property_ui,
+		pda.map_spot_property.id, pda.map_spot_property.level_name, prop, list_item:GetTAG())
+end
+
 AddScriptCallback("on_map_right_click")
 _G.COnRightClickMap = function(property_ui, map_table)
 	pda.map_spot_property.id = map_table.object_id
 	pda.map_spot_property.level_name = map_table.level_name
 	SendScriptCallback("on_map_right_click", property_ui, map_table)
+end
+
+-- Engine sets the clicked menu item's owning spot before pda.property_box_clicked,
+-- so a merged multi-object context menu dispatches the correct object id per item.
+function pda.set_map_spot_context(id, level_name)
+	pda.map_spot_property.id = id
+	pda.map_spot_property.level_name = level_name
 end
 
 --[[
@@ -412,6 +431,19 @@ end
 AddScriptCallback("npc_on_combat_action_changed")
 _G.CAI_Stalker__OnCombatActionChanged = function(npc, old_op, new_op)
 	SendScriptCallback("npc_on_combat_action_changed", npc, old_op, new_op)
+end
+
+-- NPC combat GOAP action switch veto. Fires BEFORE the combat planner swaps actions
+-- (npc_on_combat_action_changed fires after an allowed swap). from_op and to_op match
+-- stalker_ids.action_* values. Set flags.allow = false to keep the current action
+-- (e.g. suppress the take_cover <-> look_out oscillation); real switches (grenade,
+-- hit, target dead) should be left through. Re-fires each AI update while the
+-- proposed switch stays denied, so keep subscribers cheap.
+AddScriptCallback("npc_on_combat_action_switch")
+_G.CAI_Stalker__AllowCombatActionSwitch = function(npc, from_op, to_op)
+	local flags = { allow = true }
+	SendScriptCallback("npc_on_combat_action_switch", npc, from_op, to_op, flags)
+	return flags.allow ~= false
 end
 
 -- NPC TakeCover destination callback. Only fires when a real cover point is found, not on fallback paths
