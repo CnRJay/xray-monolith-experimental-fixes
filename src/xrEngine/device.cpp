@@ -827,10 +827,20 @@ void CRenderDevice::Pause(BOOL bOn, BOOL bTimer, BOOL bSound, LPCSTR reason)
 
 		if (bSound && ::Sound)
 		{
-			snd_emitters_ = ::Sound->pause_emitters(true);
+
+			bool is_focus_loss = (strstr(reason, "app_deactivate") || strstr(reason, "deactivate") ||
+				strstr(reason, "wm_deactivate") || strstr(reason, "inactive"));
+
+			// Skip sound pause ONLY when it's borderless + real focus loss (alt-tab)
+			bool should_skip = (g_screenmode == 1 && is_focus_loss && !strstr(reason, "mm_activate1"));
+
+			if (!should_skip)  // Skip ONLY borderless + focus loss
+			{
+				snd_emitters_ = ::Sound->pause_emitters(true);
 #ifdef DEBUG
-			// Log("snd_emitters_[true]",snd_emitters_);
+				// Log("snd_emitters_[true]",snd_emitters_);
 #endif // DEBUG
+			}
 		}
 	}
 	else
