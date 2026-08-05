@@ -757,6 +757,16 @@ void			CGameObject::dbg_DrawSkeleton	()
 
 void CGameObject::renderable_Render()
 {
+	// Objects being destroyed must not render. A parented item destroyed via
+	// server release (e.g. a consumed magazine) is first rejected - detached
+	// at the owner's position - and rendered until the destroy event lands
+	// (which can be one or more frames later); without this it flashes next
+	// to the player. GetTmpPreDestroy covers the reject->destroy gap (set
+	// synchronously when the reject is processed), getDestroy covers the
+	// destroy-queued state.
+	if (getDestroy() || GetTmpPreDestroy())
+		return;
+
 	inherited::renderable_Render();
 	::Render->set_Transform(&XFORM());
 	::Render->add_Visual(Visual());

@@ -296,6 +296,9 @@ BOOL CObject::net_Spawn(CSE_Abstract* data)
 void CObject::net_Destroy()
 {
 	VERIFY(getDestroy());
+	// objects are pooled and reused (ObjectPool.create/destroy) - never let
+	// the pre-destroy flag leak into the next object recycled from the pool
+	SetTmpPreDestroy(FALSE);
 	xr_delete(collidable.model);
 	if (register_schedule())
 		shedule_unregister();

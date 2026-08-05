@@ -59,11 +59,22 @@ void CPhysicItem::OnH_B_Independent(bool just_before_destroy)
 	if (m_ready_to_destroy)
 		return;
 
+	// An item detached only because it is about to be destroyed (e.g. a
+	// consumed magazine released by script while parented to the actor) must
+	// NOT be made visible: the destroy lands on the next update, so showing
+	// it here renders it for exactly one frame at the owner's position
+	// (the "mag flash" seen after every magazine-system reload).
+	if (just_before_destroy)
+	{
+		setVisible(FALSE);
+		setEnabled(FALSE);
+		return;
+	}
+
 	setVisible(TRUE);
 	setEnabled(TRUE);
 
-	if (!just_before_destroy)
-		activate_physic_shell();
+	activate_physic_shell();
 }
 
 void CPhysicItem::OnH_B_Chield()

@@ -208,6 +208,18 @@ void CInventoryItem::OnH_B_Independent(bool just_before_destroy)
 {
 	UpdateXForm();
 	m_ItemCurrPlace.type = eItemPlaceUndefined;
+
+	// An item detached only because it is about to be destroyed (e.g. a
+	// consumed magazine released by script while parented to the actor) must
+	// not become visible for its final frame: UpdateXForm just placed it at
+	// the owner's position, and the destroy only lands on the next update -
+	// without this it renders for exactly one frame next to the player
+	// (the infamous "mag flash" after every magazine-system reload).
+	if (just_before_destroy)
+	{
+		object().setVisible(FALSE);
+		object().setEnabled(FALSE);
+	}
 }
 
 void CInventoryItem::OnH_A_Independent()
